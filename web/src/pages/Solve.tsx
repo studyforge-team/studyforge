@@ -1,9 +1,12 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { postResult, startSolve } from '@/api/client'
 import type { Step } from '@/api/types'
-import AnswerCard from '@/components/AnswerCard'
 import { Button } from '@/components/ui/button'
 import { run, warm } from '@/sandbox/client'
+
+// Keeps react-markdown and KaTeX out of the main chunk; download starts when Solve is pressed.
+const loadCard = () => import('../components/AnswerCard')
+const AnswerCard = lazy(loadCard)
 
 type Row = { code: string; stdout: string; status: 'running' | 'ok' | 'fail'; ms?: number }
 const MAX_STEPS = 8
@@ -23,6 +26,7 @@ export default function Solve() {
   async function submit() {
     if (busy || !question.trim()) return
     setBusy(true); setRows([]); setEnd(undefined); setError(''); setSlow(false)
+    void loadCard() // fire and forget: fetch the answer-card chunk while Python runs
     const onSlow = () => setSlow(true)
     try {
       const first = await startSolve(question, onSlow)
@@ -79,7 +83,11 @@ export default function Solve() {
           </div>
         )}
       </div>
-      {end?.type === 'final' && <AnswerCard a={end} />}
+      {end?.type === 'final' && (
+        <Suspense fallback={<p>Loading answer…</p>}>
+          <AnswerCard a={end} />
+        </Suspense>
+      )}
     </main>
   )
 }

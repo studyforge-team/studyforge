@@ -42,7 +42,7 @@ export async function postResult(_id: string, body: ResultBody): Promise<Step> {
     type: 'final',
     answer_md:
       `For a first-order reaction in a CSTR, $X = \\frac{k\\tau}{1+k\\tau}$.\n\n` +
-      `$$X = \\frac{${r.k}\\times ${r.tau}}{1+${r.k}\\times ${r.tau}} = ${r.X}$$\n\n` +
+      `\n$$\nX = \\frac{${r.k}\\times ${r.tau}}{1+${r.k}\\times ${r.tau}} = ${r.X}\n$$\n\n` +
       `The conversion is **${r.X}** (${(r.X * 100).toFixed(1)} %).`,
     numbers: r as unknown as Record<string, number>,
     figures: body.figures.map((f) => `data:image/png;base64,${f}`),
