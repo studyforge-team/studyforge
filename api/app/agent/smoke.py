@@ -9,6 +9,7 @@ step goes to a Runner: in real runs the CI Node runner (runner/node-pyodide.mjs)
 import asyncio
 import json
 import statistics
+import uuid
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -74,9 +75,9 @@ class NodeRunner:
         self.grace_s = grace_s
         self._spawn = spawn
 
-    def argv(self) -> tuple[str, ...]:
+    def argv(self, name: str = "studyforge-run") -> tuple[str, ...]:
         return (
-            self.docker, "run", "--rm", "-i",
+            self.docker, "run", "--rm", "-i", "--name", name,
             "--network", "none",
             "--env-file", "/dev/null",
             "-v", f"{self.repo_root / 'runner'}:/runner:ro",
@@ -84,9 +85,10 @@ class NodeRunner:
         )  # fmt: skip
 
     async def run(self, code: str, timeout_s: float) -> ResultBody:
+        name = f"studyforge-run-{uuid.uuid4().hex[:12]}"
         try:
             proc = await self._spawn(
-                *self.argv(),
+                *self.argv(name),
                 stdin=asyncio.subprocess.PIPE,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
@@ -103,8 +105,13 @@ class NodeRunner:
                 proc.communicate(request.encode()), timeout_s + self.grace_s
             )
         except TimeoutError:
-            proc.kill()
+            proc.kill()  # the docker client; the container is killed by name below
             await proc.wait()
+            killer = await self._spawn(
+                self.docker, "kill", name,
+                stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL,
+            )  # fmt: skip
+            await killer.wait()
             return ResultBody(error="timeout", ms=0)
         return _parse_reply(out, errs, proc.returncode)
 

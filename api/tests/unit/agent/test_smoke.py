@@ -291,8 +291,12 @@ class Spawner:
         self.proc = proc
         self.argv: tuple[str, ...] = ()
         self.kwargs: dict[str, Any] = {}
+        self.later: list[tuple[str, ...]] = []  # e.g. docker kill after a timeout
 
     async def __call__(self, *argv: str, **kwargs: Any) -> FakeProc:
+        if self.argv:
+            self.later.append(argv)
+            return FakeProc()
         self.argv, self.kwargs = argv, kwargs
         if isinstance(self.proc, Exception):
             raise self.proc
@@ -311,11 +315,15 @@ def test_node_runner_builds_exact_docker_argv_and_parses_reply() -> None:
     spawn = Spawner(proc)
     runner = NodeRunner(repo_root=Path("/repo"), spawn=spawn)
     body = asyncio.run(runner.run("print(1)", 10))
+    name = spawn.argv[5]
+    assert name.startswith("studyforge-run-")
     assert spawn.argv == (
         "docker",
         "run",
         "--rm",
         "-i",
+        "--name",
+        name,
         "--network",
         "none",
         "--env-file",
@@ -347,10 +355,13 @@ def test_node_runner_image_and_command_are_configurable() -> None:
 
 def test_node_runner_timeout_kills_and_reports() -> None:
     proc = FakeProc(hang=True)
-    runner = NodeRunner(repo_root=Path("/r"), spawn=Spawner(proc), grace_s=0.0)
+    spawn = Spawner(proc)
+    runner = NodeRunner(repo_root=Path("/r"), spawn=spawn, grace_s=0.0)
     body = asyncio.run(runner.run("while True: pass", 0.01))
     assert body == ResultBody(error="timeout", ms=0)
     assert proc.killed
+    # the container itself is killed by name, not just the docker client
+    assert spawn.later == [("docker", "kill", spawn.argv[5])]
 
 
 def test_node_runner_default_grace_is_20_seconds() -> None:
