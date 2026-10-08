@@ -116,3 +116,10 @@ harness), q1-quiz updated (generator), contract-p1-requests (docs/api-contract.m
 note), f4-readme-draft (README + Devpost drafts).
 Merge order for stacked branches: a3 -> s2-agent-loop -> s2-wiring -> s2b-prompts;
 ch1a -> ch1b -> ch3 (ch3 also needs b8 and c2 before s2-wiring).
+
+## Decision 8 Oct (Supreeth): no new pull requests for now
+
+All work stays on its pushed branches. Do NOT open pull requests until the reviewer has
+reviewed the work; open them only after that, in the merge order above. Only A3's PR (#6)
+and the setup-hook PR (#4) exist. Verified 8 Oct night: every branch matches GitHub, no
+unpushed commits, no uncommitted changes.
