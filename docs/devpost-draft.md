@@ -134,4 +134,4 @@ header, so there is no feedback to report yet. <!-- TODO(F8): summarise real ent
 
 ## Links and media
 
-Demo URL, repo URL, video, screenshots: **TBD**.
+Repo: https://github.com/studyforge-team/studyforge. Demo URL, video, screenshots: **TBD**.

@@ -101,7 +101,7 @@ The 3D models and SVG drawings (`web/src/chemlab/`) are not built yet.
 ## Setup
 
 ```bash
-git clone <repo-url> && cd studyforge       # TBD: repo URL
+git clone https://github.com/studyforge-team/studyforge.git && cd studyforge       # https://github.com/studyforge-team/studyforge
 cd web && npm install && npm run dev        # demo mode, no backend needed
 cd api && pip install -e ".[dev]"           # after A2
 cd api && uvicorn app.main:app --reload     # after A2
