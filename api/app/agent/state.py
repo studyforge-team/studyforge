@@ -24,6 +24,7 @@ class SolveState(BaseModel):
     steps_used: int = 0  # counted tool steps (max 4)
     started_at: float | None = None  # server clock at the first next_action
     pending_call_id: str | None = None  # native tool-call id of the open run_python
+    template: str | None = None  # ChemLab template whose run is pending
     last_step: dict[str, Any] | None = None  # wire form of the last issued step
     result: Any = None  # last result that passed verify
     verify_failures: int = 0
