@@ -28,26 +28,26 @@ Nobody on the team has a Visa/Mastercard card for Nebius yet. Until that changes
 
 | ID | What | Kind | h | % | Note |
 |---|---|---|---|---|---|
-| G10 | Model test (my part of G-all) | MUST | 1.5 | 0 | needs Nebius key + network |
+| G10 | Model test (my part of G-all) | MUST | 1.5 | 25 | probe script ready (p1/g10_probe.py); running it needs Nebius |
 | G-rest | Rest of week-0 gates | MUST | 2 | 0 | |
 | K0 | Kickoff | MUST | 2 | 0 | |
 | A3 | LLM client | MUST | 6 | 75 | PR studyforge-team/studyforge#6 open; 41 tests green; live smoke + G10 wait for key and network; needs reviewer |
 | S3 | 10 golden problems + ChemLab cases proposed | MUST | 3 | 50 | branch s3-golden-proposals: 10 problems + 8 ChemLab cases, two methods each, verify script ALL OK; waits for P4 review |
-| C2 | Vision read | MUST | 7 | 25 | branch c2-vision: image/PDF prep + read_question with fake model (36 tests); real model + 7/8 photos wait for Nebius |
-| S2 | Agent loop + browser bridge | MUST | 16 | 35 | branch s2-agent-loop: DB-free core + routes (86 tests); Postgres store needs A4; golden runs need Nebius + runner |
+| C2 | Vision read | MUST | 7 | 50 | c2-vision + upload_reader wired (s2-wiring); real model + 7/8 photos wait for Nebius |
+| S2 | Agent loop + browser bridge | MUST | 16 | 50 | s2-agent-loop + s2-wiring (B8, CH3, C2 wired); Postgres store needs A4; golden runs need Nebius + S1b runner |
 | TD1 | Test day 1 | MUST | 4 | 0 | |
-| S2b | Solver prompts | MUST | 6 | 0 | |
-| B8 | Number guardrail | MUST | 4 | 50 | branch b8-guardrail pushed; 62 tests; PR not opened |
-| Q1 | Quiz engine | MUST | 8 | 25 | branch q1-quiz: schema, key checks, mock JSON (92 tests); model generation waits for Nebius |
+| S2b | Solver prompts | MUST | 6 | 50 | s2b-prompts: prompts + smoke harness (292 api tests); 8/10 score needs Nebius + runner |
+| B8 | Number guardrail | MUST | 4 | 50 | b8-guardrail; on by default in the loop (s2-wiring) |
+| Q1 | Quiz engine | MUST | 8 | 50 | q1-quiz: schema, key checks, mock, generator, make_quiz service (107 tests); 10 real quizzes need Nebius |
 | CH1a | CSTR template + frozen format | MUST | 4 | 50 | branch ch1a-cstr: 30 tests + 20k random cases; Pyodide/Node-runner check waits for S1b + jsDelivr |
-| CH3 | Template picking | MUST | 3 | 25 | branch ch3-template-pick: units, validation, server-built code, faked model (70 tests); 9/10 picks wait for Nebius + P4 labels |
+| CH3 | Template picking | MUST | 3 | 50 | ch3-template-pick, wired into the loop; 9/10 picks need Nebius + P4 labels |
 | CH1b | PFR, batch, McCabe-Thiele | MUST | 9 | 50 | branch ch1b-templates (stacked on ch1a): 158 chemlab tests; official goldens are P4's |
-| F4 | README | MUST | 3 | 0 | |
+| F4 | README | MUST | 3 | 25 | f4-readme-draft: draft, TODOs for after A2/G10 |
 | TD2 | Test day 2 | MUST | 4 | 0 | |
 | F2 | Final fixes | MUST | 3 | 0 | |
 | RTD | Release test day | MUST | 4 | 0 | |
 | SU | Standups | MUST | 5.5 | 0 | |
-| F8 | Devpost text | MUST | 3 | 0 | |
+| F8 | Devpost text | MUST | 3 | 25 | docs/devpost-draft.md on f4-readme-draft; results TBD after Nebius |
 | F9 | Final checks + submit | MUST | 2 | 0 | |
 | CH2 | Compounds, flash, HX | SHOULD | 6 | 0 | only if all MUST due are merged |
 | CH5 | Recycle flowsheet + pipe/pump | SHOULD | 6 | 0 | |
@@ -105,3 +105,14 @@ helpers build well-specified tickets in isolated worktrees, in parallel. Each ti
 tests first, ruff + mypy + pytest green. Opus re-runs every helper's checks and spot-checks
 numbers independently before pushing. Push every finished branch; PRs only with Supreeth's OK
 (A3's is open). Tracker updated after each batch.
+
+## Snapshot 8 Oct night
+
+All buildable-now P1 work is done: ~52 of the ~61 buildable budget hours (~86%). What is
+left without Nebius is blocked by others or by the calendar: Postgres store (needs A4),
+Pyodide/runner checks (S1b + jsDelivr), test days TD1/TD2/RTD and F2, final README/Devpost.
+New branches this round: s2-wiring (B8+CH3+C2 in the loop), s2b-prompts (prompts + smoke
+harness), q1-quiz updated (generator), contract-p1-requests (docs/api-contract.md + team
+note), f4-readme-draft (README + Devpost drafts).
+Merge order for stacked branches: a3 -> s2-agent-loop -> s2-wiring -> s2b-prompts;
+ch1a -> ch1b -> ch3 (ch3 also needs b8 and c2 before s2-wiring).
