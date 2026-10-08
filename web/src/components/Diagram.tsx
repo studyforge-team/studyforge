@@ -2,7 +2,8 @@ import DOMPurify from 'dompurify'
 import mermaid from 'mermaid'
 import { useEffect, useId, useState } from 'react'
 
-mermaid.initialize({ startOnLoad: false, securityLevel: 'strict' })
+// htmlLabels off: labels become SVG <text>; HTML labels live in <foreignObject>, which DOMPurify's SVG profile strips
+mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', htmlLabels: false, flowchart: { htmlLabels: false } })
 
 export default function Diagram({ src }: { src: string }) {
   const id = 'mmd' + useId().replace(/\W/g, '')

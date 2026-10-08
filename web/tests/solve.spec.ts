@@ -19,6 +19,7 @@ for (const vp of sizes) {
     expect(await card.innerText()).toMatch(/0\.667|66\.7/)
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
     await expect(card.getByTestId('diagram').locator('svg')).toBeVisible()
+    await expect(card.getByTestId('diagram')).toContainText('CSTR')
     expect(csp).toEqual([])
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   })
