@@ -52,7 +52,8 @@ export default function Solve() {
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-8">
-      <h1 className="print:hidden text-2xl font-bold tracking-tight">StudyForge</h1>
+      <a href="#" className="print:hidden text-sm underline">← Today</a>
+      <h1 className="print:hidden mt-2 text-2xl font-bold tracking-tight">StudyForge</h1>
       <label htmlFor="q" className="mt-4 block print:hidden text-sm font-medium">Your question</label>
       <textarea
         id="q" rows={4} value={question} disabled={busy}

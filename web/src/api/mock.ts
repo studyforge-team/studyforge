@@ -1,5 +1,5 @@
 // Scripted stand-in for the backend, used when VITE_API_URL is unset. Same two functions as client.ts.
-import type { ResultBody, SolveStart, Step } from './types'
+import type { Dashboard, ResultBody, SolveStart, Step } from './types'
 
 const wait = () => new Promise((r) => setTimeout(r, 300))
 
@@ -54,5 +54,30 @@ export async function postResult(_id: string, body: ResultBody): Promise<Step> {
       : `flowchart LR\n  F[Feed C_A0] --> R["CSTR, tau = ${r.tau} min"] --> P["Product, X = ${r.X}"]`,
     sources: [{ title: 'Fogler, Elements of Chemical Reaction Engineering, ch. 5' }],
     confidence: 'high',
+  }
+}
+
+// Seeded chem-eng student; every date is relative to now so the screen always has something due.
+export async function getDashboard(): Promise<Dashboard> {
+  await wait()
+  if (location.search.includes('mock=empty')) return { tasks: [], weak_topics: [], recent_solves: [], reminders: [] }
+  const at = (h: number) => new Date(Date.now() + h * 3_600_000).toISOString()
+  const task = (id: string, title: string, h: number) => ({ id, title, action: 'Open prep pack', due_at_utc: at(h), source: 'syllabus', status: 'open' as const })
+  return {
+    tasks: [task('t1', 'CRE assignment 3 — CSTR design', 5), task('t2', 'Heat transfer quiz', 24), task('t3', 'Mass transfer lab report', 144)],
+    weak_topics: [
+      { topic: 'Heat exchangers', attempts: 7, correct: 2 },
+      { topic: 'Distillation (McCabe–Thiele)', attempts: 8, correct: 3 },
+      { topic: 'Reactor stability', attempts: 7, correct: 4 },
+    ],
+    recent_solves: [
+      { id: 's1', question: 'CSTR first-order reaction, k = 0.2 1/min, tau = 10 min. Find conversion.', status: 'final', created_at: at(-3) },
+      { id: 's2', question: 'Log-mean temperature difference for a counter-current heat exchanger', status: 'final', created_at: at(-26) },
+    ],
+    reminders: [
+      { id: 'r1', title: 'CRE assignment 3 due in 5 h — open your prep pack', due_at_utc: at(-2), sent_at: at(-2), channel: 'telegram' },
+      { id: 'r2', title: 'Revise heat exchanger weak topic', due_at_utc: at(-24), sent_at: at(-24), channel: 'app' },
+      { id: 'r3', title: 'Heat transfer quiz tomorrow — do 5 practice questions', due_at_utc: at(20), sent_at: null, channel: 'app' },
+    ],
   }
 }
