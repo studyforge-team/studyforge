@@ -1,6 +1,16 @@
+import { lazy, Suspense } from 'react'
 import { Button } from '@/components/ui/button'
 
+const SelfTest = lazy(() => import('./SelfTest'))
+
 export default function App() {
+  if (location.search.includes('selftest')) {
+    return (
+      <Suspense fallback={null}>
+        <SelfTest />
+      </Suspense>
+    )
+  }
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-4 px-4 text-center">
       <h1 className="text-4xl font-bold tracking-tight">StudyForge</h1>

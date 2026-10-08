@@ -1,0 +1,4 @@
+node_modules
+.wheel-cache
+public/pyodide
+dist
