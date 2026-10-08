@@ -22,7 +22,7 @@ class ModelSpec(BaseModel):
 class RoleSpec(BaseModel):
     models: list[str]
     timeout_s: float
-    reasoning: bool = False
+    reasoning: bool | None = None  # None: send no thinking flag at all
     temperature: float | None = None
     top_p: float | None = None
     max_tokens: int | None = None

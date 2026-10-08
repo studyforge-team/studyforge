@@ -257,3 +257,24 @@ def test_missing_key_fails_before_any_request(
     with pytest.raises(LLMAuthError, match="TF_API_KEY"):
         run(client.chat("solver", MSG))
     assert server.requests == []
+
+
+def test_vision_sends_no_thinking_flag(registry: Registry) -> None:
+    server = FakeServer().ok(completion("x"))
+    client, _ = make(registry, server, FakeClock())
+    run(client.vision("data:image/png;base64,AA", "Read it."))
+    assert "chat_template_kwargs" not in server.body(0)
+
+
+def test_cut_off_reply_is_reported(registry: Registry) -> None:
+    server = FakeServer().ok(completion("result = {", finish_reason="length"))
+    client, _ = make(registry, server, FakeClock())
+    assert run(client.chat("solver", MSG)).finish_reason == "length"
+
+
+def test_reply_without_choices_is_unavailable(registry: Registry) -> None:
+    body = completion()
+    body["choices"] = []
+    client, _ = make(registry, FakeServer().ok(body), FakeClock())
+    with pytest.raises(ModelUnavailable):
+        run(client.chat("solver", MSG))

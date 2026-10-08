@@ -22,7 +22,7 @@ roles:
   router: {models: [nano, super], timeout_s: 20, reasoning: false}
   solver: {models: [super], timeout_s: 60, reasoning: true, temperature: 1.0, top_p: 0.95}
   cross_check: {models: [ultra, super], timeout_s: 60, reasoning: true}
-  vision: {models: [vision], timeout_s: 45, reasoning: false}
+  vision: {models: [vision], timeout_s: 45}
 """
 
 
@@ -32,6 +32,7 @@ def completion(
     reasoning_content: str | None = None,
     tool_calls: list[dict[str, Any]] | None = None,
     tokens: tuple[int, int] = (1000, 500),
+    finish_reason: str = "stop",
 ) -> dict[str, Any]:
     message: dict[str, Any] = {"role": "assistant", "content": content}
     if reasoning_content is not None:
@@ -43,7 +44,7 @@ def completion(
         "object": "chat.completion",
         "created": 0,
         "model": "m",
-        "choices": [{"index": 0, "message": message, "finish_reason": "stop"}],
+        "choices": [{"index": 0, "message": message, "finish_reason": finish_reason}],
         "usage": {
             "prompt_tokens": tokens[0],
             "completion_tokens": tokens[1],

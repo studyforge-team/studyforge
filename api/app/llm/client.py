@@ -56,6 +56,7 @@ class LLMResult:
     role: str
     cost_usd: float  # every attempt of this call; unpriced models count as 0
     attempts: int
+    finish_reason: str | None = None  # "length" means the reply was cut off
 
 
 class LLMClient:
@@ -195,7 +196,7 @@ class LLMClient:
                         model=model.id,
                         messages=cast(Any, messages),
                         timeout=timeout,
-                        extra_body={"chat_template_kwargs": {"enable_thinking": think}},
+                        extra_body=_thinking(think),
                         **params,
                     )
                 except openai.APIError as exc:
@@ -219,6 +220,8 @@ class LLMClient:
                 )
                 row_cost = await self._log(role, model, solve_id, start, None, pt, ct)
                 cost += row_cost or 0.0
+                if not resp.choices:
+                    raise ModelUnavailable(f"role '{role}': reply had no choices")
                 msg = resp.choices[0].message
                 extra_fields = msg.model_extra or {}
                 return LLMResult(
@@ -236,6 +239,7 @@ class LLMClient:
                     role=role,
                     cost_usd=cost,
                     attempts=attempts,
+                    finish_reason=resp.choices[0].finish_reason,
                 )
         raise ModelUnavailable(f"role '{role}': every model failed (last: {last})")
 
@@ -286,6 +290,12 @@ class LLMClient:
                 )
             )
         return cost
+
+
+def _thinking(think: bool | None) -> dict[str, Any] | None:
+    if think is None:
+        return None
+    return {"chat_template_kwargs": {"enable_thinking": think}}
 
 
 def _retryable(exc: openai.APIError) -> bool:
