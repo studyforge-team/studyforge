@@ -7,6 +7,23 @@ Run `python p1/progress.py` for the percentage.
 0 = not started · 25 = code started · 50 = code + tests green locally · 75 = PR open (CI green when CI exists) · 100 = reviewed + merged.
 Shared items use the same scale. SHOULD tickets are reported separately and never count toward the MUST %.
 
+## Standing rule: Nebius deferred (8 Oct, from Supreeth)
+
+Nobody on the team has a Visa/Mastercard card for Nebius yet. Until that changes:
+- Build every part of the plan that does not need Nebius, against fakes and mocks.
+- Do NOT change the plan's dates.
+- Everything below is parked and must be done together once Nebius is available
+  ("Nebius integration pass"):
+  - G10 probe (`p1/g10_probe.py`) and filling model IDs/prices in `config/models.yaml`
+  - A3 live smoke test (`TF_LIVE=1`)
+  - C2 vision read: real calls and the 7/8 photo test
+  - S2 done-when: 3 golden problems end-to-end with the real model
+  - S2b done-when: smoke subset >= 8/10 with the real model
+  - Q1 done-when: 10 generated quizzes; CH3 done-when: 9/10 template picks
+  - Replay fixtures recorded from real calls
+- Model use: Opus 5.5 orchestrates and does hard design/physics; Sonnet 5.5 subagents do
+  well-specified coding. Keep token use low without lowering quality.
+
 ## Tickets
 
 | ID | What | Kind | h | % | Note |
