@@ -29,9 +29,17 @@ test('empty dashboard shows empty states', async ({ page }) => {
 })
 
 test('fired reminders are no longer New after a reload', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 })
   await page.goto('/')
   await expect(page.getByText('New', { exact: true }).first()).toBeVisible()
+  // inbox is below the fold: never scrolled, so it is never seen and "New" must survive a reload
   await page.waitForTimeout(4000)
+  await page.reload()
+  await expect(page.getByText('open your prep pack')).toBeVisible()
+  await expect(page.getByText('New', { exact: true }).first()).toBeVisible()
+  // scroll the inbox into view and keep it on screen for ≥1 s, then "New" must clear
+  await page.getByRole('region', { name: /reminders/i }).scrollIntoViewIfNeeded()
+  await page.waitForTimeout(2000)
   await page.reload()
   await expect(page.getByText('open your prep pack')).toBeVisible()
   await expect(page.getByText('New', { exact: true })).toHaveCount(0)

@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { getDashboard } from '@/api/client'
 import type { Dashboard as Data } from '@/api/types'
 import { Button } from '@/components/ui/button'
@@ -33,6 +33,7 @@ export default function Dashboard() {
   const [tries, setTries] = useState(0)
   const [now] = useState(Date.now)
   const [seen] = useState(loadSeen) // read once, so "New" badges stay until the next visit
+  const inboxRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const c = (navigator as { connection?: { saveData?: boolean; effectiveType?: string } }).connection
@@ -43,12 +44,27 @@ export default function Dashboard() {
     getDashboard().then(setData, () => setError(true))
   }, [tries])
 
+  // ponytail: seen = inbox was on screen ≥1 s; per-device until the server tracks it
   useEffect(() => {
-    if (!data) return
-    const t = setTimeout(() => {
-      try { localStorage.setItem(KEY, JSON.stringify(data.reminders.filter((r) => r.sent_at).map((r) => r.id))) } catch { /* storage blocked */ }
-    }, 3000)
-    return () => clearTimeout(t)
+    const el = inboxRef.current
+    if (!data || !el) return
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const io = new IntersectionObserver(([entry]) => {
+      clearTimeout(timer)
+      if (!entry.isIntersecting) return
+      timer = setTimeout(() => {
+        try {
+          const ids = new Set([...loadSeen(), ...data.reminders.filter((r) => r.sent_at).map((r) => r.id)])
+          localStorage.setItem(KEY, JSON.stringify([...ids]))
+        } catch { /* storage blocked */ }
+        io.disconnect()
+      }, 1000)
+    }, { threshold: 0.5 })
+    io.observe(el)
+    return () => {
+      clearTimeout(timer)
+      io.disconnect()
+    }
   }, [data])
 
   if (error) {
@@ -100,7 +116,7 @@ export default function Dashboard() {
           <li key={s.id} className="text-sm"><p className="truncate">{s.question}</p><p className="text-muted-foreground">{rel(s.created_at)}</p></li>
         ))}
       </Card>
-      <div role="region" aria-label="Reminders inbox">
+      <div ref={inboxRef} role="region" aria-label="Reminders inbox">
         <Card title="Reminders inbox" empty="No reminders yet.">
           {[...fired, ...upcoming].map((r) => (
             <li key={r.id} className="text-sm">
