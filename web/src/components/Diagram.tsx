@@ -26,13 +26,18 @@ export default function Diagram({ src }: { src: string }) {
 
   if (failed) {
     return (
-      <figure>
+      <figure className="rounded-lg border bg-card p-2">
         <figcaption className="text-sm text-muted-foreground">Diagram couldn't be drawn — here is its source.</figcaption>
-        <pre className="overflow-x-auto rounded bg-muted p-2 text-xs"><code>{src}</code></pre>
+        <pre className="mt-1 overflow-x-auto rounded-lg bg-muted p-3 font-mono text-xs"><code>{src}</code></pre>
       </figure>
     )
   }
-  if (!svg) return <p>Drawing diagram…</p>
+  if (!svg) return <p className="text-sm text-muted-foreground">Drawing diagram…</p>
   // Safe: the only dangerouslySetInnerHTML in the app; svg is mermaid strict output re-sanitized by DOMPurify's SVG profile.
-  return <div data-testid="diagram" className="overflow-x-auto [&_svg]:max-w-none print:[&_svg]:max-w-full" dangerouslySetInnerHTML={{ __html: svg }} />
+  return (
+    <figure className="rounded-lg border bg-white p-2">
+      <div data-testid="diagram" className="overflow-x-auto [&_svg]:max-w-none [&_svg]:min-w-[560px] print:[&_svg]:max-w-full" dangerouslySetInnerHTML={{ __html: svg }} />
+      <figcaption className="mt-1 text-center text-xs text-muted-foreground">Diagram</figcaption>
+    </figure>
+  )
 }

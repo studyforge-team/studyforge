@@ -4,6 +4,10 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+    --color-tint: var(--tint);
+    --color-warn: var(--warn);
+    --color-warn-bg: var(--warn-bg);
+    --color-warn-line: var(--warn-line);
     --font-heading: var(--font-sans);
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
@@ -45,31 +49,36 @@
     --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* engineering notebook: warm paper, near-black ink, one deep-teal accent; amber = warning, red = error */
 :root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
+    --background: #f8f5ee;
+    --foreground: #1b1a17;
+    --card: #fdfcf8;
+    --card-foreground: #1b1a17;
+    --popover: #fdfcf8;
+    --popover-foreground: #1b1a17;
+    --primary: #0e6460;
+    --primary-foreground: #ffffff;
+    --secondary: #efebe0;
+    --secondary-foreground: #1b1a17;
+    --muted: #efebe0;
+    --muted-foreground: #5c5850;
+    --accent: #efebe0;
+    --accent-foreground: #1b1a17;
+    --destructive: #a32222;
+    --border: #ddd7c8;
+    --input: #cfc8b6;
+    --ring: #0e6460;
+    --tint: #ddefec;
+    --warn: #6b4200;
+    --warn-bg: #fff3d1;
+    --warn-line: #e0b95a;
     --chart-1: oklch(0.87 0 0);
     --chart-2: oklch(0.556 0 0);
     --chart-3: oklch(0.439 0 0);
     --chart-4: oklch(0.371 0 0);
     --chart-5: oklch(0.269 0 0);
-    --radius: 0.625rem;
+    --radius: 0.5rem;
     --sidebar: oklch(0.985 0 0);
     --sidebar-foreground: oklch(0.145 0 0);
     --sidebar-primary: oklch(0.205 0 0);
@@ -124,6 +133,16 @@
   html {
     @apply font-sans;
     }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    }
+}
+/* motion: CSS only, short, and off for reduced-motion users */
+@keyframes sf-in { from { opacity: 0; transform: translateY(4px); } }
+.sf-in { animation: sf-in 200ms ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
 }
 @media print {
   img, svg { max-width: 100%; break-inside: avoid; }

@@ -16,6 +16,7 @@ for (const vp of sizes) {
     await expect(card.locator('.katex').first()).toBeAttached()
     await expect(card.getByRole('img', { name: 'Figure 1' })).toBeVisible()
     await expect(card.getByTestId('confidence')).toHaveText('high')
+    await expect(card.getByText('Computed in your browser')).toBeVisible()
     expect(await card.innerText()).toMatch(/0\.667|66\.7/)
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
     await expect(card.getByTestId('diagram').locator('svg')).toBeVisible()
@@ -30,6 +31,19 @@ test('failed code shows Not verified', async ({ page }) => {
   await page.getByLabel('Your question').fill('please fail')
   await page.getByRole('button', { name: 'Solve' }).click()
   await expect(page.getByText('Not verified — check this answer')).toBeVisible({ timeout: 120_000 })
+  await expect(page.getByText('Computed in your browser')).toHaveCount(0)
+})
+
+test('unknown question gets an honest demo-mode answer at 375px', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 })
+  await page.goto('/#solve')
+  await page.getByLabel('Your question').fill('Hot oil is cooled from 150°C to 90°C in a counter-current heat exchanger; find the LMTD.')
+  await page.getByRole('button', { name: 'Solve' }).click()
+  const card = page.getByRole('region', { name: 'Answer' })
+  await expect(card.getByText("your question wasn't read")).toBeVisible({ timeout: 120_000 })
+  await expect(card.getByText('Confidence: low')).toBeVisible()
+  await expect(page.getByText('Computed in your browser')).toHaveCount(0)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
 })
 
 test('confirm shows the confirm box', async ({ page }) => {
@@ -48,7 +62,7 @@ test('mermaid chunk is not loaded before solving', async ({ page }) => {
 
 test('bad mermaid falls back to a code block', async ({ page }) => {
   await page.goto('/#solve')
-  await page.getByLabel('Your question').fill('baddiagram please')
+  await page.getByLabel('Your question').fill('baddiagram CSTR please')
   await page.getByRole('button', { name: 'Solve' }).click()
   const card = page.getByRole('region', { name: 'Answer' })
   await expect(card.getByText("Diagram couldn't be drawn — here is its source.")).toBeVisible({ timeout: 120_000 })

@@ -25,8 +25,19 @@ export async function startSolve(question: string): Promise<SolveStart> {
   await wait()
   if (/confirm/i.test(question)) return { solve_id: 'mock', step: { type: 'need_confirm', extracted_text: question } }
   bad = /baddiagram/i.test(question)
-  const code = /fail/i.test(question) ? "raise ValueError('demo failure')" : CODE
-  return { solve_id: 'mock', step: { type: 'run_python', code, timeout_s: 10 } }
+  if (/fail/i.test(question)) return { solve_id: 'mock', step: { type: 'run_python', code: "raise ValueError('demo failure')", timeout_s: 10 } }
+  // The demo only knows the built-in CSTR sample. Anything else gets an honest low-confidence answer, no fake computation.
+  if (!/cstr/i.test(question)) {
+    return {
+      solve_id: 'mock',
+      step: {
+        type: 'final',
+        answer_md: "**Demo mode — your question wasn't read.** StudyForge isn't connected to Nemotron yet (that happens when the backend is live), so it can't understand new questions. This demo only works the built-in sample. Try:\n\n> CSTR first-order reaction, k = 0.2 1/min, tau = 10 min. Find conversion.",
+        numbers: {}, figures: [], sources: [], confidence: 'low',
+      },
+    }
+  }
+  return { solve_id: 'mock', step: { type: 'run_python', code: CODE, timeout_s: 10 } }
 }
 
 let bad = false // ponytail: module flag instead of threading the question through the contract
@@ -34,9 +45,10 @@ let bad = false // ponytail: module flag instead of threading the question throu
 export async function postResult(_id: string, body: ResultBody): Promise<Step> {
   await wait()
   if (body.error) {
+    const lastLine = body.error.split('\n').map((l) => l.trim()).filter(Boolean).pop() ?? body.error
     return {
       type: 'final',
-      answer_md: `The computation failed, so there is no verified answer.\n\n\`\`\`\n${body.error}\n\`\`\``,
+      answer_md: `The computation failed, so there is no verified answer.\n\n\`\`\`\n${lastLine}\n\`\`\``,
       numbers: {}, figures: [], sources: [], confidence: 'low',
     }
   }
