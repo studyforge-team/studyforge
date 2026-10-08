@@ -32,15 +32,15 @@ Nobody on the team has a Visa/Mastercard card for Nebius yet. Until that changes
 | G-rest | Rest of week-0 gates | MUST | 2 | 0 | |
 | K0 | Kickoff | MUST | 2 | 0 | |
 | A3 | LLM client | MUST | 6 | 75 | PR studyforge-team/studyforge#6 open; 41 tests green; live smoke + G10 wait for key and network; needs reviewer |
-| S3 | 10 golden problems + ChemLab cases proposed | MUST | 3 | 0 | |
+| S3 | 10 golden problems + ChemLab cases proposed | MUST | 3 | 50 | branch s3-golden-proposals: 10 problems + 8 ChemLab cases, two methods each, verify script ALL OK; waits for P4 review |
 | C2 | Vision read | MUST | 7 | 25 | branch c2-vision: image/PDF prep + read_question with fake model (36 tests); real model + 7/8 photos wait for Nebius |
-| S2 | Agent loop + browser bridge | MUST | 16 | 25 | branch s2-agent-loop (stacked on a3): DB-free core, 81 tests; routes need A2, golden runs need Nebius + runner |
+| S2 | Agent loop + browser bridge | MUST | 16 | 35 | branch s2-agent-loop: DB-free core + routes (86 tests); Postgres store needs A4; golden runs need Nebius + runner |
 | TD1 | Test day 1 | MUST | 4 | 0 | |
 | S2b | Solver prompts | MUST | 6 | 0 | |
 | B8 | Number guardrail | MUST | 4 | 50 | branch b8-guardrail pushed; 62 tests; PR not opened |
 | Q1 | Quiz engine | MUST | 8 | 25 | branch q1-quiz: schema, key checks, mock JSON (92 tests); model generation waits for Nebius |
 | CH1a | CSTR template + frozen format | MUST | 4 | 50 | branch ch1a-cstr: 30 tests + 20k random cases; Pyodide/Node-runner check waits for S1b + jsDelivr |
-| CH3 | Template picking | MUST | 3 | 0 | |
+| CH3 | Template picking | MUST | 3 | 25 | branch ch3-template-pick: units, validation, server-built code, faked model (70 tests); 9/10 picks wait for Nebius + P4 labels |
 | CH1b | PFR, batch, McCabe-Thiele | MUST | 9 | 50 | branch ch1b-templates (stacked on ch1a): 158 chemlab tests; official goldens are P4's |
 | F4 | README | MUST | 3 | 0 | |
 | TD2 | Test day 2 | MUST | 4 | 0 | |
