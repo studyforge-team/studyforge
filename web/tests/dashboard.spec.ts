@@ -14,9 +14,12 @@ for (const vp of [{ width: 375, height: 812 }, { width: 1280, height: 800 }]) {
     await expect(item).toContainText('Telegram')
     await expect(inbox).toContainText('Scheduled')
     expect(await noOverflow(page)).toBe(true)
+    const nav = page.getByRole('navigation', { name: 'Main' })
+    await expect(nav.getByRole('link', { name: 'Today' })).toHaveAttribute('aria-current', 'page')
     await page.getByRole('button', { name: 'Ask a question' }).click()
     await expect(page.getByLabel('Your question')).toBeVisible()
-    await page.getByRole('link', { name: '← Today' }).click()
+    await expect(nav.getByRole('link', { name: 'Ask' })).toHaveAttribute('aria-current', 'page')
+    await nav.getByRole('link', { name: 'Today' }).click()
     await expect(page.getByRole('heading', { name: 'What do I do today?' })).toBeVisible()
   })
 }
@@ -43,4 +46,11 @@ test('fired reminders are no longer New after a reload', async ({ page }) => {
   await page.reload()
   await expect(page.getByText('open your prep pack')).toBeVisible()
   await expect(page.getByText('New', { exact: true })).toHaveCount(0)
+})
+
+test('demo banner shows in the default (mock) build', async ({ page }) => {
+  for (const path of ['/', '/#solve']) {
+    await page.goto(path)
+    await expect(page.getByRole('status').filter({ hasText: 'Demo mode — sample answers. Nemotron connects when the backend is live.' })).toBeVisible()
+  }
 })

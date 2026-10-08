@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { postResult, startSolve } from '@/api/client'
 import type { Step } from '@/api/types'
+import { Check, Cross } from '@/components/icons'
 import { Button } from '@/components/ui/button'
 import { run, warm } from '@/sandbox/client'
 
@@ -10,6 +11,32 @@ const AnswerCard = lazy(loadCard)
 
 type Row = { code: string; stdout: string; status: 'running' | 'ok' | 'fail'; ms?: number }
 const MAX_STEPS = 8
+const disclose = 'inline-flex min-h-11 items-center rounded-lg px-3 text-sm text-muted-foreground hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground'
+const pre = 'mt-1 overflow-x-auto rounded-lg border bg-muted p-3 font-mono text-xs leading-relaxed'
+
+function StepRow({ r }: { r: Row }) {
+  const [open, setOpen] = useState<'code' | 'out'>()
+  const toggle = (k: 'code' | 'out') => setOpen(open === k ? undefined : k)
+  const label = r.status === 'running' ? 'Running Python' : r.status === 'ok' ? 'Ran Python' : 'Python failed'
+  const tone = r.status === 'ok' ? 'bg-primary text-primary-foreground' : r.status === 'fail' ? 'bg-destructive text-primary-foreground' : 'bg-card'
+  return (
+    <li className="relative pl-10">
+      <span aria-hidden="true" className={`absolute left-0 top-1 flex size-6 items-center justify-center rounded-full ${tone}`}>
+        {r.status === 'ok' ? <Check width={14} height={14} /> : r.status === 'fail' ? <Cross width={14} height={14} /> : <span className="size-5 animate-spin rounded-full border-2 border-tint border-t-primary" />}
+      </span>
+      <div className="flex min-h-8 items-center justify-between gap-3 text-sm">
+        <p className="font-medium">{label} <span className="font-normal text-muted-foreground">· network blocked</span></p>
+        {r.status !== 'running' && <span className="shrink-0 tabular-nums text-muted-foreground">{r.ms} ms</span>}
+      </div>
+      <div className="flex flex-wrap gap-1">
+        <button type="button" className={disclose} aria-expanded={open === 'code'} onClick={() => toggle('code')}>Show code</button>
+        {r.stdout && <button type="button" className={disclose} aria-expanded={open === 'out'} onClick={() => toggle('out')}>Output</button>}
+      </div>
+      {open === 'code' && <pre className={pre}>{r.code}</pre>}
+      {open === 'out' && <pre className={pre}>{r.stdout}</pre>}
+    </li>
+  )
+}
 
 export default function Solve() {
   const [question, setQuestion] = useState('')
@@ -51,44 +78,42 @@ export default function Solve() {
   }
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-8">
-      <a href="#" className="print:hidden text-sm underline">← Today</a>
-      <h1 className="print:hidden mt-2 text-2xl font-bold tracking-tight">StudyForge</h1>
-      <label htmlFor="q" className="mt-4 block print:hidden text-sm font-medium">Your question</label>
-      <textarea
-        id="q" rows={4} value={question} disabled={busy}
-        onChange={(e) => setQuestion(e.target.value)}
-        onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) void submit() }}
-        className="mt-1 w-full rounded-md border bg-background p-2 text-base print:hidden"
-        placeholder="e.g. Conversion in a CSTR for a first-order reaction, k = 0.2 1/min, tau = 10 min"
-      />
-      <Button className="mt-2 print:hidden" onClick={() => void submit()} disabled={busy || !question.trim()}>
-        {busy ? 'Solving…' : 'Solve'}
-      </Button>
-      {slow && <p className="mt-2 text-sm text-muted-foreground print:hidden">Waking up the server…</p>}
-      {error && <p role="alert" className="mt-3 text-sm text-red-700">{error}</p>}
-      <div aria-live="polite" className="mt-4 space-y-2 print:hidden">
-        {rows.map((r, i) => (
-          <div key={i} className="rounded border p-2 text-sm">
-            <p>
-              {r.status === 'running' ? 'Running Python (network: blocked)…' : r.status === 'ok' ? `✓ Ran Python (${r.ms} ms)` : '✗ Python failed'}
-            </p>
-            <details><summary className="cursor-pointer">Show code</summary><pre className="overflow-x-auto bg-muted p-2 text-xs">{r.code}</pre></details>
-            {r.stdout && <details><summary className="cursor-pointer">Output</summary><pre className="overflow-x-auto bg-muted p-2 text-xs">{r.stdout}</pre></details>}
-          </div>
-        ))}
+    <main className="mx-auto max-w-3xl px-4 py-6 sm:py-8">
+      <h1 className="print:hidden text-2xl font-semibold tracking-tight">Ask a question</h1>
+      <div className="mt-4 rounded-lg border bg-card p-4 print:hidden sm:p-5">
+        <label htmlFor="q" className="block text-sm font-medium">Your question</label>
+        <p id="q-help" className="mt-1 text-sm text-muted-foreground">Ask anything from your course — numbers are computed, not guessed.</p>
+        <textarea
+          id="q" rows={4} value={question} disabled={busy} aria-describedby="q-help"
+          onChange={(e) => setQuestion(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) void submit() }}
+          className="mt-3 w-full rounded-lg border border-input bg-background p-3 text-base placeholder:text-muted-foreground disabled:opacity-60"
+          placeholder="e.g. Conversion in a CSTR for a first-order reaction, k = 0.2 1/min, tau = 10 min"
+        />
+        <Button className="mt-3 w-full sm:w-auto" onClick={() => void submit()} disabled={busy || !question.trim()}>
+          {busy ? 'Solving…' : 'Solve'}
+        </Button>
+        {slow && <p className="mt-2 text-sm text-muted-foreground">Waking up the server…</p>}
+      </div>
+      {error && <p role="alert" className="mt-3 text-sm font-medium text-destructive">{error}</p>}
+      <div aria-live="polite" className="mt-4 print:hidden">
+        {rows.length > 0 && (
+          <ol className="relative space-y-3 rounded-lg border bg-card p-4 before:absolute before:bottom-8 before:left-[27px] before:top-8 before:w-px before:bg-border">
+            {rows.map((r, i) => <StepRow key={i} r={r} />)}
+          </ol>
+        )}
         {end?.type === 'need_confirm' && (
-          <div className="rounded border-2 p-3 text-sm">
+          <div className="mt-3 rounded-lg border-2 border-warn-line bg-warn-bg p-4 text-sm">
             <pre className="whitespace-pre-wrap break-words">{end.extracted_text}</pre>
-            <p className="mt-2 text-muted-foreground">Confirm screen (S5) goes here</p>
+            <p className="mt-2 text-warn">Confirm screen (S5) goes here</p>
           </div>
         )}
       </div>
       {end?.type === 'final' && (
         <>
         <p className="mt-4 hidden whitespace-pre-wrap print:block">{question}</p>
-        <Suspense fallback={<p>Loading answer…</p>}>
-          <AnswerCard a={end} />
+        <Suspense fallback={<p className="mt-6 text-sm text-muted-foreground">Loading answer…</p>}>
+          <AnswerCard a={end} ran={rows.length > 0 && rows.every((r) => r.status === 'ok')} />
         </Suspense>
         </>
       )}

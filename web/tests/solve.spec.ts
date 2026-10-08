@@ -16,6 +16,7 @@ for (const vp of sizes) {
     await expect(card.locator('.katex').first()).toBeAttached()
     await expect(card.getByRole('img', { name: 'Figure 1' })).toBeVisible()
     await expect(card.getByTestId('confidence')).toHaveText('high')
+    await expect(card.getByText('Computed in your browser')).toBeVisible()
     expect(await card.innerText()).toMatch(/0\.667|66\.7/)
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
     await expect(card.getByTestId('diagram').locator('svg')).toBeVisible()
@@ -30,6 +31,7 @@ test('failed code shows Not verified', async ({ page }) => {
   await page.getByLabel('Your question').fill('please fail')
   await page.getByRole('button', { name: 'Solve' }).click()
   await expect(page.getByText('Not verified — check this answer')).toBeVisible({ timeout: 120_000 })
+  await expect(page.getByText('Computed in your browser')).toHaveCount(0)
 })
 
 test('confirm shows the confirm box', async ({ page }) => {

@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
+import Shell from './components/Shell'
 import Dashboard from './pages/Dashboard'
 import Solve from './pages/Solve'
 
@@ -18,5 +19,5 @@ export default function App() {
       </Suspense>
     )
   }
-  return hash === '#solve' ? <Solve /> : <Dashboard />
+  return <Shell hash={hash}>{hash === '#solve' ? <Solve /> : <Dashboard />}</Shell>
 }
