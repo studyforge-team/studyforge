@@ -68,7 +68,8 @@ async function init(packages: string[]) {
 
 async function run(id: number, code: string, mode: 'solve' | 'chemlab') {
   const t = performance.now()
-  const need = ALLOWED.filter((p) => new RegExp(String.raw`^\s*(?:from|import)\s+${p}\b`, 'm').test(code) && !py.loadedPackages[p])
+  // ponytail: a mere mention (e.g. a comment) over-loads the package: slower, never wrong
+  const need = ALLOWED.filter((p) => new RegExp(String.raw`\b${p}\b`).test(code) && !py.loadedPackages[p])
   if (need.length && locked) return post({ type: 'error', id, error: `needs ${need.join(', ')}`, needsRespawn: need })
   if (need.length) await load(need)
   if (!locked) lockdown()

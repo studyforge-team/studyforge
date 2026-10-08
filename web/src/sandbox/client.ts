@@ -15,7 +15,6 @@ let ready: Promise<string | undefined> | undefined // resolves to an error strin
 let packages: string[] = [] // extra packages to load at init (grows via needsRespawn)
 let waiter: ((m: Msg) => void) | undefined
 let expect: { types: string[]; id?: number } = { types: [] }
-let seq = 0
 // ponytail: one-at-a-time promise chain; no cancellation of the running job except by the 10 s kill.
 let tail: Promise<unknown> = Promise.resolve()
 const pending = new Set<{ latest: boolean; resolve: (r: SandboxResult) => void }>()
@@ -38,11 +37,14 @@ function discard() {
 }
 
 // Sends msg and resolves with the first valid reply of an expected type (plus 'fatal', which has no id).
-function request(msg: unknown, types: string[], id: number | undefined, onStarted?: () => void) {
+// A hard deadline runs from send, independent of any message, so forged messages can't stall us.
+function request(msg: unknown, types: string[], id: number | undefined, deadline: [number, Msg], onStarted?: () => void) {
   return new Promise<Msg>((resolve) => {
     expect = { types: [...types, 'fatal'], id }
+    const hard = setTimeout(() => waiter?.(deadline[1]), deadline[0])
     waiter = (m) => {
       if (m.type === 'started') return onStarted?.()
+      clearTimeout(hard)
       waiter = undefined
       resolve(m)
     }
@@ -65,7 +67,7 @@ function boot(): Promise<string | undefined> {
     if (waiter) waiter({ type: 'fatal', error: e.message || 'worker error' })
     else if (worker === w) discard()
   }
-  ready = request({ type: 'init', packages }, ['ready'], undefined).then((m) => {
+  ready = request({ type: 'init', packages }, ['ready'], undefined, [120_000, { type: 'fatal', error: 'sandbox failed to start' }]).then((m) => {
     if (m.type === 'ready') return undefined
     discard()
     return m.error
@@ -76,10 +78,10 @@ function boot(): Promise<string | undefined> {
 async function exec(code: string, mode: Mode, retried = false): Promise<SandboxResult> {
   const err = await boot()
   if (err) return { ok: false, error: err }
-  const id = ++seq
+  const id = crypto.getRandomValues(new Uint32Array(1))[0] // unguessable from Python
   let timer: ReturnType<typeof setTimeout> | undefined
   // The timer starts on 'started', so package loading is never charged to user code.
-  const m = await request({ type: 'run', id, code, mode }, ['started', 'result', 'error'], id, () => {
+  const m = await request({ type: 'run', id, code, mode }, ['started', 'result', 'error'], id, [60_000, { type: 'timeout' }], () => {
     timer ??= setTimeout(() => waiter?.({ type: 'timeout' }), KILL_MS)
   })
   clearTimeout(timer)

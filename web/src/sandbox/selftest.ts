@@ -3,7 +3,7 @@ import { run, type SandboxResult } from './client'
 
 type Row = { name: string; pass: boolean; detail: string }
 const rows: Row[] = []
-const add = (name: string, pass: boolean, detail: string) => rows.push({ name, pass, detail: detail.slice(0, 200) })
+const add = (name: string, pass: boolean, detail: string) => rows.push({ name, pass, detail: detail.slice(-200) })
 const err = (r: SandboxResult) => (r.ok ? '' : r.error)
 const last = (s: string) => s.trim().split('\n').pop() ?? ''
 const trivial = async () => {
@@ -53,6 +53,9 @@ result = {"ca": np.float64(ca), "arr": np.arange(3)}`)
   r = await run('import matplotlib.pyplot as plt\nplt.plot([1, 2, 3])\nresult = {"n": 1}')
   add('matplotlib figure', r.ok && r.figures.length === 1 && r.figures[0].startsWith('iVBORw0KGgo'), r.ok ? `${r.figures.length} figure(s)` : err(r))
 
+  r = await run('import numpy as np, matplotlib.pyplot as plt\nplt.plot(np.arange(3))\nresult = {}')
+  add('one-line multi-import plot', r.ok && r.figures.length === 1, r.ok ? `${r.figures.length} figure(s)` : err(r))
+
   r = await run('import sympy as sp\nx = sp.symbols("x")\nresult = {"d": str(sp.diff(sp.sin(x) * x, x))}')
   const d = r.ok ? (r.result as { d: string }).d : ''
   add('sympy diff', d === 'x*cos(x) + sin(x)', r.ok ? d : err(r))
@@ -77,6 +80,12 @@ result = {"ca": np.float64(ca), "arr": np.arange(3)}`)
   r = await run('while True:\n    pass')
   add('infinite loop is killed', !r.ok && r.error === 'timeout', `${err(r) || 'unexpected ok'} after ${Math.round(performance.now() - t0)} ms`)
   add('run succeeds after kill', await trivial(), 'respawned')
+
+  // forged results for guessable ids, then a hang: the hard deadline must still fire
+  const t1 = performance.now()
+  r = await run('import js\nfrom pyodide.ffi import to_js\nfor i in range(1, 51):\n    js.postMessage(to_js({"type":"result","id":i,"stdout":"","figures":[],"ms":0,"result":{}}, dict_converter=js.Object.fromEntries))\nwhile True:\n    pass')
+  const ms1 = Math.round(performance.now() - t1)
+  add('forged result + hang is killed', !r.ok && r.error === 'timeout' && ms1 < 11500 && (await trivial()), `${err(r) || 'unexpected ok'} after ${ms1} ms`)
 
   // escapes: each must fail inside Python (or, for the forged message, the client must stay healthy)
   for (const [name, code, must] of PROBES) {
