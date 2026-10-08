@@ -125,3 +125,6 @@
     @apply font-sans;
     }
 }
+@media print {
+  img, svg { max-width: 100%; break-inside: avoid; }
+}

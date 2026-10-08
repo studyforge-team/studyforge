@@ -52,21 +52,21 @@ export default function Solve() {
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-8">
-      <h1 className="text-2xl font-bold tracking-tight">StudyForge</h1>
-      <label htmlFor="q" className="mt-4 block text-sm font-medium">Your question</label>
+      <h1 className="print:hidden text-2xl font-bold tracking-tight">StudyForge</h1>
+      <label htmlFor="q" className="mt-4 block print:hidden text-sm font-medium">Your question</label>
       <textarea
         id="q" rows={4} value={question} disabled={busy}
         onChange={(e) => setQuestion(e.target.value)}
         onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) void submit() }}
-        className="mt-1 w-full rounded-md border bg-background p-2 text-base"
+        className="mt-1 w-full rounded-md border bg-background p-2 text-base print:hidden"
         placeholder="e.g. Conversion in a CSTR for a first-order reaction, k = 0.2 1/min, tau = 10 min"
       />
-      <Button className="mt-2" onClick={() => void submit()} disabled={busy || !question.trim()}>
+      <Button className="mt-2 print:hidden" onClick={() => void submit()} disabled={busy || !question.trim()}>
         {busy ? 'Solving…' : 'Solve'}
       </Button>
-      {slow && <p className="mt-2 text-sm text-muted-foreground">Waking up the server…</p>}
+      {slow && <p className="mt-2 text-sm text-muted-foreground print:hidden">Waking up the server…</p>}
       {error && <p role="alert" className="mt-3 text-sm text-red-700">{error}</p>}
-      <div aria-live="polite" className="mt-4 space-y-2">
+      <div aria-live="polite" className="mt-4 space-y-2 print:hidden">
         {rows.map((r, i) => (
           <div key={i} className="rounded border p-2 text-sm">
             <p>
@@ -84,9 +84,12 @@ export default function Solve() {
         )}
       </div>
       {end?.type === 'final' && (
+        <>
+        <p className="mt-4 hidden whitespace-pre-wrap print:block">{question}</p>
         <Suspense fallback={<p>Loading answer…</p>}>
           <AnswerCard a={end} />
         </Suspense>
+        </>
       )}
     </main>
   )

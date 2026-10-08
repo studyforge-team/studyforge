@@ -24,9 +24,12 @@ result = {"X": round(float(X), 4), "k": k, "tau": tau}
 export async function startSolve(question: string): Promise<SolveStart> {
   await wait()
   if (/confirm/i.test(question)) return { solve_id: 'mock', step: { type: 'need_confirm', extracted_text: question } }
+  bad = /baddiagram/i.test(question)
   const code = /fail/i.test(question) ? "raise ValueError('demo failure')" : CODE
   return { solve_id: 'mock', step: { type: 'run_python', code, timeout_s: 10 } }
 }
+
+let bad = false // ponytail: module flag instead of threading the question through the contract
 
 export async function postResult(_id: string, body: ResultBody): Promise<Step> {
   await wait()
@@ -46,6 +49,9 @@ export async function postResult(_id: string, body: ResultBody): Promise<Step> {
       `The conversion is **${r.X}** (${(r.X * 100).toFixed(1)} %).`,
     numbers: r as unknown as Record<string, number>,
     figures: body.figures.map((f) => `data:image/png;base64,${f}`),
+    diagram_mermaid: bad
+      ? 'flowchart LR\n  A -->  ]]]((('
+      : `flowchart LR\n  F[Feed C_A0] --> R["CSTR, tau = ${r.tau} min"] --> P["Product, X = ${r.X}"]`,
     sources: [{ title: 'Fogler, Elements of Chemical Reaction Engineering, ch. 5' }],
     confidence: 'high',
   }
