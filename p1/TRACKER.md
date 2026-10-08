@@ -14,7 +14,7 @@ Shared items use the same scale. SHOULD tickets are reported separately and neve
 | G10 | Model test (my part of G-all) | MUST | 1.5 | 0 | needs Nebius key + network |
 | G-rest | Rest of week-0 gates | MUST | 2 | 0 | |
 | K0 | Kickoff | MUST | 2 | 0 | |
-| A3 | LLM client | MUST | 6 | 0 | |
+| A3 | LLM client | MUST | 6 | 50 | branch a3-llm-client pushed; 38 tests green; PR not opened; G10 + live test wait for key |
 | S3 | 10 golden problems + ChemLab cases proposed | MUST | 3 | 0 | |
 | C2 | Vision read | MUST | 7 | 0 | |
 | S2 | Agent loop + browser bridge | MUST | 16 | 0 | |
@@ -54,3 +54,4 @@ Shared items use the same scale. SHOULD tickets are reported separately and neve
 ## Log
 
 - 8 Oct: tracker created. Environment checked. A3 started on branch `a3-llm-client`.
+- 8 Oct: A3 code + mocked tests done on `a3-llm-client` (38 pass, 1 live test skipped; ruff, mypy --strict clean; works on openai 1.109 and 3.26). ~1,100 lines (≈560 code, ≈500 tests), over the ~400 guideline: flag to reviewer. Open for team: own JSON repair wrapper instead of instructor (stack change), dependency pins for A2.
