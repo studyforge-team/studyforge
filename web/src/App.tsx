@@ -1,9 +1,16 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
+import Dashboard from './pages/Dashboard'
 import Solve from './pages/Solve'
 
 const SelfTest = lazy(() => import('./SelfTest'))
 
 export default function App() {
+  const [hash, setHash] = useState(location.hash) // ponytail: hash routing, no router library
+  useEffect(() => {
+    const on = () => setHash(location.hash)
+    addEventListener('hashchange', on)
+    return () => removeEventListener('hashchange', on)
+  }, [])
   if (location.search.includes('selftest')) {
     return (
       <Suspense fallback={null}>
@@ -11,5 +18,5 @@ export default function App() {
       </Suspense>
     )
   }
-  return <Solve />
+  return hash === '#solve' ? <Solve /> : <Dashboard />
 }

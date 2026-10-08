@@ -1,5 +1,5 @@
 import * as mock from './mock'
-import type { ResultBody, SolveStart, Step } from './types'
+import type { Dashboard, ResultBody, SolveStart, Step } from './types'
 
 const BASE = import.meta.env.VITE_API_URL as string | undefined
 
@@ -24,3 +24,10 @@ export const startSolve = (question: string, onSlow?: () => void): Promise<Solve
 
 export const postResult = async (id: string, body: ResultBody, onSlow?: () => void): Promise<Step> =>
   BASE ? (await post<{ step: Step }>(`/solve/${id}/result`, body, onSlow)).step : mock.postResult(id, body)
+
+export async function getDashboard(): Promise<Dashboard> {
+  if (!BASE) return mock.getDashboard()
+  const r = await fetch(`${BASE}/api/v1/dashboard`)
+  if (!r.ok) throw new Error(`Server error (HTTP ${r.status})`)
+  return (await r.json()) as Dashboard
+}

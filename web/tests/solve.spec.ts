@@ -8,7 +8,7 @@ for (const vp of sizes) {
     const csp: string[] = []
     page.on('console', (m) => { if (/content security policy|refused to/i.test(m.text())) csp.push(m.text()) })
     await page.setViewportSize(vp)
-    await page.goto('/')
+    await page.goto('/#solve')
     await page.getByLabel('Your question').fill(Q)
     await page.getByRole('button', { name: 'Solve' }).click()
     const card = page.getByRole('region', { name: 'Answer' })
@@ -26,28 +26,28 @@ for (const vp of sizes) {
 }
 
 test('failed code shows Not verified', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/#solve')
   await page.getByLabel('Your question').fill('please fail')
   await page.getByRole('button', { name: 'Solve' }).click()
   await expect(page.getByText('Not verified — check this answer')).toBeVisible({ timeout: 120_000 })
 })
 
 test('confirm shows the confirm box', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/#solve')
   await page.getByLabel('Your question').fill('please confirm')
   await page.getByRole('button', { name: 'Solve' }).click()
   await expect(page.getByText('Confirm screen (S5) goes here')).toBeVisible()
 })
 
 test('mermaid chunk is not loaded before solving', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/#solve')
   await page.waitForLoadState('networkidle')
   const names = await page.evaluate(() => performance.getEntriesByType('resource').map((e) => e.name))
   expect(names.filter((n) => /mermaid|Diagram/i.test(n))).toEqual([])
 })
 
 test('bad mermaid falls back to a code block', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/#solve')
   await page.getByLabel('Your question').fill('baddiagram please')
   await page.getByRole('button', { name: 'Solve' }).click()
   const card = page.getByRole('region', { name: 'Answer' })
@@ -57,7 +57,7 @@ test('bad mermaid falls back to a code block', async ({ page }) => {
 })
 
 test('print media shows the answer only; Download PDF on screen', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/#solve')
   await page.getByLabel('Your question').fill(Q)
   await page.getByRole('button', { name: 'Solve' }).click()
   const card = page.getByRole('region', { name: 'Answer' })
