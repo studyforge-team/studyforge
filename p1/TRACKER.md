@@ -33,15 +33,15 @@ Nobody on the team has a Visa/Mastercard card for Nebius yet. Until that changes
 | K0 | Kickoff | MUST | 2 | 0 | |
 | A3 | LLM client | MUST | 6 | 75 | PR studyforge-team/studyforge#6 open; 41 tests green; live smoke + G10 wait for key and network; needs reviewer |
 | S3 | 10 golden problems + ChemLab cases proposed | MUST | 3 | 0 | |
-| C2 | Vision read | MUST | 7 | 0 | |
-| S2 | Agent loop + browser bridge | MUST | 16 | 0 | |
+| C2 | Vision read | MUST | 7 | 25 | branch c2-vision: image/PDF prep + read_question with fake model (36 tests); real model + 7/8 photos wait for Nebius |
+| S2 | Agent loop + browser bridge | MUST | 16 | 25 | branch s2-agent-loop (stacked on a3): DB-free core, 81 tests; routes need A2, golden runs need Nebius + runner |
 | TD1 | Test day 1 | MUST | 4 | 0 | |
 | S2b | Solver prompts | MUST | 6 | 0 | |
-| B8 | Number guardrail | MUST | 4 | 0 | |
-| Q1 | Quiz engine | MUST | 8 | 0 | |
-| CH1a | CSTR template + frozen format | MUST | 4 | 0 | |
+| B8 | Number guardrail | MUST | 4 | 50 | branch b8-guardrail pushed; 62 tests; PR not opened |
+| Q1 | Quiz engine | MUST | 8 | 25 | branch q1-quiz: schema, key checks, mock JSON (92 tests); model generation waits for Nebius |
+| CH1a | CSTR template + frozen format | MUST | 4 | 50 | branch ch1a-cstr: 30 tests + 20k random cases; Pyodide/Node-runner check waits for S1b + jsDelivr |
 | CH3 | Template picking | MUST | 3 | 0 | |
-| CH1b | PFR, batch, McCabe-Thiele | MUST | 9 | 0 | |
+| CH1b | PFR, batch, McCabe-Thiele | MUST | 9 | 50 | branch ch1b-templates (stacked on ch1a): 158 chemlab tests; official goldens are P4's |
 | F4 | README | MUST | 3 | 0 | |
 | TD2 | Test day 2 | MUST | 4 | 0 | |
 | F2 | Final fixes | MUST | 3 | 0 | |
@@ -73,3 +73,4 @@ Nobody on the team has a Visa/Mastercard card for Nebius yet. Until that changes
 - 8 Oct: tracker created. Environment checked. A3 started on branch `a3-llm-client`.
 - 8 Oct: A3 code + mocked tests done on `a3-llm-client` (38 pass, 1 live test skipped; ruff, mypy --strict clean; works on openai 1.109 and 3.26). ~1,100 lines (≈560 code, ≈500 tests), over the ~400 guideline: flag to reviewer. Open for team: own JSON repair wrapper instead of instructor (stack change), dependency pins for A2.
 - 8 Oct: A3 PR opened (studyforge-team/studyforge#6). Added: thinking flag optional per role (vision sends none), finish_reason, empty-choices guard. G10 probe script ready at p1/g10_probe.py. Token Factory still denied by the environment's network policy; TF_API_KEY not set.
+- 8 Oct: Nebius deferred (see standing rule). Built without it: B8, Q1 (model-free), CH1a, CH1b, C2 (model-free), S2 core. Sonnet 5.5 helpers did B8, Q1, C2, PFR/batch, McCabe; Opus reviewed and re-checked each. Found and fixed: S2 "safe retry" by identical body would loop forever on a deterministic error (no step number in the contract) -> removed, contract request needed. Licence flag: Pillow (MIT-CMU) and pypdfium2 (BSD-3/Apache) not strictly on the allow list.
