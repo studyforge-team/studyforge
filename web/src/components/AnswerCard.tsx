@@ -27,7 +27,7 @@ export default function AnswerCard({ a, ran = false }: { a: Final; ran?: boolean
       </div>
       {low && <p className="text-sm font-semibold text-warn">Not verified — check this answer</p>}
       {/* ponytail: no rehype-raw, so model text cannot inject HTML */}
-      <div className="break-words leading-relaxed [&_.katex-display]:my-3 [&_.katex-display]:overflow-x-auto [&_.katex-display]:py-1 [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:border [&_pre]:bg-muted [&_pre]:p-3 [&_pre]:font-mono [&_pre]:text-xs [&_p]:my-2 [&_strong]:text-lg [&_strong]:font-semibold [&_strong]:text-primary">
+      <div className="break-words leading-8 [&_.katex-display]:my-3 [&_.katex-display]:overflow-x-auto [&_.katex-display]:py-1 [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:border [&_pre]:bg-muted [&_pre]:p-3 [&_pre]:font-mono [&_pre]:text-xs [&_p]:my-2 [&_strong]:text-lg [&_strong]:font-semibold [&_strong]:text-primary">
         <Markdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>{a.answer_md}</Markdown>
       </div>
       {a.figures.map((f, i) => (

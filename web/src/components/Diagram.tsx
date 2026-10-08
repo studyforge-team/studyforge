@@ -36,7 +36,7 @@ export default function Diagram({ src }: { src: string }) {
   // Safe: the only dangerouslySetInnerHTML in the app; svg is mermaid strict output re-sanitized by DOMPurify's SVG profile.
   return (
     <figure className="rounded-lg border bg-white p-2">
-      <div data-testid="diagram" className="overflow-x-auto [&_svg]:max-w-none print:[&_svg]:max-w-full" dangerouslySetInnerHTML={{ __html: svg }} />
+      <div data-testid="diagram" className="overflow-x-auto [&_svg]:max-w-none [&_svg]:min-w-[560px] print:[&_svg]:max-w-full" dangerouslySetInnerHTML={{ __html: svg }} />
       <figcaption className="mt-1 text-center text-xs text-muted-foreground">Diagram</figcaption>
     </figure>
   )

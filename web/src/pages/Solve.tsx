@@ -26,7 +26,7 @@ function StepRow({ r }: { r: Row }) {
       </span>
       <div className="flex min-h-8 items-center justify-between gap-3 text-sm">
         <p className="font-medium">{label} <span className="font-normal text-muted-foreground">· network blocked</span></p>
-        {r.status !== 'running' && <span className="shrink-0 tabular-nums text-muted-foreground">{r.ms} ms</span>}
+        {r.status === 'ok' && <span className="shrink-0 tabular-nums text-muted-foreground">{r.ms} ms</span>}
       </div>
       <div className="flex flex-wrap gap-1">
         <button type="button" className={disclose} aria-expanded={open === 'code'} onClick={() => toggle('code')}>Show code</button>

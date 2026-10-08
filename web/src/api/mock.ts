@@ -34,9 +34,10 @@ let bad = false // ponytail: module flag instead of threading the question throu
 export async function postResult(_id: string, body: ResultBody): Promise<Step> {
   await wait()
   if (body.error) {
+    const lastLine = body.error.split('\n').map((l) => l.trim()).filter(Boolean).pop() ?? body.error
     return {
       type: 'final',
-      answer_md: `The computation failed, so there is no verified answer.\n\n\`\`\`\n${body.error}\n\`\`\``,
+      answer_md: `The computation failed, so there is no verified answer.\n\n\`\`\`\n${lastLine}\n\`\`\``,
       numbers: {}, figures: [], sources: [], confidence: 'low',
     }
   }
