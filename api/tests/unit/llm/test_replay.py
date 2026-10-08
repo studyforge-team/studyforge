@@ -11,7 +11,6 @@ import httpx
 import pytest
 
 from app.llm.client import LLMClient
-from app.llm.errors import ModelUnavailable
 from app.llm.registry import Registry
 from app.llm.replay import MissingFixture, ReplayTransport, replay_client
 from tests.unit.llm.conftest import FakeServer, completion
@@ -64,10 +63,11 @@ async def test_replay_different_prompt_is_missing_fixture(
     with pytest.raises(MissingFixture, match="TF_RECORD=1"):
         await transport.handle_async_request(other)
 
-    # Through LLMClient the SDK wraps the error as a connection error, which the
-    # client retries and then reports as ModelUnavailable. No network either way.
-    async def no_sleep(_: float) -> None:
-        return None
+    # Through LLMClient the error reaches the caller unwrapped and is not retried.
+    calls: list[float] = []
+
+    async def no_sleep(seconds: float) -> None:
+        calls.append(seconds)
 
     client = LLMClient(
         registry,
@@ -75,8 +75,9 @@ async def test_replay_different_prompt_is_missing_fixture(
         http_client=httpx.AsyncClient(transport=transport),
         sleep=no_sleep,
     )
-    with pytest.raises(ModelUnavailable):
+    with pytest.raises(MissingFixture, match="TF_RECORD=1"):
         await client.chat("router", [{"role": "user", "content": "b"}])
+    assert calls == []
 
 
 @sync
