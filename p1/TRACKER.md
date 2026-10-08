@@ -74,3 +74,34 @@ Nobody on the team has a Visa/Mastercard card for Nebius yet. Until that changes
 - 8 Oct: A3 code + mocked tests done on `a3-llm-client` (38 pass, 1 live test skipped; ruff, mypy --strict clean; works on openai 1.109 and 3.26). ~1,100 lines (≈560 code, ≈500 tests), over the ~400 guideline: flag to reviewer. Open for team: own JSON repair wrapper instead of instructor (stack change), dependency pins for A2.
 - 8 Oct: A3 PR opened (studyforge-team/studyforge#6). Added: thinking flag optional per role (vision sends none), finish_reason, empty-choices guard. G10 probe script ready at p1/g10_probe.py. Token Factory still denied by the environment's network policy; TF_API_KEY not set.
 - 8 Oct: Nebius deferred (see standing rule). Built without it: B8, Q1 (model-free), CH1a, CH1b, C2 (model-free), S2 core. Sonnet 5.5 helpers did B8, Q1, C2, PFR/batch, McCabe; Opus reviewed and re-checked each. Found and fixed: S2 "safe retry" by identical body would loop forever on a deterministic error (no step number in the contract) -> removed, contract request needed. Licence flag: Pillow (MIT-CMU) and pypdfium2 (BSD-3/Apache) not strictly on the allow list.
+
+## Snapshot 8 Oct evening (what is built, where)
+
+Budget-hours view (not clock time): ~61 of 100 MUST hours are buildable without Nebius;
+~44 h of that is built (~72% of the buildable part). Merge-based % (progress.py) is lower
+because nothing is reviewed/merged yet.
+
+| Branch on GitHub | Ticket | Built | Left without Nebius | Left with Nebius |
+|---|---|---|---|---|
+| a3-llm-client (PR #6) | A3 | client, registry, retries, deadlines, cost log, JSON repair | none | G10 IDs/prices, live test |
+| b8-guardrail | B8 | guardrail, 62 tests | wire into S2 | none |
+| ch1a-cstr | CH1a | CSTR + shared format | Pyodide/runner check (S1b, jsDelivr) | none |
+| ch1b-templates (on ch1a) | CH1b | PFR, batch, McCabe-Thiele | runner check | none |
+| s2-agent-loop (on a3) | S2 | loop core, routes, replay transport | Postgres store (A4), wire B8/CH3/C2 | 3 golden runs |
+| c2-vision (on a3) | C2 | image/PDF prep, read_question | none | real calls, 7/8 photos |
+| q1-quiz | Q1 | schema, key checks, mock | generator with fake model | 10 real quizzes |
+| ch3-template-pick (on ch1b) | CH3 | units, validation, code builder | wire into S2 | 9/10 picks |
+| s3-golden-proposals (on ch1b) | S3 | 10 problems + 8 ChemLab cases | P4 review | none |
+| p1-tracker | - | this tracker, progress.py, g10_probe.py | - | run G10 |
+
+Next without Nebius: integrate B8+CH3+C2 into the loop (fake model end to end), Q1 generator,
+S2b prompt polish + smoke script, F4/F8 drafts. Backend tickets of P2/P4 (A2, A4, C1, S1b, T1)
+only with the team's OK.
+
+## Workflow
+
+Opus 5.5 orchestrates: designs hard parts (physics, loop, formats), writes specs. Sonnet 5.5
+helpers build well-specified tickets in isolated worktrees, in parallel. Each ticket: own branch,
+tests first, ruff + mypy + pytest green. Opus re-runs every helper's checks and spot-checks
+numbers independently before pushing. Push every finished branch; PRs only with Supreeth's OK
+(A3's is open). Tracker updated after each batch.
