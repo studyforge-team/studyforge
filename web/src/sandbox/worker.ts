@@ -7,6 +7,8 @@ const NET = ['fetch', 'XMLHttpRequest', 'WebSocket', 'WebSocketStream', 'EventSo
   'SharedWorker', 'caches', 'WebTransport', 'BroadcastChannel', 'indexedDB']
 const ALLOWED = ['numpy', 'scipy', 'sympy', 'matplotlib']
 const CAP = 65536
+// ponytail: P1's chemlab package source lives outside web/; empty glob (no chemlab code on this branch) = nothing mounted.
+const CHEMLAB = import.meta.glob('../../../chemlab/templates/*.py', { query: '?raw', import: 'default', eager: true }) as Record<string, string>
 
 type In = { type: 'init'; packages: string[] } | { type: 'run'; id: number; code: string; mode: 'solve' | 'chemlab' }
 
@@ -63,6 +65,12 @@ async function init(packages: string[]) {
   await py.runPythonAsync('import numpy, scipy.optimize, scipy.integrate')
   const extra = packages.filter((p) => p === 'matplotlib' || p === 'sympy')
   await load(extra)
+  const files = Object.entries(CHEMLAB)
+  if (files.length) {
+    py.FS.mkdirTree('/home/pyodide/chemlab')
+    py.FS.writeFile('/home/pyodide/chemlab/__init__.py', '')
+    for (const [f, src] of files) py.FS.writeFile(`/home/pyodide/chemlab/${f.split('/').pop()}`, src)
+  }
   post({ type: 'ready', ms: Math.round(performance.now() - t) })
 }
 
