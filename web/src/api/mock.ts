@@ -87,7 +87,7 @@ export async function getDashboard(): Promise<Dashboard> {
       { id: 's2', question: 'Log-mean temperature difference for a counter-current heat exchanger', status: 'final', created_at: at(-26) },
     ],
     reminders: [
-      { id: 'r1', title: 'CRE assignment 3 due in 5 h — open your prep pack', due_at_utc: at(-2), sent_at: at(-2), channel: 'telegram' },
+      { id: 'r1', title: 'CRE assignment 3 due in 5 h — open your prep pack', due_at_utc: at(-2), sent_at: at(-2), channel: 'push' },
       { id: 'r2', title: 'Revise heat exchanger weak topic', due_at_utc: at(-24), sent_at: at(-24), channel: 'app' },
       { id: 'r3', title: 'Heat transfer quiz tomorrow — do 5 practice questions', due_at_utc: at(20), sent_at: null, channel: 'app' },
     ],
