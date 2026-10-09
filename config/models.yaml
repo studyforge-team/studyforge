@@ -1,0 +1,49 @@
+# Model registry: the only place model IDs and prices live (plan rule 6).
+# `id: null` = not confirmed yet. G10 fills every id and price from GET /v1/models;
+# until then a null model is skipped in its role's chain.
+# Prices are USD per 1M tokens.
+
+base_url: https://api.tokenfactory.nebius.com/v1/
+api_key_env: TF_API_KEY
+
+models:
+  nano:
+    id: null  # G10: exact Nemotron Nano ID
+    input_usd_per_m: null
+    output_usd_per_m: null
+  super:
+    id: nvidia/nemotron-3-super-120b-a12b  # from the role handbook; G10 confirms
+    input_usd_per_m: null
+    output_usd_per_m: null
+  ultra:
+    id: null  # only if listed
+    input_usd_per_m: null
+    output_usd_per_m: null
+  vision:
+    id: null  # G10: NVIDIA vision model on Token Factory
+    input_usd_per_m: null
+    output_usd_per_m: null
+
+# models: tried in order (fallback chain). reasoning: thinking on/off for the call;
+# leave it out to send no thinking flag (vision, until G10 shows the model accepts it).
+# JSON calls always force it off.
+roles:
+  router:
+    models: [nano, super]
+    timeout_s: 20
+    reasoning: false
+  solver:
+    models: [super]  # no fallback model: failure raises ModelUnavailable
+    timeout_s: 60
+    reasoning: true
+    temperature: 1.0
+    top_p: 0.95
+  cross_check:
+    models: [ultra, super]
+    timeout_s: 60
+    reasoning: true
+    temperature: 1.0
+    top_p: 0.95
+  vision:
+    models: [vision]
+    timeout_s: 45
