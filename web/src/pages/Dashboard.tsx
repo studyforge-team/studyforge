@@ -167,7 +167,7 @@ export default function Dashboard() {
                   <span>{r.title}</span>
                 </p>
                 <p className="text-muted-foreground">
-                  {r.sent_at ? `Sent ${rel(r.sent_at)}` : `Scheduled ${rel(r.due_at_utc)}`} · {r.channel === 'telegram' ? 'Telegram' : 'In app'}
+                  {r.sent_at ? `Sent ${rel(r.sent_at)}` : `Scheduled ${rel(r.due_at_utc)}`} · {r.channel === 'push' ? 'Phone notification' : 'In app'}
                 </p>
               </li>
             ))}

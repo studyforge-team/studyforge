@@ -11,7 +11,7 @@ for (const vp of [{ width: 375, height: 812 }, { width: 1280, height: 800 }]) {
     const inbox = page.getByRole('region', { name: 'Reminders inbox' })
     const item = inbox.getByRole('listitem').filter({ hasText: 'open your prep pack' })
     await expect(item).toContainText('New')
-    await expect(item).toContainText('Telegram')
+    await expect(item).toContainText('Phone notification')
     await expect(inbox).toContainText('Scheduled')
     expect(await noOverflow(page)).toBe(true)
     const nav = page.getByRole('navigation', { name: 'Main' })
