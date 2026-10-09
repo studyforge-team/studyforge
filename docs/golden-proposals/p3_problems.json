@@ -9,10 +9,8 @@
   "tolerance_rel": 0.01,
   "method_1": "delta = (3 mu q/(rho g))^(1/3) with q = Q/W; Re = 4 rho q/mu = 1.44 < 20, so smooth laminar flow",
   "method_2": "integrate the parabolic profile v(x) = rho g delta^2/(2 mu) (1 - (x/delta)^2) with quad for the flow per width, solve for delta with brentq",
-  "topic": "ch. 2 — falling film",
+  "topic": "Transport: falling film",
   "difficulty": "easy",
-  "book": "BSL 2nd ed., ch. 2 — falling film",
-  "page": "TO CONFIRM (Samarth)",
   "source_note": "textbook topic; numbers original"
  },
  {
@@ -23,12 +21,10 @@
    "unit": "L/s"
   },
   "tolerance_rel": 0.01,
-  "method_1": "BSL closed form Q = pi dP R^4/(8 mu L) [(1 - k^4) - (1 - k^2)^2/ln(1/k)], k = 0.4; Re = 103 based on hydraulic diameter, laminar",
+  "method_1": "closed form Q = pi dP R^4/(8 mu L) [(1 - k^4) - (1 - k^2)^2/ln(1/k)], k = 0.4; Re = 103 based on hydraulic diameter, laminar",
   "method_2": "solve the radial momentum balance as a boundary value problem with solve_bvp (no slip at both walls), integrate 2 pi r v dr with quad",
-  "topic": "ch. 2 — flow through an annulus",
+  "topic": "Transport: flow through an annulus",
   "difficulty": "medium",
-  "book": "BSL 2nd ed., ch. 2 — flow through an annulus",
-  "page": "TO CONFIRM (Samarth)",
   "source_note": "textbook topic; numbers original"
  },
  {
@@ -41,10 +37,8 @@
   "tolerance_rel": 0.01,
   "method_1": "Se = I^2/(ke (pi R^2)^2); dT = Se R^2/(4 k)",
   "method_2": "solve_bvp for (1/r) d/dr(r k dT/dr) + Se = 0 on [1e-5 R, R] with T(R) = 0 and zero flux at the inner end",
-  "topic": "ch. 10 — wire with electrical heat source",
+  "topic": "Transport: wire with electrical heat source",
   "difficulty": "medium",
-  "book": "BSL 2nd ed., ch. 10 — wire with electrical heat source",
-  "page": "TO CONFIRM (Samarth)",
   "source_note": "textbook topic; numbers original"
  },
  {
@@ -57,10 +51,8 @@
   "tolerance_rel": 0.01,
   "method_1": "N_A = (c D/(z2 - z1)) ln(x_B2/x_B1), c = P/(RT)",
   "method_2": "solve_bvp on d/dz[(1/(1 - x_A)) dx_A/dz] = 0 (constant-parameter form), then N_A = -c D/(1 - x_A) dx_A/dz",
-  "topic": "ch. 18 — diffusion through a stagnant gas film",
+  "topic": "Transport: diffusion through a stagnant gas film",
   "difficulty": "medium",
-  "book": "BSL 2nd ed., ch. 18 — diffusion through a stagnant gas film",
-  "page": "TO CONFIRM (Samarth)",
   "source_note": "textbook topic; numbers original"
  },
  {
@@ -73,10 +65,8 @@
   "tolerance_rel": 0.01,
   "method_1": "T = T1 + (T0 - T1) erf(x/(2 sqrt(alpha t))), written with math.erfc",
   "method_2": "method of lines on a 0.6 m domain (1200 and 2400 intervals, node at x = 0.05 m), BDF in time, Richardson extrapolation of the two grids on the temperature rise",
-  "topic": "ch. 12 — unsteady conduction, semi-infinite solid",
+  "topic": "Transport: unsteady conduction, semi-infinite solid",
   "difficulty": "hard",
-  "book": "BSL 2nd ed., ch. 12 — unsteady conduction, semi-infinite solid",
-  "page": "TO CONFIRM (Samarth)",
   "source_note": "textbook topic; numbers original"
  },
  {
@@ -89,10 +79,8 @@
   "tolerance_rel": 0.01,
   "method_1": "np.roots of P V^3 - (P b + R T) V^2 + a V - a b = 0, largest real root",
   "method_2": "brentq on RT/(V - b) - a/V^2 - P over a bracket from just above b to 3x the ideal-gas volume",
-  "topic": "van der Waals equation",
+  "topic": "Thermodynamics: van der Waals equation",
   "difficulty": "easy",
-  "book": "Narayanan, van der Waals equation",
-  "page": "TO CONFIRM (Samarth)",
   "source_note": "textbook topic; numbers original"
  },
  {
@@ -105,10 +93,8 @@
   "tolerance_rel": 0.01,
   "method_1": "ln(P/P0) = -(dH/R)(1/T - 1/Tb)",
   "method_2": "solve_ivp (DOP853) of d(ln P)/dT = dH/(R T^2) from Tb to 320 K",
-  "topic": "Clausius–Clapeyron equation",
+  "topic": "Thermodynamics: Clausius–Clapeyron equation",
   "difficulty": "easy",
-  "book": "Narayanan, Clausius–Clapeyron equation",
-  "page": "TO CONFIRM (Samarth)",
   "source_note": "textbook topic; numbers original"
  },
  {
@@ -121,10 +107,8 @@
   "tolerance_rel": 0.01,
   "method_1": "brentq on sum(x_i P_i_sat(T)) - 760 over 60 to 120 °C",
   "method_2": "Newton iteration from 90 °C using the analytic derivative of the Antoine terms",
-  "topic": "Raoult's law — bubble point",
+  "topic": "Thermodynamics: Raoult's law — bubble point",
   "difficulty": "medium",
-  "book": "Narayanan, Raoult's law — bubble point",
-  "page": "TO CONFIRM (Samarth)",
   "source_note": "textbook topic; numbers original"
  },
  {
@@ -137,10 +121,8 @@
   "tolerance_rel": 0.01,
   "method_1": "analytic: a ln(T2/T1) + b (T2 - T1) + c/2 (T2^2 - T1^2) - R ln(P2/P1)",
   "method_2": "quad of cp/T dT minus quad of R/P dP",
-  "topic": "entropy change of an ideal gas with temperature-dependent cp",
+  "topic": "Thermodynamics: entropy change of an ideal gas with temperature-dependent cp",
   "difficulty": "medium",
-  "book": "Narayanan, entropy change of an ideal gas with temperature-dependent cp",
-  "page": "TO CONFIRM (Samarth)",
   "source_note": "textbook topic; numbers original"
  },
  {
@@ -153,10 +135,8 @@
   "tolerance_rel": 0.01,
   "method_1": "brentq on y_NH3^2/(y_N2 y_H2^3) - K P^2 = 0 in the extent e (moles N2 reacted, 4 - 2e total moles)",
   "method_2": "clear denominators to 4 e^2 (4 - 2e)^2 - 27 K P^2 (1 - e)^4 = 0 and take the single real root in (0, 1) with np.roots",
-  "topic": "chemical reaction equilibrium — gas phase",
+  "topic": "Thermodynamics: chemical reaction equilibrium — gas phase",
   "difficulty": "hard",
-  "book": "Narayanan, chemical reaction equilibrium — gas phase",
-  "page": "TO CONFIRM (Samarth)",
   "source_note": "textbook topic; numbers original"
  }
 ]

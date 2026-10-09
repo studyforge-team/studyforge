@@ -3,7 +3,7 @@
     python docs/golden-proposals/verify_p3_problems.py          # verify (CI-style)
     python docs/golden-proposals/verify_p3_problems.py --write  # regenerate JSON + md
 
-Needs numpy and scipy only. 10 calculation problems (BSL + Narayanan), method 1 vs
+Needs numpy and scipy only. 10 calculation problems (transport + thermodynamics), method 1 vs
 method 2 within 1e-6 relative, then vs p3_problems.json
 (6 significant digits stored, compared at 1e-5).
 """
@@ -150,26 +150,26 @@ def p10():
     return m1, roots[0]
 
 
-B, N = "BSL 2nd ed., ", "Narayanan, "
-# (id, difficulty, topic, book prefix, fn, unit, method agreement, question, method_1, method_2)
+B, N = "Transport: ", "Thermodynamics: "
+# (id, difficulty, topic, subject prefix, fn, unit, method agreement, question, method_1, method_2)
 PROBLEMS = [
-    ("P3-01", "easy", "ch. 2 — falling film", B, p01, "mm", 1e-6,
+    ("P3-01", "easy", "falling film", B, p01, "mm", 1e-6,
      "A Newtonian liquid (viscosity 0.050 Pa s, density 900 kg/m^3) flows as a steady laminar film down a vertical wall at 2.0e-5 m^2/s of volumetric flow per unit width of wall (use g = 9.81 m/s^2, no ripples, negligible end effects). What is the film thickness in mm?",
      "delta = (3 mu q/(rho g))^(1/3) with q = Q/W; Re = 4 rho q/mu = 1.44 < 20, so smooth laminar flow",
      "integrate the parabolic profile v(x) = rho g delta^2/(2 mu) (1 - (x/delta)^2) with quad for the flow per width, solve for delta with brentq"),
-    ("P3-02", "medium", "ch. 2 — flow through an annulus", B, p02, "L/s", 1e-6,
+    ("P3-02", "medium", "flow through an annulus", B, p02, "L/s", 1e-6,
      "A Newtonian oil (viscosity 0.10 Pa s, density 900 kg/m^3) flows by laminar axial flow through a horizontal concentric annulus with outer radius 25 mm and inner radius 10 mm. The pressure drop is 2000 Pa per metre of length. What is the volumetric flow rate in L/s?",
-     "BSL closed form Q = pi dP R^4/(8 mu L) [(1 - k^4) - (1 - k^2)^2/ln(1/k)], k = 0.4; Re = 103 based on hydraulic diameter, laminar",
+     "closed form Q = pi dP R^4/(8 mu L) [(1 - k^4) - (1 - k^2)^2/ln(1/k)], k = 0.4; Re = 103 based on hydraulic diameter, laminar",
      "solve the radial momentum balance as a boundary value problem with solve_bvp (no slip at both walls), integrate 2 pi r v dr with quad"),
-    ("P3-03", "medium", "ch. 10 — wire with electrical heat source", B, p03, "K", 1e-6,
+    ("P3-03", "medium", "wire with electrical heat source", B, p03, "K", 1e-6,
      "A long stainless-steel wire of radius 1.5 mm (thermal conductivity 16 W/(m K), electrical conductivity 1.4e6 S/m) carries a current of 150 A. Heat is generated uniformly and removed at the surface, which is held at a constant temperature; assume constant properties and radial conduction only. By how many kelvin is the centreline hotter than the surface?",
      "Se = I^2/(ke (pi R^2)^2); dT = Se R^2/(4 k)",
      "solve_bvp for (1/r) d/dr(r k dT/dr) + Se = 0 on [1e-5 R, R] with T(R) = 0 and zero flux at the inner end"),
-    ("P3-04", "medium", "ch. 18 — diffusion through a stagnant gas film", B, p04, "mol/(m^2 s)", 1e-6,
+    ("P3-04", "medium", "diffusion through a stagnant gas film", B, p04, "mol/(m^2 s)", 1e-6,
      "In an Arnold diffusion cell, liquid A evaporates into stagnant gas B at 328 K and 101325 Pa total pressure. The vapour pressure of A at the liquid surface is 30.0 kPa, and the gas composition at the top of the 0.15 m column is pure B (x_A = 0). The binary diffusivity is 1.2e-5 m^2/s. Use R = 8.314462618 J/(mol K) and ideal gas for the gas phase. What is the molar flux of A in mol/(m^2 s)?",
      "N_A = (c D/(z2 - z1)) ln(x_B2/x_B1), c = P/(RT)",
      "solve_bvp on d/dz[(1/(1 - x_A)) dx_A/dz] = 0 (constant-parameter form), then N_A = -c D/(1 - x_A) dx_A/dz"),
-    ("P3-05", "hard", "ch. 12 — unsteady conduction, semi-infinite solid", B, p05, "°C", 1e-6,
+    ("P3-05", "hard", "unsteady conduction, semi-infinite solid", B, p05, "°C", 1e-6,
      "A semi-infinite solid with thermal diffusivity 1.1e-6 m^2/s is initially at 20 °C. Its surface is suddenly raised to 200 °C and held there. What is the temperature, in °C, at a depth of 0.050 m after 3600 s?",
      "T = T1 + (T0 - T1) erf(x/(2 sqrt(alpha t))), written with math.erfc",
      "method of lines on a 0.6 m domain (1200 and 2400 intervals, node at x = 0.05 m), BDF in time, Richardson extrapolation of the two grids on the temperature rise"),
@@ -202,14 +202,13 @@ def sig(x, n=6):
 
 def build():
     out = []
-    for pid, diff, topic, book, fn, unit, tol, q, t1, t2 in PROBLEMS:
+    for pid, diff, topic, subject, fn, unit, tol, q, t1, t2 in PROBLEMS:
         a, b = fn()
         assert rel(a, b) < tol, (pid, a, b, rel(a, b))
         out.append({
             "id": pid, "question": q, "answer": {"value": sig(a), "unit": unit},
             "tolerance_rel": 0.01, "method_1": t1, "method_2": t2,
-            "topic": topic, "difficulty": diff,
-            "book": book + topic, "page": "TO CONFIRM (Samarth)",
+            "topic": subject + topic, "difficulty": diff,
             "source_note": "textbook topic; numbers original",
             "_raw": (a, b),
         })
@@ -220,12 +219,11 @@ def md(P):
     L = ["# P3 golden proposals (S3)", "",
          "> These are PROPOSALS for P4's review. P4 moves accepted ones into `api/tests/golden/`; nothing here edits that folder.",
          "> Every answer is computed by two independent methods in `verify_p3_problems.py` (agree within 1e-6 relative). Run `python docs/golden-proposals/verify_p3_problems.py`.",
-         "> Books: BSL = Bird, Stewart, Lightfoot, Transport Phenomena (2nd ed.); Narayanan = K. V. Narayanan, A Textbook of Chemical Engineering Thermodynamics. Every `page` is TO CONFIRM by Samarth from the physical books; no page, section or problem numbers are claimed.",
          "", "## Calculation problems (`p3_problems.json`)", "",
-         "| id | diff | topic | book | page | answer | method 1 / method 2 |", "|---|---|---|---|---|---|---|"]
+         "| id | diff | topic | answer | method 1 / method 2 |", "|---|---|---|---|---|"]
     for p in P:
         a = p["answer"]
-        L.append(f"| {p['id']} | {p['difficulty']} | {p['topic']} | {p['book']} | {p['page']} | {a['value']:g} {a['unit']} | {p['method_1']} / {p['method_2']} |")
+        L.append(f"| {p['id']} | {p['difficulty']} | {p['topic']} | {a['value']:g} {a['unit']} | {p['method_1']} / {p['method_2']} |")
     L.append("")
     for p in P:
         L += [f"**{p['id']}** ({p['difficulty']}): {p['question']}", ""]
