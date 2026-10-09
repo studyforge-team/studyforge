@@ -1,5 +1,5 @@
 // Scripted stand-in for the backend, used when VITE_API_URL is unset. Same two functions as client.ts.
-import type { Dashboard, ResultBody, SolveStart, Step } from './types'
+import type { Dashboard, ResultBody, SolveStart, Step, UploadRead } from './types'
 
 const wait = () => new Promise((r) => setTimeout(r, 300))
 
@@ -38,6 +38,17 @@ export async function startSolve(question: string): Promise<SolveStart> {
     }
   }
   return { solve_id: 'mock', step: { type: 'run_python', code: CODE, timeout_s: 10 } }
+}
+
+export async function uploadFile(): Promise<{ upload_id: string }> {
+  await wait()
+  return { upload_id: 'mock-upload' }
+}
+
+// The demo cannot read files; never pretend it did.
+export async function readUpload(): Promise<UploadRead> {
+  await wait()
+  return { text: '', latex: '', confidence: 'low' }
 }
 
 let bad = false // ponytail: module flag instead of threading the question through the contract
