@@ -77,9 +77,9 @@ result = {"ca": np.float64(ca), "arr": np.arange(3)}`)
   r = await run('result = {"a": list(range(10000))}', { mode: 'chemlab' })
   add('chemlab result uncapped', r.ok, err(r) || 'ok')
 
-  // ponytail: no chemlab files bundled (main today) -> ModuleNotFoundError -> row skipped
-  r = await run('from chemlab.cstr import run\nr = run({}, series=False)\nresult ={"ok": r["ok"], "n": r["n_steady_states"], "stable": [s["stable"] for s in r["steady_states"]]}', { mode: 'chemlab' })
-  if (r.ok || !r.error.includes('ModuleNotFoundError')) {
+  // ponytail: no chemlab files bundled (main today) -> the package itself is missing -> row skipped; a broken bundle still fails
+  r = await run('from chemlab.cstr import run\nr = run({}, series=False)\nresult = {"ok": r["ok"], "n": r["n_steady_states"], "stable": [s["stable"] for s in r["steady_states"]]}', { mode: 'chemlab' })
+  if (r.ok || !r.error.includes("No module named 'chemlab'")) {
     const c = r.ok ? (r.result as { n: number; stable: boolean[] }) : undefined
     add('chemlab: CSTR default has 3 steady states', !!c && c.n === 3 && JSON.stringify(c.stable) === '[true,false,true]', r.ok ? JSON.stringify(c) : err(r))
   }
