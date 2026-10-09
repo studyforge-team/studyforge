@@ -54,3 +54,11 @@ test('demo banner shows in the default (mock) build', async ({ page }) => {
     await expect(page.getByRole('status').filter({ hasText: 'Demo mode — sample answers. Nemotron connects when the backend is live.' })).toBeVisible()
   }
 })
+
+test('lecture notes upload is honest in demo mode', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 })
+  await page.goto('/')
+  await page.locator('input[type=file]').setInputFiles({ name: 'notes.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4') })
+  await expect(page.getByText("Demo mode — notes.pdf wasn't stored.")).toBeVisible()
+  expect(await noOverflow(page)).toBe(true)
+})

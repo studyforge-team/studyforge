@@ -1,7 +1,8 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
-import { postResult, startSolve } from '@/api/client'
-import type { Step } from '@/api/types'
+import { postResult, readUpload, startSolve, uploadFile } from '@/api/client'
+import type { Step, UploadRead } from '@/api/types'
 import { Check, Cross } from '@/components/icons'
+import { FilePick } from '@/components/FilePick'
 import { Button } from '@/components/ui/button'
 import { run, warm } from '@/sandbox/client'
 
@@ -45,10 +46,27 @@ export default function Solve() {
   const [end, setEnd] = useState<Step>()
   const [error, setError] = useState('')
   const [slow, setSlow] = useState(false)
+  const [file, setFile] = useState<{ name: string; id: string }>()
+  const [upStatus, setUpStatus] = useState('') // 'Uploading …' / 'Reading…' while non-empty
+  const [read, setRead] = useState<UploadRead>()
 
   useEffect(() => { void warm() }, []) // boot the sandbox while the student types
 
   const patch = (i: number, p: Partial<Row>) => setRows((r) => r.map((x, j) => (j === i ? { ...x, ...p } : x)))
+
+  async function attach(f: File) {
+    setError(''); setFile(undefined); setRead(undefined); setUpStatus(`Uploading ${f.name}…`)
+    try {
+      const { upload_id } = await uploadFile(f, 'question', () => setSlow(true))
+      setUpStatus('Reading…')
+      setRead(await readUpload(upload_id, () => setSlow(true)))
+      setFile({ name: f.name, id: upload_id })
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Upload failed')
+    } finally {
+      setUpStatus(''); setSlow(false)
+    }
+  }
 
   async function submit() {
     if (busy || !question.trim()) return
@@ -56,7 +74,7 @@ export default function Solve() {
     void loadCard() // fire and forget: fetch the answer-card chunk while Python runs
     const onSlow = () => setSlow(true)
     try {
-      const first = await startSolve(question, onSlow)
+      const first = await startSolve(question, onSlow, file?.id)
       let step = first.step
       for (let n = 0; step.type === 'run_python'; n++) {
         if (n >= MAX_STEPS) throw new Error('Too many steps, stopping.')
@@ -90,9 +108,36 @@ export default function Solve() {
           className="mt-3 w-full rounded-lg border border-input bg-background p-3 text-base placeholder:text-muted-foreground disabled:opacity-60"
           placeholder="e.g. Conversion in a CSTR for a first-order reaction, k = 0.2 1/min, tau = 10 min"
         />
-        <Button className="mt-3 w-full sm:w-auto" onClick={() => void submit()} disabled={busy || !question.trim()}>
-          {busy ? 'Solving…' : 'Solve'}
-        </Button>
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+          <Button className="w-full sm:w-auto" onClick={() => void submit()} disabled={busy || !question.trim()}>
+            {busy ? 'Solving…' : 'Solve'}
+          </Button>
+          <FilePick label="Attach PDF or photo" className="w-full sm:w-auto" disabled={busy || !!upStatus} onFile={(f) => void attach(f)} onError={setError} />
+        </div>
+        <p aria-live="polite" className="mt-2 text-sm text-muted-foreground">{upStatus}</p>
+        {file && (
+          <span className="mt-2 inline-flex max-w-full items-center gap-1 rounded-full bg-tint py-1 pl-3 text-sm font-medium text-primary">
+            <span className="truncate">{file.name}</span>
+            <button type="button" aria-label="Remove attachment" disabled={busy} className="flex size-11 shrink-0 items-center justify-center rounded-full hover:bg-muted" onClick={() => { setFile(undefined); setRead(undefined) }}>
+              <Cross width={14} height={14} />
+            </button>
+          </span>
+        )}
+        {/* S5 (confirm screen, owned by another teammate) replaces this block */}
+        {file && read && (
+          <div className="mt-3 rounded-lg border-2 border-warn-line bg-warn-bg p-4 text-sm">
+            <p className="font-medium">{file.name}</p>
+            {read.text ? (
+              <>
+                <pre className="mt-2 whitespace-pre-wrap break-words">{read.text}</pre>
+                {read.confidence === 'low' && <p className="mt-2 text-warn">Check this carefully — the reading may be wrong.</p>}
+                <Button className="mt-3" onClick={() => setQuestion(read.text)}>Use this text</Button>
+              </>
+            ) : (
+              <p className="mt-2 text-warn">Demo mode — your file wasn't read. Reading photos and PDFs needs the live backend. Type the question below instead; the file stays attached.</p>
+            )}
+          </div>
+        )}
         {slow && <p className="mt-2 text-sm text-muted-foreground">Waking up the server…</p>}
       </div>
       {error && <p role="alert" className="mt-3 text-sm font-medium text-destructive">{error}</p>}
