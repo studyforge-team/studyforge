@@ -21,7 +21,7 @@ export default function SelfTest() {
   if (!rows) {
     return (
       <main className="p-4">
-        <p>{done ? `Running sandbox self-test: ${done} of 35 done` : 'Downloading and starting Python (first run is slow; keep this tab open)'}…</p>
+        <p>{done ? `Running sandbox self-test: ${done} done` : 'Downloading and starting Python (first run is slow; keep this tab open)'}…</p>
         <p className="mt-2 text-sm text-muted-foreground">{secs} s elapsed{readyS ? ` · Python ready in ${readyS} s` : ''}. The whole test takes 1–3 minutes.</p>
       </main>
     )
