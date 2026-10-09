@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420" role="img" aria-labelledby="title desc">
+<title id="title">CSTR plan view — schematic</title><desc id="desc">Top view showing circular vessel shell, central agitator, four baffles, and inlet and outlet nozzles.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#334155"/></marker></defs>
+<rect width="640" height="420" fill="#fff"/><text x="24" y="34" font-family="Arial,sans-serif" font-size="20" font-weight="700" fill="#0f172a">CSTR — PLAN VIEW</text>
+<circle cx="310" cy="220" r="130" fill="#f8fafc" stroke="#334155" stroke-width="4"/><circle cx="310" cy="220" r="112" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5 5"/>
+<g fill="#cbd5e1" stroke="#475569" stroke-width="2"><rect x="300" y="94" width="20" height="42" rx="2"/><rect x="300" y="304" width="20" height="42" rx="2"/><rect x="184" y="210" width="42" height="20" rx="2"/><rect x="394" y="210" width="42" height="20" rx="2"/></g>
+<circle cx="310" cy="220" r="15" fill="#dbeafe" stroke="#1d4ed8" stroke-width="3"/><path d="M310 205 V145 M310 235 V295 M295 220 H245 M325 220 H375" stroke="#2563eb" stroke-width="8" stroke-linecap="round"/>
+<path d="M440 145 H520" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/><text x="448" y="132" font-family="Arial,sans-serif" font-size="14" fill="#334155">Vessel shell</text>
+<path d="M310 220 L475 285" stroke="#334155" stroke-width="1.5" marker-end="url(#arrow)"/><text x="482" y="291" font-family="Arial,sans-serif" font-size="14" fill="#334155">Agitator</text>
+<path d="M180 130 L115 90 H55" fill="none" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/><text x="28" y="78" font-family="Arial,sans-serif" font-size="14" fill="#334155">Baffle</text>
+<text x="24" y="390" font-family="Arial,sans-serif" font-size="12" fill="#64748b">Schematic only — not to scale; verify against team reference / IS SP 46.</text></svg>
