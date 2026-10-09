@@ -11,6 +11,7 @@ const loadCard = () => import('../components/AnswerCard')
 const AnswerCard = lazy(loadCard)
 
 type Row = { code: string; stdout: string; status: 'running' | 'ok' | 'fail'; ms?: number }
+const demo = !import.meta.env.VITE_API_URL // same switch as api/client.ts
 const MAX_STEPS = 8
 const disclose = 'inline-flex min-h-11 items-center rounded-lg px-3 text-sm text-muted-foreground hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground'
 const pre = 'mt-1 overflow-x-auto rounded-lg border bg-muted p-3 font-mono text-xs leading-relaxed'
@@ -134,7 +135,7 @@ export default function Solve() {
                 <Button className="mt-3" onClick={() => setQuestion(read.text)}>Use this text</Button>
               </>
             ) : (
-              <p className="mt-2 text-warn">Demo mode — your file wasn't read. Reading photos and PDFs needs the live backend. Type the question below instead; the file stays attached.</p>
+              <p className="mt-2 text-warn">{demo ? "Demo mode — your file wasn't read. Reading photos and PDFs needs the live backend." : 'No text could be read from this file.'} Type the question above instead; the file stays attached.</p>
             )}
           </div>
         )}

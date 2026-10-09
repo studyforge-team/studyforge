@@ -79,7 +79,7 @@ export default function Dashboard() {
     setNoteBad(false); setNote(`Uploading ${f.name}…`)
     try {
       await uploadFile(f, 'notes') // ponytail: upload only, no read; the backend indexes notes itself
-      setNote(demo ? `Demo mode — ${f.name} wasn't stored.` : `Added ${f.name}. Answers will cite your notes once the backend is live.`)
+      setNote(demo ? `Demo mode — ${f.name} wasn't stored.` : `Added ${f.name} to your notes.`)
     } catch (e) {
       setNoteBad(true); setNote(e instanceof Error ? e.message : 'Upload failed')
     }
