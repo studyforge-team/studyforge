@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420" role="img" aria-labelledby="title desc">
+<title id="title">CSTR side elevation — schematic</title><desc id="desc">Side elevation showing vessel profile, agitator assembly, nozzle projections, and supports.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#334155"/></marker></defs><rect width="640" height="420" fill="#fff"/><text x="24" y="34" font-family="Arial,sans-serif" font-size="20" font-weight="700" fill="#0f172a">CSTR — SIDE ELEVATION</text>
+<rect x="270" y="65" width="80" height="36" rx="5" fill="#e2e8f0" stroke="#475569" stroke-width="2"/><path d="M245 125 Q245 112 260 112 H360 Q375 112 375 125 V292 Q375 320 347 320 H273 Q245 320 245 292 Z" fill="#f8fafc" stroke="#334155" stroke-width="3"/>
+<path d="M249 205 H371 V292 Q371 316 347 316 H273 Q249 316 249 292 Z" fill="#bfdbfe" opacity=".85"/><path d="M249 205 H371" stroke="#2563eb" stroke-width="2" stroke-dasharray="6 4"/>
+<path d="M310 101 V257 M275 257 H345" stroke="#2563eb" stroke-width="5" stroke-linecap="round"/>
+<path d="M245 155 H200 V175 H245 M375 235 H420 V255 H375" fill="none" stroke="#64748b" stroke-width="5"/>
+<path d="M270 320 L255 365 H280 L292 320 M350 320 L365 365 H340 L328 320" fill="#e2e8f0" stroke="#475569" stroke-width="2"/><path d="M230 365 H390" stroke="#334155" stroke-width="3"/>
+<path d="M200 155 H125" stroke="#334155" stroke-width="1.5" marker-end="url(#arrow)"/><text x="45" y="150" font-family="Arial,sans-serif" font-size="14" fill="#334155">Inlet nozzle</text>
+<path d="M420 245 H500" stroke="#334155" stroke-width="1.5" marker-end="url(#arrow)"/><text x="505" y="250" font-family="Arial,sans-serif" font-size="14" fill="#334155">Outlet</text>
+<path d="M375 130 L465 105" stroke="#334155" stroke-width="1.5" marker-end="url(#arrow)"/><text x="473" y="105" font-family="Arial,sans-serif" font-size="14" fill="#334155">Shell</text>
+<text x="24" y="390" font-family="Arial,sans-serif" font-size="12" fill="#64748b">Schematic only — not to scale; verify against team reference / IS SP 46.</text></svg>

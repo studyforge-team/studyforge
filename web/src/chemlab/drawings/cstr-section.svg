@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420" role="img" aria-labelledby="title desc">
+<title id="title">CSTR sectional view — schematic</title><desc id="desc">Cutaway section showing vessel wall, liquid, central shaft, impeller, baffles, and bottom outlet.</desc>
+<defs><pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse"><path d="M0 8 L8 0" stroke="#64748b" stroke-width="1"/></pattern><marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#334155"/></marker></defs><rect width="640" height="420" fill="#fff"/><text x="24" y="34" font-family="Arial,sans-serif" font-size="20" font-weight="700" fill="#0f172a">CSTR — SECTION</text>
+<path d="M245 115 H375 V292 Q375 320 347 320 H273 Q245 320 245 292 Z" fill="#f8fafc" stroke="#334155" stroke-width="3"/>
+<path d="M250 190 H370 V292 Q370 315 347 315 H273 Q250 315 250 292 Z" fill="#bfdbfe" opacity=".85"/><path d="M250 190 H370" stroke="#2563eb" stroke-width="2" stroke-dasharray="6 4"/>
+<path d="M245 115 H258 V292 Q258 307 273 307 H347 Q362 307 362 292 V115 H375" fill="none" stroke="url(#hatch)" stroke-width="8"/>
+<path d="M310 70 V258" stroke="#475569" stroke-width="6"/><path d="M275 258 H345 M285 250 L275 258 L285 266 M335 250 L345 258 L335 266" fill="none" stroke="#2563eb" stroke-width="5" stroke-linejoin="round"/>
+<rect x="260" y="145" width="10" height="100" fill="#cbd5e1" stroke="#64748b" stroke-width="1.5"/><rect x="350" y="145" width="10" height="100" fill="#cbd5e1" stroke="#64748b" stroke-width="1.5"/>
+<path d="M310 320 V352 H335" fill="none" stroke="#64748b" stroke-width="5"/><path d="M375 135 H470" stroke="#334155" stroke-width="1.5" marker-end="url(#arrow)"/><text x="478" y="140" font-family="Arial,sans-serif" font-size="14" fill="#334155">Wall / shell</text>
+<path d="M355 220 L460 230" stroke="#334155" stroke-width="1.5" marker-end="url(#arrow)"/><text x="468" y="235" font-family="Arial,sans-serif" font-size="14" fill="#334155">Baffle</text>
+<path d="M310 258 L440 285" stroke="#334155" stroke-width="1.5" marker-end="url(#arrow)"/><text x="448" y="290" font-family="Arial,sans-serif" font-size="14" fill="#334155">Impeller</text>
+<text x="24" y="390" font-family="Arial,sans-serif" font-size="12" fill="#64748b">Schematic only — section hatching and dimensions require engineering review.</text></svg>
