@@ -1,0 +1,20 @@
+# Stand-in registry for local development with Ollama (rehearsal only, never merged).
+# Use: set STUDYFORGE_MODELS_PATH to this file and LOCAL_LLM_KEY to any non-empty value.
+# RAM: 8 GB -> qwen2.5:3b + qwen2.5vl:3b; 12 GB -> qwen2.5:7b + qwen2.5vl:3b; 16 GB+ -> 7b + vl:7b.
+# No role sets `reasoning`, so no thinking flag is sent (JSON calls still send
+# enable_thinking=false; Ollama ignores fields it doesn't know).
+
+base_url: http://localhost:11434/v1/
+api_key_env: LOCAL_LLM_KEY
+
+models:
+  nano:   {id: null}             # router falls back to super; avoids loading a 2nd model
+  super:  {id: "qwen2.5:7b"}
+  ultra:  {id: null}
+  vision: {id: "qwen2.5vl:3b"}
+
+roles:
+  router:      {models: [nano, super], timeout_s: 60}
+  solver:      {models: [super], timeout_s: 180, temperature: 0.7}
+  cross_check: {models: [ultra, super], timeout_s: 180, temperature: 0.7}
+  vision:      {models: [vision], timeout_s: 180}
