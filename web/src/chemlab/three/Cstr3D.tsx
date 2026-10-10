@@ -10,7 +10,7 @@ const LABELS = ['Jacket', 'Agitator (D/3)', 'Feed in', 'Product out']
 const hue = (p: Cstr3DProps) => 0.61 * (1 - Math.min(1, Math.max(0, p.Tmax > p.T0 ? (p.T - p.T0) / (p.Tmax - p.T0) : 0)))
 const css = (p: Cstr3DProps) => `hsl(${Math.round(hue(p) * 360)} 80% 50%)`
 
-type Api = { build: (p: Cstr3DProps) => void; png: () => string }
+type Api = { shape: (D: number, H: number, UA: number) => void; paint: (p: Cstr3DProps) => void; png: () => string }
 
 export default function Cstr3D(p: Cstr3DProps) {
   const [fb, setFb] = useState(false)
@@ -36,6 +36,8 @@ export default function Cstr3D(p: Cstr3DProps) {
     let group: THREE.Group | undefined
     let anchors: (THREE.Vector3 | null)[] = []
     let first = true
+    let liquidMat: THREE.MeshStandardMaterial | undefined
+    let last = ''
 
     const render = () => {
       renderer.render(scene, cam)
@@ -50,6 +52,7 @@ export default function Cstr3D(p: Cstr3DProps) {
         const y = Math.min(h - s.offsetHeight, Math.max(0, ((1 - v.y) / 2) * h - s.offsetHeight / 2))
         s.style.transform = `translate(${x}px,${y}px)`
       })
+      canvas.dataset.dist = cam.position.distanceTo(ctl.target).toFixed(4) // zoom-kept check hook
       canvas.dataset.geoms = String(renderer.info.memory.geometries) // leak check hook for the verify script
     }
     const fit = () => { // keep the whole vessel in view for any aspect ratio
@@ -74,7 +77,13 @@ export default function Cstr3D(p: Cstr3DProps) {
 
     api.current = {
       png: () => { render(); return canvas.toDataURL('image/png') }, // same tick: no preserveDrawingBuffer
-      build: (q) => {
+      paint: (q) => { liquidMat?.color.setHSL(hue(q), 0.8, 0.5); render() }, // colour only: no geometry work, no fit
+      shape: (D, H, UA) => {
+        const key = `${D}|${H}|${UA > 0}`
+        if (key === last) return
+        const refit = !group || last.split('|').slice(0, 2).join('|') !== `${D}|${H}`
+        last = key
+        const q = { D, H, UA }
         if (group) { scene.remove(group); free() }
         group = new THREE.Group()
         const k = 2 / Math.max(q.D, q.H), r = (q.D * k) / 2, h = q.H * k, yb = -h / 2
@@ -82,8 +91,8 @@ export default function Cstr3D(p: Cstr3DProps) {
           const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color, transparent: op < 1, opacity: op, depthWrite: op === 1, side: op < 1 ? THREE.DoubleSide : THREE.FrontSide }))
           m.position.set(x, y, 0); m.rotation.z = rz; group!.add(m)
         }
-        const liquid = new THREE.Color().setHSL(hue(q), 0.8, 0.5)
-        add(new THREE.CylinderGeometry(r * 0.98, r * 0.98, h * 0.98, 48), liquid, 0.55)
+        add(new THREE.CylinderGeometry(r * 0.98, r * 0.98, h * 0.98, 48), 0x888888, 0.55)
+        liquidMat = (group.children[0] as THREE.Mesh).material as THREE.MeshStandardMaterial
         add(new THREE.CylinderGeometry(r, r, h, 48, 1, true), 0xcccccc, 0.25)
         if (q.UA > 0) add(new THREE.CylinderGeometry(r * 1.12, r * 1.12, h * 0.8, 48, 1, true), 0x3b82f6, 0.2, 0, yb + h * 0.4) // ponytail: no jacket when adiabatic
         const yi = yb + h / 3, id = (2 * r) / 3
@@ -95,8 +104,9 @@ export default function Cstr3D(p: Cstr3DProps) {
         np(-r - nz / 2 + r * 0.05, yIn); np(r + nz / 2 - r * 0.05, yOut)
         group.position.set(0, 0, 0)
         scene.add(group)
-        anchors = [q.UA > 0 ? new THREE.Vector3(-r * 1.12, yb + h * 0.1, 0) : null, new THREE.Vector3(0, yi, 0), new THREE.Vector3(-r - nz, yIn, 0), new THREE.Vector3(r + nz, yOut, 0)]
-        fit(); render()
+        anchors = [q.UA > 0 ? new THREE.Vector3(r * 1.12, yb + h * 0.27, 0) : null, new THREE.Vector3(r * 0.2, yi + h * 0.12, 0), new THREE.Vector3(-r - nz, yIn, 0), new THREE.Vector3(r + nz, yOut, 0)]
+        if (refit) fit()
+        render()
       },
     }
 
@@ -131,7 +141,11 @@ export default function Cstr3D(p: Cstr3DProps) {
     }
   }, [fb])
 
-  useEffect(() => { api.current?.build(p) }, [p.D, p.H, p.T, p.T0, p.Tmax, p.UA, fb]) // eslint-disable-line
+  // One rAF per change (cancelled by the next) so the result numbers paint before any 3D work.
+  useEffect(() => {
+    const id = requestAnimationFrame(() => { api.current?.shape(p.D, p.H, p.UA); api.current?.paint(p) })
+    return () => cancelAnimationFrame(id)
+  }, [p.D, p.H, p.UA > 0, p.T, p.T0, p.Tmax, fb]) // eslint-disable-line
 
   const desc = `Stirred-tank reactor, diameter ${fmt(p.D)} m, height ${fmt(p.H)} m, liquid at ${fmt(p.T)} K`
   const png = () => {
@@ -174,12 +188,12 @@ function Flat({ D, H, UA, desc, ...p }: Cstr3DProps & { desc: string }) {
         <path d={`M${x + w / 2} ${y - 10}V${yi}M${x + w / 2 - w / 6} ${yi}H${x + w / 2 + w / 6}`} strokeWidth="3" fill="none" />
         <path d={`M${x - 25} ${y + h * 0.12}H${x}M${x + w} ${y + h * 0.88}H${x + w + 25}`} strokeWidth="4" fill="none" />
         <text x={x - 28} y={y + h * 0.12 - 6} textAnchor="end" stroke="none">Feed in</text>
-        <text x={x + w + 28} y={y + h * 0.88 - 6} stroke="none">Product out</text>
-        {UA > 0 && <text x={x + w + 8} y={y + h * 0.4} stroke="none">Jacket</text>}
-        <text x={x + w / 2 + w / 6 + 4} y={yi - 4} stroke="none">Agitator (D/3)</text>
-        <path d={`M${x} ${y + h + 12}H${x + w}M${x + w + 14} ${y}V${y + h}`} fill="none" strokeWidth="1" />
+        <text x={x + w + 4} y={y + h * 0.88 + 16} stroke="none">Product out</text>
+        {UA > 0 && <text x={x - 10} y={y + h * 0.5} textAnchor="end" stroke="none">Jacket</text>}
+        <text x={x + w / 2 - 6} y={yi - 22} textAnchor="end" stroke="none">Agitator<tspan x={x + w / 2 - 6} dy="12">(D/3)</tspan></text>
+        <path d={`M${x} ${y + h + 12}H${x + w}M${x + w + 70} ${y}V${y + h}`} fill="none" strokeWidth="1" />
         <text x={x + w / 2} y={y + h + 26} textAnchor="middle" stroke="none">D = {fmt(D)} m</text>
-        <text x={x + w + 18} y={y + h + 12} stroke="none">H = {fmt(H)} m</text>
+        <text transform={`translate(${x + w + 84} ${y + h / 2}) rotate(-90)`} textAnchor="middle" stroke="none">H = {fmt(H)} m</text>
       </svg>
       <p className="mt-1 text-sm text-muted-foreground">3D isn't available on this device — showing the 2D drawing.</p>
     </>
