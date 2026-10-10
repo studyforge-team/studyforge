@@ -1,5 +1,5 @@
 // Scripted stand-in for the backend, used when VITE_API_URL is unset. Same two functions as client.ts.
-import type { Dashboard, ResultBody, SolveStart, Step } from './types'
+import type { Dashboard, ResultBody, SolveStart, Step, UploadRead } from './types'
 
 const wait = () => new Promise((r) => setTimeout(r, 300))
 
@@ -38,6 +38,17 @@ export async function startSolve(question: string): Promise<SolveStart> {
     }
   }
   return { solve_id: 'mock', step: { type: 'run_python', code: CODE, timeout_s: 10 } }
+}
+
+export async function uploadFile(): Promise<{ upload_id: string }> {
+  await wait()
+  return { upload_id: 'mock-upload' }
+}
+
+// The demo cannot read files; never pretend it did.
+export async function readUpload(): Promise<UploadRead> {
+  await wait()
+  return { text: '', latex: '', confidence: 'low' }
 }
 
 let bad = false // ponytail: module flag instead of threading the question through the contract
@@ -87,7 +98,7 @@ export async function getDashboard(): Promise<Dashboard> {
       { id: 's2', question: 'Log-mean temperature difference for a counter-current heat exchanger', status: 'final', created_at: at(-26) },
     ],
     reminders: [
-      { id: 'r1', title: 'CRE assignment 3 due in 5 h — open your prep pack', due_at_utc: at(-2), sent_at: at(-2), channel: 'telegram' },
+      { id: 'r1', title: 'CRE assignment 3 due in 5 h — open your prep pack', due_at_utc: at(-2), sent_at: at(-2), channel: 'push' },
       { id: 'r2', title: 'Revise heat exchanger weak topic', due_at_utc: at(-24), sent_at: at(-24), channel: 'app' },
       { id: 'r3', title: 'Heat transfer quiz tomorrow — do 5 practice questions', due_at_utc: at(20), sent_at: null, channel: 'app' },
     ],

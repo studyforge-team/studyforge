@@ -3,7 +3,9 @@ import { run, type SandboxResult } from './client'
 
 type Row = { name: string; pass: boolean; detail: string }
 const rows: Row[] = []
-const add = (name: string, pass: boolean, detail: string) => rows.push({ name, pass, detail: detail.slice(-200) })
+let onRow: ((done: number) => void) | undefined // ponytail: progress callback for the slow first run on phones
+const add = (name: string, pass: boolean, detail: string) => { rows.push({ name, pass, detail: detail.slice(-200) }); onRow?.(rows.length) }
+export let readyS = 0 // seconds until the first run finished: download + Python start + numpy/scipy (G13 number)
 const err = (r: SandboxResult) => (r.ok ? '' : r.error)
 const last = (s: string) => s.trim().split('\n').pop() ?? ''
 const trivial = async () => {
@@ -35,8 +37,10 @@ const PROBES: [string, string, string?][] = [
   ['forged postMessage', 'import js\nfrom pyodide.ffi import to_js\njs.postMessage(to_js({"type":"result","id":999,"stdout":"<img src=x onerror=alert(1)>","figures":["nope"],"ms":1,"result":{}}, dict_converter=js.Object.fromEntries))\nraise Exception("sent forged message")', 'sent forged message'],
 ]
 
-export async function selftest(): Promise<Row[]> {
+export async function selftest(progress?: (done: number) => void): Promise<Row[]> {
   rows.length = 0
+  onRow = progress
+  const start = performance.now()
   let csp = 0
   const onCsp = () => csp++
   document.addEventListener('securitypolicyviolation', onCsp)
@@ -47,6 +51,7 @@ from scipy.optimize import brentq
 ca0, tau, k = 2.0, 5.0, 0.3
 ca = brentq(lambda c: (ca0 - c) / tau - k * c, 0, ca0)
 result = {"ca": np.float64(ca), "arr": np.arange(3)}`)
+  readyS = Math.round((performance.now() - start) / 100) / 10
   const ca = r.ok ? (r.result as { ca: number }).ca : NaN
   add('numpy+scipy brentq steady state', r.ok && Math.abs(ca - 0.8) < 1e-6, r.ok ? `ca=${ca}` : err(r))
 
