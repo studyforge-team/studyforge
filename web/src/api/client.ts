@@ -1,5 +1,5 @@
 import * as mock from './mock'
-import type { Dashboard, ResultBody, SolveStart, Step, UploadKind, UploadRead } from './types'
+import type { Dashboard, Quiz, ResultBody, SolveStart, Step, UploadKind, UploadRead } from './types'
 
 const BASE = import.meta.env.VITE_API_URL as string | undefined
 
@@ -40,4 +40,21 @@ export async function getDashboard(): Promise<Dashboard> {
   const r = await fetch(`${BASE}/api/v1/dashboard`)
   if (!r.ok) throw new Error(`Server error (HTTP ${r.status})`)
   return (await r.json()) as Dashboard
+}
+
+// POST /api/v1/quizzes {topic|upload_id} -> quiz (§3.5). Response `id` is a gap.
+export const getQuiz = (topic: string, onSlow?: () => void): Promise<Quiz> =>
+  BASE ? post('/quizzes', { topic }, onSlow) : mock.getQuiz()
+
+// Fire-and-forget; failures are swallowed (a missed report or save must never block the student).
+const quiet = (path: string, body: unknown) => { void post(path, body).catch(() => {}) }
+
+// P1 request #8, endpoint not built yet. Body shape is a gap. No-op in demo or without a quiz id.
+export const reportItem = (quizId: string | undefined, index: number, reason: string) => {
+  if (BASE && quizId) quiet(`/quizzes/${quizId}/report`, { index, reason })
+}
+
+// Not in the contract; body shape is a gap. Demo mode saves to localStorage in the page instead.
+export const saveAnswers = (quizId: string | undefined, answers: string[], score: number) => {
+  if (BASE && quizId) quiet(`/quizzes/${quizId}/answers`, { answers, score })
 }

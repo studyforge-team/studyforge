@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
 import Shell from './components/Shell'
 import Dashboard from './pages/Dashboard'
+import Quiz from './pages/Quiz'
 import Solve from './pages/Solve'
 
 const SelfTest = lazy(() => import('./SelfTest'))
@@ -19,5 +20,5 @@ export default function App() {
       </Suspense>
     )
   }
-  return <Shell hash={hash}>{hash === '#solve' ? <Solve /> : <Dashboard />}</Shell>
+  return <Shell hash={hash}>{hash === '#solve' ? <Solve /> : hash === '#quiz' ? <Quiz /> : <Dashboard />}</Shell>
 }

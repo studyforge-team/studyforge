@@ -1,0 +1,68 @@
+{
+  "title": "Ideal reactors: CSTR basics",
+  "items": [
+    {
+      "type": "mcq",
+      "topic": "CSTR design",
+      "source": "slides-reactors-03",
+      "tags": ["core", "interview-round-1"],
+      "stem": "In a steady-state CSTR, what is the concentration of A inside the reactor?",
+      "options": [
+        "Equal to the inlet concentration",
+        "Equal to the outlet concentration",
+        "The log-mean of inlet and outlet concentrations",
+        "It varies linearly along the reactor length"
+      ],
+      "correct_index": 1,
+      "misconceptions": {
+        "0": "Assumes no conversion happens; mixing is instant, but the reaction still lowers the concentration to the exit value.",
+        "2": "Borrows the log-mean from heat exchangers; it does not apply to a perfectly mixed vessel.",
+        "3": "Describes a plug flow reactor, where concentration changes along the length."
+      },
+      "explanation": "Perfect mixing makes the contents uniform and equal to the exit stream, so the rate is evaluated at the outlet concentration."
+    },
+    {
+      "type": "mcq",
+      "topic": "Reactor comparison",
+      "source": null,
+      "tags": ["interview-round-1"],
+      "stem": "For a positive-order reaction at the same conversion and temperature, which flow reactor needs the smallest volume?",
+      "options": [
+        "Single CSTR",
+        "Plug flow reactor",
+        "Laminar flow reactor with a parabolic velocity profile",
+        "They always need the same volume"
+      ],
+      "correct_index": 1,
+      "misconceptions": {
+        "0": "A CSTR runs entirely at the low outlet concentration, so its rate is lowest and it needs more volume.",
+        "2": "Velocity spread widens the residence time distribution, which lowers conversion for a positive-order reaction.",
+        "3": "Volumes are equal only for zero-order reactions, not in general."
+      },
+      "explanation": "A PFR keeps the concentration, and so the rate, higher on average than a CSTR, so it needs less volume."
+    },
+    {
+      "type": "numerical",
+      "topic": "CSTR conversion",
+      "source": "slides-reactors-04",
+      "tags": ["core"],
+      "stem": "A first-order liquid-phase reaction A -> B, with k = 0.25 1/min, runs in a CSTR with a space time of 8 min. What is the conversion of A?",
+      "key_code": "k = 0.25\ntau = 8.0\nda = k * tau\nx_direct = da / (1 + da)\n\n# Second method: solve the steady-state balance X - k*tau*(1 - X) = 0 by bisection.\nlo, hi = 0.0, 1.0\nfor _ in range(80):\n    mid = 0.5 * (lo + hi)\n    if mid - da * (1 - mid) > 0:\n        hi = mid\n    else:\n        lo = mid\nx_bisect = 0.5 * (lo + hi)\n\nresult = {\n    \"answer\": {\"value\": x_direct, \"unit\": \"-\"},\n    \"check\": {\"value\": x_bisect, \"unit\": \"-\", \"method\": \"bisection on the mole balance\"},\n    \"values\": {\"da\": {\"value\": da, \"unit\": \"-\"}},\n}\n",
+      "unit": "-",
+      "tolerance_rel": 0.01,
+      "worked_solution": "The Damkohler number is Da = k * tau = {da}. For a first-order reaction in a CSTR, X = Da / (1 + Da) = {answer}."
+    },
+    {
+      "type": "subjective",
+      "topic": "Reactor selection",
+      "source": null,
+      "tags": ["interview-round-2"],
+      "stem": "Explain why a series of CSTRs approaches plug flow performance as the number of tanks grows.",
+      "rubric": [
+        "States that each tank is perfectly mixed at its own outlet concentration",
+        "Explains that concentration steps down tank by tank, approximating a gradient along the length",
+        "Mentions that the total volume needed falls towards the PFR volume as tanks increase"
+      ]
+    }
+  ]
+}
