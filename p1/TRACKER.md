@@ -32,16 +32,16 @@ Nobody on the team has a Visa/Mastercard card for Nebius yet. Until that changes
 | G-rest | Rest of week-0 gates | MUST | 2 | 0 | |
 | K0 | Kickoff | MUST | 2 | 0 | |
 | A3 | LLM client | MUST | 6 | 100 | merged 9 Oct (studyforge-team/studyforge#6); live smoke test + G10 still wait for Nebius |
-| S3 | 10 golden problems + ChemLab cases proposed | MUST | 3 | 50 | branch s3-golden-proposals: 10 problems + 8 ChemLab cases, two methods each, verify script ALL OK; waits for P4 review |
-| C2 | Vision read | MUST | 7 | 50 | c2-vision + upload_reader wired (s2-wiring); real model + 7/8 photos wait for Nebius |
-| S2 | Agent loop + browser bridge | MUST | 16 | 50 | s2-agent-loop + s2-wiring (B8, CH3, C2 wired); Postgres store needs A4; golden runs need Nebius + S1b runner |
+| S3 | 10 golden problems + ChemLab cases proposed | MUST | 3 | 75 | branch s3-golden-proposals: 10 problems + 8 ChemLab cases, two methods each, verify script ALL OK; waits for P4 review |
+| C2 | Vision read | MUST | 7 | 75 | c2-vision + upload_reader wired (s2-wiring); real model + 7/8 photos wait for Nebius |
+| S2 | Agent loop + browser bridge | MUST | 16 | 75 | s2-agent-loop + s2-wiring (B8, CH3, C2 wired); Postgres store needs A4; golden runs need Nebius + S1b runner |
 | TD1 | Test day 1 | MUST | 4 | 0 | |
-| S2b | Solver prompts | MUST | 6 | 50 | s2b-prompts: prompts + smoke harness (292 api tests); 8/10 score needs Nebius + runner |
-| B8 | Number guardrail | MUST | 4 | 50 | b8-guardrail; on by default in the loop (s2-wiring) |
-| Q1 | Quiz engine | MUST | 8 | 50 | q1-quiz: schema, key checks, mock, generator, make_quiz service (107 tests); 10 real quizzes need Nebius |
-| CH1a | CSTR template + frozen format | MUST | 4 | 50 | branch ch1a-cstr: 30 tests + 20k random cases; Pyodide/Node-runner check waits for S1b + jsDelivr |
-| CH3 | Template picking | MUST | 3 | 50 | ch3-template-pick, wired into the loop; 9/10 picks need Nebius + P4 labels |
-| CH1b | PFR, batch, McCabe-Thiele | MUST | 9 | 50 | branch ch1b-templates (stacked on ch1a): 158 chemlab tests; official goldens are P4's |
+| S2b | Solver prompts | MUST | 6 | 75 | s2b-prompts: prompts + smoke harness (292 api tests); 8/10 score needs Nebius + runner |
+| B8 | Number guardrail | MUST | 4 | 75 | b8-guardrail; on by default in the loop (s2-wiring) |
+| Q1 | Quiz engine | MUST | 8 | 75 | q1-quiz: schema, key checks, mock, generator, make_quiz service (107 tests); 10 real quizzes need Nebius |
+| CH1a | CSTR template + frozen format | MUST | 4 | 75 | branch ch1a-cstr: 30 tests + 20k random cases; Pyodide/Node-runner check waits for S1b + jsDelivr |
+| CH3 | Template picking | MUST | 3 | 75 | ch3-template-pick, wired into the loop; 9/10 picks need Nebius + P4 labels |
+| CH1b | PFR, batch, McCabe-Thiele | MUST | 9 | 75 | branch ch1b-templates (stacked on ch1a): 158 chemlab tests; official goldens are P4's |
 | F4 | README | MUST | 3 | 25 | f4-readme-draft: draft, TODOs for after A2/G10 |
 | TD2 | Test day 2 | MUST | 4 | 0 | |
 | F2 | Final fixes | MUST | 3 | 0 | |
@@ -117,7 +117,7 @@ note), f4-readme-draft (README + Devpost drafts).
 Merge order for stacked branches: a3 -> s2-agent-loop -> s2-wiring -> s2b-prompts;
 ch1a -> ch1b -> ch3 (ch3 also needs b8 and c2 before s2-wiring).
 
-## Decision 8 Oct (Supreeth): no new pull requests for now
+## Decision 8 Oct (Supreeth): no new pull requests for now (LIFTED 10 Oct)
 
 All work stays on its pushed branches. Do NOT open pull requests until the reviewer has
 reviewed the work; open them only after that, in the merge order above. Only A3's PR (#6)
@@ -125,3 +125,8 @@ and the setup-hook PR (#4) exist. Verified 8 Oct night: every branch matches Git
 unpushed commits, no uncommitted changes.
 - 10 Oct: A3 merged into main (#6, merge c2bc388). Re-verified after a session restart: all 15 branches match GitHub, 0 unpushed commits, no uncommitted changes.
 - 10 Oct: checked an outside AI review claim by claim. False: parser "crashes" on <think> inside JSON (tested: worst case one repair call), guardrail "burns a tool step" (regenerate is not a counted step), s1-chemlab-mount "deadlocked" (it skips cleanly until chemlab files exist; its self-test expects our CSTR defaults and they match), "tracker false" (it reports merge-based %). Valid: solver prompt did not keep arrays out of result (16 KB cap) -> fixed on s2b-prompts (e3a8b0e). Partly valid: a late matplotlib/sympy import costs a worker respawn (seconds), but the client already retries it automatically; preloading all four packages for every solve would slow every solve, so not done. For P2: A2-fastapi-health's api/pyproject.toml lacks openai and pyyaml, which A3 on main needs (listed in PR #6). Verified: none of our branches or main were changed by that tool.
+- 10 Oct: Supreeth lifted the no-PR rule. Opened PRs (not merged: AGENTS.md rule 11 needs a teammate review):
+  #16 B8, #17 CH1a, #18 CH1b (base ch1a), #19 C2, #20 Q1, #21 S2 core, #22 contract note (S2),
+  #23 CH3 (base ch1b), #24 S2 wiring (base s2-agent-loop; needs #16 #19 #23 first), #25 S2b (base s2-wiring),
+  #26 S3 proposals (base ch1b), #27 F4/F8 drafts (draft PR). All 12 merged cleanly into main in a dry run.
+  Reviewers requested: ragaveeru-bit (backend), samarthkombli-ops (chemlab/contract), shreyasgoudar251ch056 (Q1, S2b, S3).
