@@ -31,7 +31,7 @@ Nobody on the team has a Visa/Mastercard card for Nebius yet. Until that changes
 | G10 | Model test (my part of G-all) | MUST | 1.5 | 25 | probe script ready (p1/g10_probe.py); running it needs Nebius |
 | G-rest | Rest of week-0 gates | MUST | 2 | 0 | |
 | K0 | Kickoff | MUST | 2 | 0 | |
-| A3 | LLM client | MUST | 6 | 75 | PR studyforge-team/studyforge#6 open; 41 tests green; live smoke + G10 wait for key and network; needs reviewer |
+| A3 | LLM client | MUST | 6 | 100 | merged 9 Oct (studyforge-team/studyforge#6); live smoke test + G10 still wait for Nebius |
 | S3 | 10 golden problems + ChemLab cases proposed | MUST | 3 | 50 | branch s3-golden-proposals: 10 problems + 8 ChemLab cases, two methods each, verify script ALL OK; waits for P4 review |
 | C2 | Vision read | MUST | 7 | 50 | c2-vision + upload_reader wired (s2-wiring); real model + 7/8 photos wait for Nebius |
 | S2 | Agent loop + browser bridge | MUST | 16 | 50 | s2-agent-loop + s2-wiring (B8, CH3, C2 wired); Postgres store needs A4; golden runs need Nebius + S1b runner |
@@ -123,3 +123,4 @@ All work stays on its pushed branches. Do NOT open pull requests until the revie
 reviewed the work; open them only after that, in the merge order above. Only A3's PR (#6)
 and the setup-hook PR (#4) exist. Verified 8 Oct night: every branch matches GitHub, no
 unpushed commits, no uncommitted changes.
+- 10 Oct: A3 merged into main (#6, merge c2bc388). Re-verified after a session restart: all 15 branches match GitHub, 0 unpushed commits, no uncommitted changes.
