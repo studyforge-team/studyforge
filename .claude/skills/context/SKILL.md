@@ -48,6 +48,16 @@ There is no `gh` CLI. The repo is **public**: never commit secrets or student da
 | (name not recorded) | `shreyasgoudar251ch056` | V2Da CSTR drawings (PR #13); asked to review Q1, S2b, S3. Role likely P4 Quality & release: confirm |
 
 All four are equal teammates; roles say who builds a ticket first. P4 owns golden test values.
+A fifth collaborator, `sudhanvaad1106-spec`, also has admin access (role unknown; ask Supreeth).
+
+**How the repo actually works (checked live 10 Oct; re-check, it can change):**
+- All 5 collaborators are **admin**. `main` is **not protected**: no required reviews, no required
+  CI, no CODEOWNERS, no CI workflows. Anyone can push to `main` or merge any PR, their own included.
+- So "review by a different role" (rule 11) is a **team agreement in AGENTS.md, not enforced by GitHub**.
+- In practice `samarthkombli-ops` merges PRs, sometimes without a formal GitHub review
+  (#6 A3 and his own #12 were merged with zero reviews). Merging is a team habit, not a GitHub gate.
+- P1's PRs carry the team PR template (ticket ID, done-when, how tested, contract y/n) and have
+  reviewers requested (GitHub notifies them). Supreeth decides whether to wait for review or merge.
 
 ## 3. Rules (all binding)
 
