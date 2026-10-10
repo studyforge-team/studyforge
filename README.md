@@ -9,9 +9,11 @@ reminders, quizzes, prep packs, cited web answers, and ChemLab reactor and disti
 simulations.
 
 **Status: work in progress, hackathon build** (Nebius x NVIDIA Global AI Hackathon, Track 2).
-Only the web app is merged to `main`. The backend lives on feature branches until A2
-lands. The Nemotron models have **not been called yet**, so this README makes no claims
-about accuracy, latency or cost. <!-- TODO(F4): update status after A2 and G10 merge -->
+`main` holds the web app and the engine: the Nemotron client, the agent loop, the number
+guardrail, photo reading, the quiz engine and the ChemLab templates. The FastAPI app (A2)
+and the database are not merged yet, so the API does not run end to end. The Nemotron
+models have **not been called yet**, so this README makes no claims about accuracy,
+latency or cost. <!-- TODO(F4): update status after A2 and G10 merge -->
 
 ## How a solve works
 
