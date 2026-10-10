@@ -130,3 +130,4 @@ unpushed commits, no uncommitted changes.
   #23 CH3 (base ch1b), #24 S2 wiring (base s2-agent-loop; needs #16 #19 #23 first), #25 S2b (base s2-wiring),
   #26 S3 proposals (base ch1b), #27 F4/F8 drafts (draft PR). All 12 merged cleanly into main in a dry run.
   Reviewers requested: ragaveeru-bit (backend), samarthkombli-ops (chemlab/contract), shreyasgoudar251ch056 (Q1, S2b, S3).
+- 10 Oct: Supreeth chose a stand-in model pass (free OpenAI-compatible model now, Nebius switch at the end). Added the hand-over skill `.claude/skills/context/` (SKILL.md = full context + next job, plan-v3.md = the P1 plan, next-session-prompt.md = text to paste into a new session). Network check from the cloud session: Token Factory, NVIDIA API, Groq, OpenRouter and jsDelivr blocked; Gemini API reachable.
