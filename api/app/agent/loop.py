@@ -4,7 +4,8 @@ DB-free core: start() and on_result() read and write SolveState through deps.sto
 so the route layer, the eval runner (T4) and tests drive the same code.
 
 Calc path: classify (router) -> notes search once (not a counted step) ->
-next_action (solver, native tool calls; a fenced ```python block is the fallback) ->
+ChemLab template if one fits (CH3: server-built code, one run, no second method) ->
+otherwise next_action (solver, native tool calls; a fenced ```python block is the fallback) ->
 the browser runs run_python -> deterministic verify -> explain (JSON, reasoning off)
 -> number guardrail -> final. Limits: 4 counted tool steps and 90 s of server wall
 clock from the first next_action. Every failure ends as a final step with
@@ -14,13 +15,14 @@ confidence "low", never an HTTP error (the web client does not read error bodies
 import json
 import re
 import uuid
-from collections.abc import Awaitable, Callable, Sequence
+from collections.abc import Awaitable, Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any, Literal, Protocol
 
 from pydantic import BaseModel
 
-from app.agent import prompts
+from app.agent import guardrail, prompts
+from app.agent.chemlab_pick import pick_template
 from app.agent.state import SolveNotFound, SolveState, StateStore
 from app.agent.steps import (
     Final,
@@ -75,14 +77,22 @@ class Model(Protocol):
 Guard = Callable[[str, Any, str], Sequence[str]]
 
 
+def b8_guard(answer_md: str, result: Any, question: str) -> list[str]:
+    """B8: every number must come from the sandbox result or the question."""
+    allowed = guardrail.allowed_numbers(result, question)
+    return [f.text for f in guardrail.check(answer_md, allowed).unsupported]
+
+
 @dataclass
 class Deps:
     llm: Model
     store: StateStore
     clock: Callable[[], float]
     tools: ToolImpls = field(default_factory=StubTools)
-    guard: Guard | None = None
+    guard: Guard | None = b8_guard
     read_upload: Callable[[str], Awaitable[str]] | None = None  # C2 text
+    # ChemLab SPECs as data ({template: SPEC}); None turns template picking off
+    templates: Mapping[str, Mapping[str, Mapping[str, Any]]] | None = None
     regenerate_on_flag: bool = True  # cut-line step 1 sets False: flag only
 
 
@@ -196,6 +206,21 @@ async def _begin(state: SolveState, deps: Deps) -> Step:
         {"role": "system", "content": prompts.SOLVER + notes},
         {"role": "user", "content": q},
     ]
+    if deps.templates:
+        state.started_at = deps.clock()
+        run, cost = await pick_template(
+            deps.llm,
+            state.question,
+            deps.templates,
+            deadline=state.started_at + BUDGET_S,
+            solve_id=state.id,
+        )
+        state.cost_usd += cost
+        if run is not None:
+            state.template = run.template
+            state.steps_used += 1
+            state.pending_call_id = None
+            return RunPython(code=run.code)
     return await _next_action(state, deps)
 
 
@@ -289,6 +314,23 @@ async def _after_run(state: SolveState, body: ResultBody, deps: Deps) -> Step:
         "error": run.error,
     }
     _tell(state, json.dumps(report, ensure_ascii=False))
+    if state.template is not None:
+        template, state.template = state.template, None
+        result = None if run.error else _template_result(run.result)
+        if result is not None:
+            state.result = result
+            return await _explain(state, deps)
+        errors = run.error or json.dumps(
+            run.result.get("errors") if isinstance(run.result, dict) else run.result
+        )
+        state.messages.append(
+            {
+                "role": "user",
+                "content": f"The ChemLab {template} template could not answer this "
+                f"({errors}). Solve it with run_python instead.",
+            }
+        )
+        return await _next_action(state, deps)
     if run.error:
         return await _next_action(state, deps, _role(state))
     verdict = verify(run.result)
@@ -411,6 +453,33 @@ def _final(
         sources=[Source(**s) for s in state.sources],
         confidence=confidence,
     )
+
+
+_STEADY_UNITS = {"T": "K", "X": "-", "CA": "mol/m^3", "Da": "-"}
+
+
+def _template_result(result: Any) -> dict[str, Any] | None:
+    """A ChemLab template's output in the loop's result shape, or None if it failed.
+    Steady states are flattened into named values so the guardrail allows them."""
+    if not isinstance(result, dict) or result.get("ok") is not True:
+        return None
+    outputs = result.get("outputs")
+    if not isinstance(outputs, dict) or not outputs:
+        return None
+    values = dict(outputs)
+    states = result.get("steady_states") or []
+    if len(states) > 1:
+        for i, st in enumerate(states, 1):
+            for key, unit in _STEADY_UNITS.items():
+                if isinstance(st, dict) and isinstance(st.get(key), int | float):
+                    values[f"steady_state_{i}_{key}"] = {"value": st[key], "unit": unit}
+    return {
+        "template": result.get("template"),
+        "inputs": result.get("inputs", {}),
+        "values": values,
+        "steady_states": states,  # keeps the stable/unstable flags for the explanation
+        "warnings": result.get("warnings", []),
+    }
 
 
 def _tell(state: SolveState, content: str) -> None:

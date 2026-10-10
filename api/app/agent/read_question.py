@@ -8,6 +8,7 @@ anything is solved, so a misread digit is caught by a person, not by the agent.
 import asyncio
 import base64
 import io
+from collections.abc import Awaitable, Callable
 from typing import Any, Literal, Protocol
 
 import pypdfium2 as pdfium  # type: ignore[import-untyped]
@@ -15,7 +16,7 @@ from PIL import Image, ImageOps
 from pydantic import BaseModel, ConfigDict
 
 from app.llm.client import LLMResult
-from app.llm.errors import ModelUnavailable
+from app.llm.errors import LLMError, ModelUnavailable
 from app.llm.reasoning import extract_json
 
 MAX_INPUT_BYTES = 15 * 1024 * 1024
@@ -165,3 +166,27 @@ async def read_question(
         return QuestionRead.model_validate(payload)
     except ValueError:  # includes pydantic ValidationError
         return QuestionRead(text=raw, latex="", figure_description="", confidence="low")
+
+
+def upload_reader(
+    fetch: Callable[[str], Awaitable[tuple[bytes, str]]], client: _Vision
+) -> Callable[[str], Awaitable[str]]:
+    """The loop's read_upload: upload id -> text for the confirm screen.
+
+    fetch(upload_id) returns (bytes, mime) from storage (C1). A photo that cannot be
+    read gives "" so the student types the question instead of seeing an error."""
+
+    async def read(upload_id: str) -> str:
+        try:
+            data, mime = await fetch(upload_id)
+            q = await read_question(client, data, mime)
+        except (LookupError, UnsupportedUpload, LLMError):
+            return ""
+        parts = [q.text]
+        if q.latex and q.latex not in q.text:
+            parts.append(f"$$\n{q.latex}\n$$")
+        if q.figure_description:
+            parts.append(f"Figure: {q.figure_description}")
+        return "\n\n".join(x.strip() for x in parts if x.strip())
+
+    return read
