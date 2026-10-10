@@ -140,6 +140,10 @@ def test_code_masking_keeps_offsets() -> None:
         ("1.2 × 10^{−3}", [1.2e-3]),
         ("10^{-3}", [1e-3]),
         ("10^5", [1e5]),
+        ("3.2 × 10⁵", [3.2e5]),
+        ("1.2×10⁻³", [1.2e-3]),
+        ("10⁻¹²", [1e-12]),
+        ("k = 4.1 s⁻¹", [4.1]),
         ("−3.2", [3.2]),
         ("-3.2", [3.2]),
         (r"\frac{1}{3}", [1, 3]),
@@ -163,6 +167,9 @@ def test_formats_checked_against_allowed(answer: str) -> None:
 
 
 def test_sci_scale_shift_caught() -> None:
+    # a Unicode superscript exponent must not hide a scale shift
+    assert flagged("k = 3.2 × 10⁵ s⁻¹", {"k": 3.2}) == ["3.2 × 10⁵"]
+    assert flagged("k = 3.2 × 10⁵ s⁻¹", {"k": 3.2e5}) == []
     assert flagged(r"1.2 \times 10^{3}", {"v": 1.2e-3}) != []
     assert flagged("1200", {"v": 1.2}) == ["1200"]
 

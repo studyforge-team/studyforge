@@ -33,7 +33,11 @@ class GuardrailReport:
 
 
 _MINUS = "-−"
-_EXP = rf"\^\s*(?:\{{\s*[{_MINUS}+]?[0-9]+\s*\}}|[{_MINUS}+]?[0-9]+)"
+_SUP = "⁰¹²³⁴⁵⁶⁷⁸⁹"
+_EXP = (
+    rf"\^\s*(?:\{{\s*[{_MINUS}+]?[0-9]+\s*\}}|[{_MINUS}+]?[0-9]+)"
+    rf"|[⁻⁺]?[{_SUP}]+"  # Unicode superscript: 10⁵, 10⁻³
+)
 _NUM = r"(?:[0-9]{1,3}(?:,[0-9]{3})+(?![0-9])|[0-9]+)(?:\.[0-9]+)?|\.[0-9]+"
 _TOKEN = re.compile(
     # --- skipped (consumed, never reported) ---
@@ -60,8 +64,11 @@ def _to_float(s: str) -> float:
     return float(s.replace(",", "").replace("−", "-"))
 
 
+_FROM_SUP = str.maketrans(_SUP + "⁻⁺", "0123456789-+")
+
+
 def _exp(s: str) -> str:
-    return re.sub(r"[\s{}^]", "", s).replace("−", "-")
+    return re.sub(r"[\s{}^]", "", s).translate(_FROM_SUP).replace("−", "-")
 
 
 def parse_numbers(text: str) -> list[Flagged]:
