@@ -10,6 +10,7 @@ import json
 import math
 import re
 from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 from typing import Any, Protocol
 
 from pydantic import BaseModel, ConfigDict
@@ -211,6 +212,13 @@ class ChatJSON(Protocol):
     ) -> tuple[Pick, Any]: ...
 
 
+@dataclass(frozen=True)
+class TemplateRun:
+    template: str
+    code: str
+    values: dict[str, float]
+
+
 async def pick_template(
     llm: ChatJSON,
     question: str,
@@ -218,19 +226,23 @@ async def pick_template(
     *,
     deadline: float | None = None,
     solve_id: str | None = None,
-) -> tuple[str, dict[str, float]] | None:
-    """(code, values) for a direct forward template calculation, else None."""
+) -> tuple[TemplateRun | None, float]:
+    """(run, cost_usd): the run for a direct forward template calculation, else None.
+    The model call's cost is returned either way so the solve's total stays right."""
     messages: list[dict[str, Any]] = [
         {"role": "system", "content": build_system_prompt(specs)},
         {"role": "user", "content": f"<question>\n{json.dumps(question)}\n</question>"},
     ]
-    pick, _ = await llm.chat_json(
+    pick, res = await llm.chat_json(
         "router", messages, Pick, deadline=deadline, solve_id=solve_id
     )
+    cost = float(getattr(res, "cost_usd", 0.0) or 0.0)
     if pick.template is None:
-        return None
+        return None, cost
     try:
         values = validate_pick(pick, specs)
-        return build_code(pick.template, values), values
+        return TemplateRun(
+            pick.template, build_code(pick.template, values), values
+        ), cost
     except PickError:
-        return None
+        return None, cost

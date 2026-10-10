@@ -291,9 +291,11 @@ class FakeLLM:
 
 
 def run_pick(llm: FakeLLM, question: str = "q") -> tuple[str, dict[str, float]] | None:
-    return asyncio.run(
+    run, cost = asyncio.run(
         pick_template(llm, question, real_specs(), deadline=12.5, solve_id="s1")
     )
+    assert cost == 0.0  # the fake returns no LLMResult
+    return (run.code, run.values) if run else None
 
 
 def test_pick_template_valid() -> None:
