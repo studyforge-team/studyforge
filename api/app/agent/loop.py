@@ -354,7 +354,7 @@ async def _after_run(state: SolveState, body: ResultBody, deps: Deps) -> Step:
     state.messages.append(
         {
             "role": "user",
-            "content": f"Check failed: {verdict.reason}. Fix the code and rerun.",
+            "content": prompts.REPAIR.format(reason=verdict.reason),
         }
     )
     return await _next_action(state, deps)

@@ -161,7 +161,7 @@ def test_shape_failure_is_explained_to_the_model() -> None:
         ("chat_json", {"answer_md": "ok"}),
     )
     steps = run(solve(deps(llm), {"result": bad}, {"result": GOOD}))
-    assert "Check failed" in llm.calls[2][2][-1]["content"]
+    assert "failed its check" in llm.calls[2][2][-1]["content"]
     assert steps[2]["confidence"] == "high"
 
 
