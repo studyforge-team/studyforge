@@ -186,6 +186,11 @@ TD2 + F2 + RTD 24–25 Oct · F8 27 Oct · F9 submit 28 Oct 21:00 IST. Check-ins
 
 ## 9. NEXT JOB: stand-in model pass (decided 10 Oct), then the Nebius switch
 
+**Tooling is ready (10 Oct): read `p1/standin/SWITCH.md` first.** `p1/standin/check.py --live`
+verifies any provider through the app's own client; `p1/g10_probe.py --base-url --key-env` runs
+G10 on a stand-in. Registries: `p1/standin/models.{nvidia,gemini,ollama}.yaml` (ids to fill).
+p1-tracker now contains main, so one checkout runs everything.
+
 Goal: do the model-dependent ~27 h now with a free OpenAI-compatible **stand-in** model, so that
 when Nebius arrives only a config switch + re-run + small retune (~7–10 h) is left. A3 reads
 `base_url`, `api_key_env`, model IDs and role settings from a YAML registry; env var

@@ -1,0 +1,20 @@
+# Stand-in registry: NVIDIA API catalog (build.nvidia.com). Rehearsal only, never merged.
+# Serves Nemotron models, so behaviour is closest to the final Nebius setup.
+# Fill the ids from the model list that `python p1/g10_probe.py --base-url
+# https://integrate.api.nvidia.com/v1 --key-env NVIDIA_API_KEY` prints (prefer Nemotron).
+# Needs: NVIDIA_API_KEY in the environment settings; allowed domain integrate.api.nvidia.com.
+base_url: https://integrate.api.nvidia.com/v1/
+api_key_env: NVIDIA_API_KEY
+
+models:
+  nano:   {id: null}
+  super:  {id: null}
+  ultra:  {id: null}
+  vision: {id: null}
+
+# Same roles as config/models.yaml. Delete a `reasoning:` line if check.py shows 400s.
+roles:
+  router:      {models: [nano, super], timeout_s: 20, reasoning: false}
+  solver:      {models: [super], timeout_s: 60, reasoning: true, temperature: 1.0, top_p: 0.95}
+  cross_check: {models: [ultra, super], timeout_s: 60, reasoning: true, temperature: 1.0, top_p: 0.95}
+  vision:      {models: [vision], timeout_s: 45}

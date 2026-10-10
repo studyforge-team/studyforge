@@ -1,0 +1,21 @@
+# Stand-in registry: Google Gemini free tier (OpenAI-compatible endpoint). Rehearsal only.
+# Reachable from the cloud session today. Free-tier data may be used by Google: test data only.
+# Fill the ids from the model list that `python p1/g10_probe.py --base-url
+# https://generativelanguage.googleapis.com/v1beta/openai/ --key-env GEMINI_API_KEY` prints.
+# Needs: GEMINI_API_KEY in the environment settings.
+# Known risk: JSON calls always send the Nemotron thinking flag; if check.py shows 400s
+# on every role, see SWITCH.md "thinking flag".
+base_url: https://generativelanguage.googleapis.com/v1beta/openai/
+api_key_env: GEMINI_API_KEY
+
+models:
+  nano:   {id: null}
+  super:  {id: null}
+  ultra:  {id: null}
+  vision: {id: null}
+
+roles:
+  router:      {models: [nano, super], timeout_s: 20}
+  solver:      {models: [super], timeout_s: 60, temperature: 1.0, top_p: 0.95}
+  cross_check: {models: [ultra, super], timeout_s: 60, temperature: 1.0, top_p: 0.95}
+  vision:      {models: [vision], timeout_s: 45}

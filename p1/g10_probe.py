@@ -4,6 +4,10 @@ Usage (needs TF_API_KEY and network access to api.tokenfactory.nebius.com):
     python p1/g10_probe.py                      # list models only
     python p1/g10_probe.py --super ID --nano ID --vision ID --photo q.jpg
 
+Stand-in rehearsal (same checks, another OpenAI-compatible provider):
+    python p1/g10_probe.py --base-url URL --key-env NAME --super ID ...
+The output file then carries "stand_in": true; only Token Factory results count.
+
 Writes p1/g10_results.json: per call the model ID, tokens, latency, finish_reason
 and how reasoning text arrived. Prices are not in /v1/models: copy them from the
 Token Factory pricing page into config/models.yaml. Every call is capped at
@@ -79,10 +83,16 @@ def main() -> None:
     ap.add_argument("--nano")
     ap.add_argument("--vision")
     ap.add_argument("--photo", type=Path, help="question photo with no personal data")
+    ap.add_argument("--base-url", default=BASE_URL, help="default: Token Factory")
+    ap.add_argument("--key-env", default="TF_API_KEY", help="env var holding the key")
     args = ap.parse_args()
+    stand_in = args.base_url.rstrip("/") != BASE_URL.rstrip("/")
 
     client = OpenAI(
-        base_url=BASE_URL, api_key=os.environ["TF_API_KEY"], max_retries=0, timeout=120
+        base_url=args.base_url,
+        api_key=os.environ[args.key_env],
+        max_retries=0,
+        timeout=120,
     )
     ids = sorted(m.id for m in client.models.list())
     print("\n".join(ids))
@@ -175,8 +185,10 @@ def main() -> None:
             )
         )
 
-    out = Path(__file__).with_name("g10_results.json")
-    out.write_text(json.dumps({"models": ids, "calls": rows}, indent=2))
+    name = "g10_results_standin.json" if stand_in else "g10_results.json"
+    out = Path(__file__).with_name(name)
+    meta = {"base_url": args.base_url, "stand_in": stand_in}
+    out.write_text(json.dumps({**meta, "models": ids, "calls": rows}, indent=2))
     for r in rows:
         print(
             r["check"],
