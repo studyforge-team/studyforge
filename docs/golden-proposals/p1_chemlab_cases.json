@@ -1,0 +1,295 @@
+[
+ {
+  "id": "CSTR-1",
+  "template": "cstr",
+  "inputs": {
+   "CA0": 1500.0,
+   "v0": 0.02,
+   "V": 3.0,
+   "n": 2.0,
+   "k0": 50.0,
+   "Ea": 40000.0,
+   "T0": 320.0,
+   "isothermal": 1.0
+  },
+  "expected": {
+   "X": [
+    0.5817802887749013,
+    "-"
+   ],
+   "CA": [
+    627.329566837648,
+    "mol/m^3"
+   ],
+   "tau": [
+    150.0,
+    "s"
+   ],
+   "Da": [
+    3.3262126220979815,
+    "-"
+   ]
+  },
+  "n_steady_states": 1,
+  "independent": "Isothermal 2nd-order CSTR: X = (2Da+1-sqrt(4Da+1))/(2Da), Da = k tau CA0; checked by integrating dCA/dt to steady state with LSODA."
+ },
+ {
+  "id": "CSTR-2",
+  "template": "cstr",
+  "inputs": {
+   "CA0": 2000.0,
+   "v0": 0.01,
+   "V": 1.0,
+   "n": 1.0,
+   "k0": 10000000000.0,
+   "Ea": 80000.0,
+   "dHr": -200000.0,
+   "rho_cp": 4180000.0,
+   "UA": 0.0,
+   "Ta": 300.0,
+   "T0": 300.0,
+   "isothermal": 0.0
+  },
+  "expected": {
+   "T": [
+    301.2734315314322,
+    "K"
+   ],
+   "X": [
+    0.013307359503466582,
+    "-"
+   ]
+  },
+  "n_steady_states": 3,
+  "steady_states": [
+   {
+    "T": 301.2734315314322,
+    "X": 0.013307359503466582,
+    "stable": true
+   },
+   {
+    "T": 348.6452512555092,
+    "X": 0.5083428756200712,
+    "stable": false
+   },
+   {
+    "T": 391.3439460107608,
+    "X": 0.9545442358124505,
+    "stable": true
+   }
+  ],
+  "independent": "First order, adiabatic: X = Da/(1+Da) and T = T0 + dT_ad X, so roots of dT_ad Da(T)/(1+Da(T)) - (T - T0) in T, scanned on a grid and refined with brentq. Stability from the sign of d(G-R)/dT. Outputs are the lowest-T stable state."
+ },
+ {
+  "id": "PFR-1",
+  "template": "pfr",
+  "inputs": {
+   "CA0": 800.0,
+   "v0": 0.002,
+   "V": 0.5,
+   "D": 0.1,
+   "n": 1.0,
+   "k": 0.012
+  },
+  "expected": {
+   "X": [
+    0.9502129316321273,
+    "-"
+   ],
+   "CA": [
+    39.829654694298206,
+    "mol/m^3"
+   ],
+   "tau": [
+    250.0,
+    "s"
+   ],
+   "length_m": [
+    63.66197723675813,
+    "m"
+   ]
+  },
+  "independent": "First order: integrate v0 dCA/dV = -k CA with DOP853; cross-checked against X = 1 - exp(-k tau)."
+ },
+ {
+  "id": "PFR-2",
+  "template": "pfr",
+  "inputs": {
+   "CA0": 1200.0,
+   "v0": 0.002,
+   "V": 0.8,
+   "D": 0.1,
+   "n": 2.0,
+   "k": 1e-05
+  },
+  "expected": {
+   "X": [
+    0.8275862068965479,
+    "-"
+   ],
+   "CA": [
+    206.89655172414245,
+    "mol/m^3"
+   ],
+   "tau": [
+    400.0,
+    "s"
+   ],
+   "length_m": [
+    101.85916357881301,
+    "m"
+   ]
+  },
+  "independent": "Second order: integrate v0 dCA/dV = -k CA^2 with DOP853; cross-checked against X = Da/(1+Da), Da = k tau CA0."
+ },
+ {
+  "id": "BATCH-1",
+  "template": "batch",
+  "inputs": {
+   "CA0": 1000.0,
+   "V": 0.5,
+   "n": 1.0,
+   "k": 0.004,
+   "t": 300.0,
+   "X_target": 0.95
+  },
+  "expected": {
+   "t_for_target": [
+    748.9330683885478,
+    "s"
+   ],
+   "X": [
+    0.6988057880877793,
+    "-"
+   ]
+  },
+  "independent": "First order: t = ln(1/(1-X))/k = 748.9 s; X(t) from DOP853; t_target also found by an integration event."
+ },
+ {
+  "id": "BATCH-2",
+  "template": "batch",
+  "inputs": {
+   "CA0": 900.0,
+   "V": 0.5,
+   "n": 0.5,
+   "k": 0.02,
+   "t": 300.0,
+   "X_target": 0.8
+  },
+  "expected": {
+   "t_for_target": [
+    1658.3592135001263,
+    "s"
+   ],
+   "X": [
+    0.18999999999999995,
+    "-"
+   ]
+  },
+  "independent": "n = 0.5: sqrt(CA) = sqrt(CA0) - k t/2, so t = 2 sqrt(CA0)(1 - sqrt(1-X))/k; X(t) from DOP853 and t_target from an integration event."
+ },
+ {
+  "id": "MCCABE-1",
+  "template": "mccabe",
+  "inputs": {
+   "F": 100.0,
+   "zF": 0.45,
+   "xD": 0.95,
+   "xB": 0.04,
+   "q": 1.0,
+   "alpha": 2.4,
+   "R": 1.8
+  },
+  "expected": {
+   "Rmin": [
+    1.3520923520923516,
+    "-"
+   ],
+   "D": [
+    45.05494505494506,
+    "kmol/h"
+   ],
+   "B": [
+    54.94505494505494,
+    "kmol/h"
+   ],
+   "V": [
+    126.15384615384616,
+    "kmol/h"
+   ],
+   "V_bar": [
+    126.15384615384616,
+    "kmol/h"
+   ],
+   "N_theoretical": [
+    14,
+    "-"
+   ],
+   "feed_stage": [
+    7,
+    "-"
+   ],
+   "N_fractional": [
+    13.951718645460948,
+    "-"
+   ]
+  },
+  "exact": [
+   "N_theoretical",
+   "feed_stage"
+  ],
+  "independent": "Constant alpha, CMO, total condenser, reboiler counted as a stage. Rmin from Underwood (theta root of sum alpha z/(alpha-theta) = 1-q); D, B, V, V' from balances (V' = V-(1-q)F); stages stepped top-down with the inverse equilibrium curve and the two operating lines (own code). Last liquid x = 0.0383 vs xB = 0.04."
+ },
+ {
+  "id": "MCCABE-2",
+  "template": "mccabe",
+  "inputs": {
+   "F": 100.0,
+   "zF": 0.4,
+   "xD": 0.9,
+   "xB": 0.05,
+   "q": 0.0,
+   "alpha": 3.0,
+   "R": 3.0
+  },
+  "expected": {
+   "Rmin": [
+    2.2916666666666656,
+    "-"
+   ],
+   "D": [
+    41.1764705882353,
+    "kmol/h"
+   ],
+   "B": [
+    58.8235294117647,
+    "kmol/h"
+   ],
+   "V": [
+    164.7058823529412,
+    "kmol/h"
+   ],
+   "V_bar": [
+    64.70588235294119,
+    "kmol/h"
+   ],
+   "N_theoretical": [
+    8,
+    "-"
+   ],
+   "feed_stage": [
+    5,
+    "-"
+   ],
+   "N_fractional": [
+    7.771840120195366,
+    "-"
+   ]
+  },
+  "exact": [
+   "N_theoretical",
+   "feed_stage"
+  ],
+  "independent": "Constant alpha, CMO, total condenser, reboiler counted as a stage. Rmin from Underwood (theta root of sum alpha z/(alpha-theta) = 1-q); D, B, V, V' from balances (V' = V-(1-q)F); stages stepped top-down with the inverse equilibrium curve and the two operating lines (own code). Last liquid x = 0.0404 vs xB = 0.05."
+ }
+]
