@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { LineChart, type Line } from '@/components/LineChart'
 import { fmt } from '@/lib/fmt'
 import { Button } from '@/components/ui/button'
 import { run } from '@/sandbox/client'
+
+const Cstr3D = lazy(() => import('@/chemlab/three/Cstr3D')) // three.js stays in its own chunk
 
 // gap: the frozen contract has no `final.chemlab` field, so AnswerCard has no "Open in ChemLab" button yet.
 // The hook is ready: link to `#chemlab?V=2&T0=310` and those inputs pre-fill (validated, bad params ignored).
@@ -93,7 +95,6 @@ export default function ChemLab() {
 
   const ss = out?.steady_states ?? []
   const si = sel >= 0 && sel < ss.length ? sel : Math.max(0, ss.findIndex((s) => s.stable))
-  // V3Da (later): the 3D scene reads `ss[si]` (the student's selected steady state) and `out.geometry`.
   const gen = out ? (x: number) => -out.inputs.dHr.value * out.inputs.v0.value * out.inputs.CA0.value * x : () => 0
   const lines = (s: Ser): Line[] =>
     (s.branches ?? [{ stable: true, start: 0, stop: s.x.length }]).map((b) => ({
@@ -157,6 +158,11 @@ export default function ChemLab() {
                   </label>
                 ))}
               </fieldset>
+              {ss[si] && (
+                <Suspense fallback={<p role="status" className="text-sm text-muted-foreground">Loading 3D view…</p>}>
+                  <Cstr3D D={out.geometry.diameter_m} H={out.geometry.height_m} T={ss[si].T} T0={out.inputs.T0.value} Tmax={Math.max(...ss.map((s) => s.T))} UA={out.inputs.UA.value} />
+                </Suspense>
+              )}
               {sr.heat_generated && sr.heat_removed && (
                 <LineChart title="Heat generated and removed" xLabel="T (K)" yLabel="Heat (W)"
                   lines={[{ name: 'generated', x: sr.heat_generated.x, y: sr.heat_generated.y, color: 'var(--destructive)' }, { name: 'removed', x: sr.heat_removed.x, y: sr.heat_removed.y, color: 'var(--primary)' }]}
