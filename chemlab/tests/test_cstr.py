@@ -1,6 +1,7 @@
 """CSTR template tests. Expected values come from closed forms or from an
 independent temperature scan, not from the template's own X-scan."""
 
+import itertools
 import json
 import math
 import random
@@ -320,3 +321,90 @@ def test_fast_enough_for_sliders() -> None:
     start = time.perf_counter()
     run()
     assert time.perf_counter() - start < 1.0
+
+
+def _branches(r: dict) -> tuple[list[dict], np.ndarray, np.ndarray]:
+    sc = r["series"]["s_curve"]
+    return (
+        sc["branches"],
+        np.array(sc["x"], dtype=float),
+        np.array(sc["y"], dtype=float),
+    )
+
+
+def test_s_curve_branches_split_the_fold() -> None:
+    # default inputs have 3 steady states: the S-curve folds back twice
+    r = run({}, series=True)
+    branches, tau, X = _branches(r)
+    assert [b["stable"] for b in branches] == [True, False, True]
+    # contiguous, in X order, covering every point
+    assert branches[0]["start"] == 0 and branches[-1]["stop"] == len(X)
+    for a, b in itertools.pairwise(branches):
+        assert a["stop"] == b["start"]
+    # residence time is monotonic inside each branch, so a renderer that sorts by x
+    # (or draws each branch as its own line) cannot zig-zag
+    for b in branches:
+        d = np.diff(tau[b["start"] : b["stop"]])
+        assert np.all(d > 0) or np.all(d < 0)
+
+
+def test_s_curve_branch_labels_match_independent_eigenvalues() -> None:
+    p = params()
+    r = run({}, series=True)
+    branches, tau, X = _branches(r)
+    for b in branches:
+        for i in range(b["start"], b["stop"], 7):
+            q = dict(p, V=tau[i] * p["v0"])  # the curve varies V at fixed v0
+            T = (
+                -q["dHr"] * q["v0"] * q["CA0"] * X[i]
+                + q["rho_cp"] * q["v0"] * q["T0"]
+                + q["UA"] * q["Ta"]
+            ) / (q["rho_cp"] * q["v0"] + q["UA"])
+            eig = np.linalg.eigvals(jacobian(q, q["CA0"] * (1 - X[i]), T))
+            if abs(eig.real.max()) > 1e-9:  # skip points on a fold
+                assert b["stable"] == bool(eig.real.max() < 0.0)
+
+
+def test_s_curve_isothermal_is_one_stable_branch() -> None:
+    r = run({"isothermal": 1.0}, series=True)
+    branches, _, X = _branches(r)
+    assert branches == [{"stable": True, "start": 0, "stop": len(X)}]
+
+
+def test_s_curve_operating_point_sits_on_a_branch_with_its_label() -> None:
+    # every reported steady state lies on the S-curve at the reactor's tau, on a
+    # branch with the same stability label
+    r = run({}, series=True)
+    branches, tau, X = _branches(r)
+    tau_op = r["inputs"]["V"]["value"] / r["inputs"]["v0"]["value"]
+    for st in r["steady_states"]:
+        i = int(np.argmin(np.abs(X - st["X"])))
+        b = next(b for b in branches if b["start"] <= i < b["stop"])
+        assert b["stable"] == st["stable"]
+        assert math.isclose(tau[i], tau_op, rel_tol=0.2)
+
+
+def test_s_curve_splits_a_fold_between_two_unstable_branches() -> None:
+    # Cooled reactor where an oscillating state (trace > 0) sits next to the
+    # saddle branch: the label is "unstable" on both sides of the fold, so the split
+    # must also happen where tau turns back.
+    inp = {
+        "CA0": 1289.0,
+        "v0": 0.02779,
+        "V": 2.577,
+        "Ea": 84730.0,
+        "dHr": -209900.0,
+        "rho_cp": 426500.0,
+        "UA": 11610.0,
+        "Ta": 306.0,
+        "T0": 286.4,
+        "k0": 2.399e10,
+    }
+    r = run(inp, series=True)
+    branches, tau, _ = _branches(r)
+    assert any(
+        not a["stable"] and not b["stable"] for a, b in itertools.pairwise(branches)
+    )
+    for b in branches:
+        d = np.diff(tau[b["start"] : b["stop"]])
+        assert np.all(d > 0) or np.all(d < 0)

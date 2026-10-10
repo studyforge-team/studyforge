@@ -27,7 +27,7 @@ from scipy.optimize import brentq
 from ._common import InputSpec, Values, envelope, failed, finish, series, spec, validate
 
 TEMPLATE = "cstr"
-VERSION = "1.1"
+VERSION = "1.2"
 R_GAS = 8.314462618  # J/(mol K)
 N_SERIES = 150
 
@@ -241,6 +241,40 @@ def _stable(p: Values, tau: float, T: float, X: float, u: float) -> bool:
     return bool(dR_dT > dG_dT and a11 + a22 < 0.0)
 
 
+def _s_curve_branches(
+    p: Values, tau_X: Any, X: Any, T_X: Any, iso: bool
+) -> list[dict[str, Any]]:
+    """Index ranges [start, stop) of the S-curve, in X order, split where the
+    stability label changes. Each point is a steady state at its own residence time
+    (the curve varies V at fixed v0), so the labels match the steady_states rule.
+    A fold (where tau turns back) is a stability change, so tau is monotonic inside a
+    branch: draw each branch as its own line and nothing zig-zags."""
+    if iso:  # T fixed: only the mole balance, which is always stable for n >= 0
+        return [{"stable": True, "start": 0, "stop": len(X)}]
+    labels = []
+    for t, x, temp in zip(tau_X, X, T_X, strict=True):
+        if not (math.isfinite(t) and t > 0.0):
+            labels.append(False)
+            continue
+        q = dict(p, V=float(t) * p["v0"])
+        labels.append(_stable(q, float(t), float(temp), float(x), 1.0 - float(x)))
+    out: list[dict[str, Any]] = []
+    direction = 0.0  # sign of d(tau) inside the current branch, 0 = not known yet
+    for i, stable in enumerate(labels):
+        step = float(np.sign(tau_X[i] - tau_X[i - 1])) if i else 0.0
+        turns = bool(direction and step and step != direction)
+        if out and out[-1]["stable"] == stable and not turns:
+            out[-1]["stop"] = i + 1
+            direction = direction or step
+        else:
+            # A new branch starts where the label changes or where tau turns back.
+            # Both sides of a fold can be unstable (saddle next to an oscillating
+            # state), so the label alone does not mark every fold.
+            out.append({"stable": stable, "start": i, "stop": i + 1})
+            direction = 0.0
+    return out
+
+
 def _approach_negative(f: Any, inside: float, edge: float) -> float | None:
     """A point between inside and edge, close to edge, where f < 0 (f(inside) > 0)."""
     for k in range(1, 60):
@@ -275,6 +309,7 @@ def _series(p: Values, tau: float, T_op: float, iso: bool) -> dict[str, Any]:
     T_X = np.full_like(X, p["T0"]) if iso else _t_energy(p, X)
     tau_X = X / (_k(p, T_X) * p["CA0"] ** (p["n"] - 1) * (1.0 - X) ** p["n"])
     out["s_curve"] = series(tau_X, X, "s", "-")
+    out["s_curve"]["branches"] = _s_curve_branches(p, tau_X, X, T_X, iso)
     # Levenspiel plot at the operating temperature: CSTR volume = v0*CA0*X/(-rA)
     Xl = np.linspace(0.0, 0.95, N_SERIES)
     inv_rate = 1.0 / (float(_k(p, T_op)) * (p["CA0"] * (1.0 - Xl)) ** p["n"])
