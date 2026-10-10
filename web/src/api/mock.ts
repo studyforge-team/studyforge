@@ -1,5 +1,6 @@
 // Scripted stand-in for the backend, used when VITE_API_URL is unset. Same two functions as client.ts.
-import type { Dashboard, ResultBody, SolveStart, Step, UploadRead } from './types'
+import type { Dashboard, Quiz, ResultBody, SolveStart, Step, UploadRead } from './types'
+import quizMock from './quizMock.json'
 
 const wait = () => new Promise((r) => setTimeout(r, 300))
 
@@ -103,4 +104,9 @@ export async function getDashboard(): Promise<Dashboard> {
       { id: 'r3', title: 'Heat transfer quiz tomorrow — do 5 practice questions', due_at_utc: at(20), sent_at: null, channel: 'app' },
     ],
   }
+}
+
+export async function getQuiz(): Promise<Quiz> {
+  await wait()
+  return quizMock as unknown as Quiz // JSON widens the `type` literals
 }
