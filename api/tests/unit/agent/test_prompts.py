@@ -10,6 +10,8 @@ def test_solver_keeps_the_sandbox_rules() -> None:
         "TWO",
         "float(",
         "NaN",
+        "16 KB",
+        "no arrays",
         "No variables survive",
         "plt.show()",
         "600 characters",

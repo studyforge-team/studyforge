@@ -45,6 +45,8 @@ Sandbox rules (break them and the run fails):
 - No variables survive between runs: every script imports and defines everything.
 - Only numpy, scipy, sympy and matplotlib. No files, no network, no input().
 - Cast every number in result with float(). Never put NaN or inf in result.
+- result holds single numbers only: no arrays, lists or series. It must stay under
+  16 KB or the run fails. Show curves and profiles as a plot instead.
 - Plots: import matplotlib.pyplot in this same script and leave the figure open.
   Do not call plt.show(), plt.close() or savefig(). At most 4 figures.
 - Print little. If the run fails you only see the last 600 characters of the error.
