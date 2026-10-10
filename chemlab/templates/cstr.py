@@ -8,7 +8,10 @@ Method (no division by dHr, no inner root-solve for any order n):
   temperature on the mole-balance curve is explicit: T_MB(X) = Ea / (R*ln(k0/k)).
 - Steady states are the roots of the heat residual G - R along that curve
   (G = heat generated, R = heat removed), found on a dense grid and refined with brentq.
-- Stability uses the slope condition dR/dT > dG/dT (necessary for a CSTR).
+- Stability uses both conditions on the transient model's 2x2 Jacobian (CA, T):
+  det > 0, which is the slope condition dR/dT > dG/dT, and trace < 0. A state that
+  passes only the slope condition is unstable and the reactor oscillates (limit
+  cycle); outputs then carry a warning.
 - isothermal = 1: T = T0, the energy balance is not used.
 - The reported operating point (outputs) is the lowest-temperature stable steady
   state, the one a start-up from the feed temperature reaches; all states are listed
@@ -24,7 +27,7 @@ from scipy.optimize import brentq
 from ._common import InputSpec, Values, envelope, failed, finish, series, spec, validate
 
 TEMPLATE = "cstr"
-VERSION = "1.0"
+VERSION = "1.1"
 R_GAS = 8.314462618  # J/(mol K)
 N_SERIES = 150
 
@@ -80,6 +83,11 @@ def _run(inputs: dict[str, Any], series: bool) -> dict[str, Any]:
     op = next((s for s in states if s["stable"]), states[0])
     out["steady_states"] = states
     out["n_steady_states"] = len(states)
+    if not any(s["stable"] for s in states):
+        out["warnings"].append(
+            "no stable steady state: the reactor oscillates (limit cycle) instead of"
+            " settling; outputs show an unstable state"
+        )
     if len(states) > 1:
         out["warnings"].append(
             f"{len(states)} steady states; outputs show the lowest-temperature stable one"
@@ -205,11 +213,7 @@ def _steady_states(p: Values, tau: float) -> list[dict[str, Any]]:
     states = {}
     for X, u in roots:
         T = float(_t_mole_balance(p, tau, X, u))
-        # slope condition: removal line steeper than generation curve
-        dT_dX = R_GAS * T * T / p["Ea"] * (1.0 / X + p["n"] / u)
-        dG_dT = -p["dHr"] * p["v0"] * p["CA0"] / dT_dX
-        dR_dT = p["rho_cp"] * p["v0"] + p["UA"]
-        states[round(T, 9)] = _state(p, tau, T, X, stable=bool(dR_dT > dG_dT), u=u)
+        states[round(T, 9)] = _state(p, tau, T, X, stable=_stable(p, tau, T, X, u), u=u)
     if p["n"] == 0.0:
         # Zero order can finish (X = 1) at a finite T, so the residual need not change
         # sign: full conversion is a steady state when k*tau >= CA0 at the
@@ -218,6 +222,23 @@ def _steady_states(p: Values, tau: float) -> list[dict[str, Any]]:
         if T1 > 0.0 and float(_k(p, T1)) * tau >= p["CA0"]:
             states[round(T1, 9)] = _state(p, tau, T1, 1.0, stable=True, u=0.0)
     return [states[k] for k in sorted(states)]  # a root at X = 0.5 is found twice
+
+
+def _stable(p: Values, tau: float, T: float, X: float, u: float) -> bool:
+    """Both Jacobian conditions for the transient model
+    dCA/dt = (CA0 - CA)/tau - r,  rho_cp*V*dT/dt = rho_cp*v0*(T0 - T) - UA*(T - Ta) - dHr*V*r
+    with r = k(T)*CA^n. Written with X and u = 1 - X so nothing divides by CA."""
+    # slope condition (det > 0): removal line steeper than the generation curve
+    dT_dX = R_GAS * T * T / p["Ea"] * (1.0 / X + p["n"] / u)
+    dG_dT = -p["dHr"] * p["v0"] * p["CA0"] / dT_dX
+    dR_dT = p["rho_cp"] * p["v0"] + p["UA"]
+    # trace < 0; r = CA0*X/tau at steady state, dr/dCA = n*r/CA, dr/dT = r*Ea/(R*T^2)
+    r = p["CA0"] * X / tau
+    a11 = -1.0 / tau - p["n"] * r / (p["CA0"] * u)
+    a22 = (-dR_dT - p["dHr"] * p["V"] * r * p["Ea"] / (R_GAS * T * T)) / (
+        p["rho_cp"] * p["V"]
+    )
+    return bool(dR_dT > dG_dT and a11 + a22 < 0.0)
 
 
 def _approach_negative(f: Any, inside: float, edge: float) -> float | None:
