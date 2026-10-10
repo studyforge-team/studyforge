@@ -13,6 +13,10 @@ VENV="$ROOT/.venv"
 
 # Python 3.12 (AGENTS.md pins api/ to 3.12)
 if [ ! -x "$VENV/bin/python" ]; then
+  if ! command -v python3.12 >/dev/null; then
+    echo "session-start: python3.12 not found; api/ and chemlab/ need 3.12 (AGENTS.md)" >&2
+    exit 1
+  fi
   python3.12 -m venv "$VENV"
 fi
 "$VENV/bin/pip" install --quiet --upgrade pip
@@ -43,8 +47,8 @@ npm_ci() {
 npm_ci "$ROOT/web"
 npm_ci "$ROOT/runner"
 
-# Put the venv on PATH for the rest of the session
-if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
+# Put the venv on PATH for the rest of the session (once, even if the hook re-runs)
+if [ -n "${CLAUDE_ENV_FILE:-}" ] && ! grep -qs "VIRTUAL_ENV=\"$VENV\"" "$CLAUDE_ENV_FILE"; then
   {
     echo "export VIRTUAL_ENV=\"$VENV\""
     echo "export PATH=\"$VENV/bin:\$PATH\""
