@@ -9,6 +9,7 @@ import time
 import numpy as np
 import pytest
 from chemlab.cstr import R_GAS, SPEC, run
+from scipy.integrate import solve_ivp
 from scipy.optimize import brentq
 
 ADIABATIC = {}  # the defaults: first order, adiabatic, three steady states
@@ -147,6 +148,75 @@ def test_zero_order_full_conversion_is_a_steady_state() -> None:
     assert [s["stable"] for s in states] == [True, False, True]
     for state in states:
         assert_balances(params(**inp), state)
+
+
+def test_oscillating_state_is_not_called_stable() -> None:
+    # The only steady state passes the slope test (dR/dT > dG/dT) but the transient
+    # Jacobian has trace > 0: the reactor runs a limit cycle (311-423 K by solve_ivp)
+    # instead of sitting at ~330 K.
+    inp = {
+        "CA0": 5000.0,
+        "v0": 3.4e-4,
+        "V": 0.32,
+        "k0": 3.4e13,
+        "Ea": 1.0e5,
+        "dHr": -1.9e5,
+        "UA": 9500.0,
+        "Ta": 303.6,
+        "T0": 318.2,
+    }
+    r = run(inp, series=False)
+    assert r["n_steady_states"] == 1
+    assert r["steady_states"][0]["stable"] is False
+    assert any("oscillat" in w for w in r["warnings"])
+    p = params(**inp)
+    T = r["steady_states"][0]["T"]
+    sol = solve_ivp(
+        lambda _, y: transient(p, y),
+        (0.0, 40.0 * p["V"] / p["v0"]),
+        [r["steady_states"][0]["CA"] * 1.001, T],
+        rtol=1e-10,
+        atol=1e-8,
+        method="LSODA",
+    )
+    late = sol.y[1][sol.t > 30.0 * p["V"] / p["v0"]]
+    assert late.max() - late.min() > 50.0  # sustained swing, not a decay to T
+
+
+def test_stable_labels_match_jacobian_eigenvalues() -> None:
+    for inp in (ADIABATIC, {"UA": 2e4, "Ta": 290.0}, {"dHr": 5e4}):
+        p = params(**inp)
+        for state in run(inp, series=False)["steady_states"]:
+            eig = np.linalg.eigvals(jacobian(p, state["CA"], state["T"]))
+            assert state["stable"] == bool(eig.real.max() < 0.0)
+
+
+def transient(p: dict[str, float], y: list[float]) -> list[float]:
+    CA, T = y
+    k = p["k0"] * math.exp(-p["Ea"] / (R_GAS * T))
+    r = k * max(CA, 0.0) ** p["n"]
+    tau = p["V"] / p["v0"]
+    heat = (
+        p["rho_cp"] * p["v0"] * (p["T0"] - T)
+        - p["UA"] * (T - p["Ta"])
+        - p["dHr"] * p["V"] * r
+    )
+    return [(p["CA0"] - CA) / tau - r, heat / (p["rho_cp"] * p["V"])]
+
+
+def jacobian(p: dict[str, float], CA: float, T: float) -> np.ndarray:
+    # central differences of the transient model, independent of the template
+    y0 = np.array([CA, T])
+    J = np.zeros((2, 2))
+    for j in range(2):
+        h = 1e-6 * max(abs(y0[j]), 1.0)
+        up, dn = y0.copy(), y0.copy()
+        up[j] += h
+        dn[j] -= h
+        J[:, j] = (
+            np.array(transient(p, list(up))) - np.array(transient(p, list(dn)))
+        ) / (2 * h)
+    return J
 
 
 def test_endothermic_states_are_stable() -> None:
