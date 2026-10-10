@@ -32,16 +32,16 @@ Nobody on the team has a Visa/Mastercard card for Nebius yet. Until that changes
 | G-rest | Rest of week-0 gates | MUST | 2 | 0 | |
 | K0 | Kickoff | MUST | 2 | 0 | |
 | A3 | LLM client | MUST | 6 | 100 | merged 9 Oct (studyforge-team/studyforge#6); live smoke test + G10 still wait for Nebius |
-| S3 | 10 golden problems + ChemLab cases proposed | MUST | 3 | 75 | branch s3-golden-proposals: 10 problems + 8 ChemLab cases, two methods each, verify script ALL OK; waits for P4 review |
-| C2 | Vision read | MUST | 7 | 75 | c2-vision + upload_reader wired (s2-wiring); real model + 7/8 photos wait for Nebius |
-| S2 | Agent loop + browser bridge | MUST | 16 | 75 | s2-agent-loop + s2-wiring (B8, CH3, C2 wired); Postgres store needs A4; golden runs need Nebius + S1b runner |
+| S3 | 10 golden problems + ChemLab cases proposed | MUST | 3 | 100 | branch s3-golden-proposals: 10 problems + 8 ChemLab cases, two methods each, verify script ALL OK; waits for P4 review |
+| C2 | Vision read | MUST | 7 | 100 | c2-vision + upload_reader wired (s2-wiring); real model + 7/8 photos wait for Nebius |
+| S2 | Agent loop + browser bridge | MUST | 16 | 100 | s2-agent-loop + s2-wiring (B8, CH3, C2 wired); Postgres store needs A4; golden runs need Nebius + S1b runner |
 | TD1 | Test day 1 | MUST | 4 | 0 | |
-| S2b | Solver prompts | MUST | 6 | 75 | s2b-prompts: prompts + smoke harness (292 api tests); 8/10 score needs Nebius + runner |
-| B8 | Number guardrail | MUST | 4 | 75 | b8-guardrail; on by default in the loop (s2-wiring) |
-| Q1 | Quiz engine | MUST | 8 | 75 | q1-quiz: schema, key checks, mock, generator, make_quiz service (107 tests); 10 real quizzes need Nebius |
-| CH1a | CSTR template + frozen format | MUST | 4 | 75 | branch ch1a-cstr: 30 tests + 20k random cases; Pyodide/Node-runner check waits for S1b + jsDelivr |
-| CH3 | Template picking | MUST | 3 | 75 | ch3-template-pick, wired into the loop; 9/10 picks need Nebius + P4 labels |
-| CH1b | PFR, batch, McCabe-Thiele | MUST | 9 | 75 | branch ch1b-templates (stacked on ch1a): 158 chemlab tests; official goldens are P4's |
+| S2b | Solver prompts | MUST | 6 | 100 | s2b-prompts: prompts + smoke harness (292 api tests); 8/10 score needs Nebius + runner |
+| B8 | Number guardrail | MUST | 4 | 100 | b8-guardrail; on by default in the loop (s2-wiring) |
+| Q1 | Quiz engine | MUST | 8 | 100 | q1-quiz: schema, key checks, mock, generator, make_quiz service (107 tests); 10 real quizzes need Nebius |
+| CH1a | CSTR template + frozen format | MUST | 4 | 100 | branch ch1a-cstr: 30 tests + 20k random cases; Pyodide/Node-runner check waits for S1b + jsDelivr |
+| CH3 | Template picking | MUST | 3 | 100 | ch3-template-pick, wired into the loop; 9/10 picks need Nebius + P4 labels |
+| CH1b | PFR, batch, McCabe-Thiele | MUST | 9 | 100 | branch ch1b-templates (stacked on ch1a): 158 chemlab tests; official goldens are P4's |
 | F4 | README | MUST | 3 | 25 | f4-readme-draft: draft, TODOs for after A2/G10 |
 | TD2 | Test day 2 | MUST | 4 | 0 | |
 | F2 | Final fixes | MUST | 3 | 0 | |
@@ -132,3 +132,7 @@ unpushed commits, no uncommitted changes.
   Reviewers requested: ragaveeru-bit (backend), samarthkombli-ops (chemlab/contract), shreyasgoudar251ch056 (Q1, S2b, S3).
 - 10 Oct: Supreeth chose a stand-in model pass (free OpenAI-compatible model now, Nebius switch at the end). Added the hand-over skill `.claude/skills/context/` (SKILL.md = full context + next job, plan-v3.md = the P1 plan, next-session-prompt.md = text to paste into a new session). Network check from the cloud session: Token Factory, NVIDIA API, Groq, OpenRouter and jsDelivr blocked; Gemini API reachable.
 - 10 Oct: added `p1/standin/models.ollama.yaml` (Ollama stand-in registry, validated with main's loader). Checked an outside AI's "merge config/models.local.yaml + README into main now" advice: not done. Merging needs a teammate review (rule 11), Ollama IDs on main break plan rule 6, and main has no runnable API yet (no api/pyproject.toml or app/main.py until A2 #14 merges). Local runs need the p1-integration branch.
+- 10 Oct (afternoon): Supreeth told me to verify everything and merge all P1 work in order. Applied 3 fixes from an outside review after checking them independently: CH1a stability now needs det > 0 and trace < 0 (my own 4,000-case eigenvalue sweep: 0 wrong labels; the old rule mislabelled 30 oscillating states), B8 parses Unicode superscript exponents (10⁵), the setup hook adds PATH once and fails clearly without python3.12. Dry-run merge of everything = ChemLab 160 passed, API 403 passed / 1 skipped, ruff + mypy clean; hook ran twice OK.
+  Merged into main (merge commits, by Supreeth's decision; only #4 had a formal review, by samarthkombli-ops): #4 (renamed "A1: Claude Code cloud session setup hook"), #16 B8, #19 C2, #17 CH1a, #18 CH1b, #23 CH3, #26 S3, #20 Q1, #22 contract, #21 S2 core, #24 S2 wiring (main merged into the branch first; GitHub showed a stale conflict), #25 S2b, #27 README/Devpost draft (status line corrected first). Final main = the tested dry run, byte for byte. Commented on A2 #14: add openai>=1.109,<2 (3.28 breaks mypy at client.py:83, verified), pyyaml, pypdfium2, pillow, types-PyYAML.
+  Ticket % for B8, C2, CH1a, CH1b, CH3, Q1, S2, S2b, S3 set to 100 (merged). Their Nebius done-when checks (live runs) are still open and listed under the standing rule above.
+  Open from the review, needs a team decision: guardrail lets integers ≤ 10 pass (plan rule), sign contradictions pass (deliberate test), verify() can't tell if the two methods are really independent; CSTR operating point by transient start-up; McCabe sizing uses top vapour only; chemlab mypy config. Biggest unknown: no real model has run the agent yet (stand-in pass is next).

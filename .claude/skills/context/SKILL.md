@@ -132,6 +132,14 @@ A fifth collaborator, `sudhanvaad1106-spec`, also has admin access (role unknown
 
 ## 6. What is built (all pushed; verify on GitHub)
 
+**UPDATE 10 Oct afternoon: ALL P1 PRs ARE MERGED INTO `main`** (#4, #16–#27, merge commits,
+Supreeth's decision). Fixes applied first: CH1a stability det>0 AND trace<0, B8 Unicode
+superscripts, hook PATH-once. Final main: ChemLab 160 passed, API 403 passed/1 skipped, ruff +
+mypy clean (with openai 1.109; openai 3.28 breaks mypy at client.py:83). Main still has NO
+`api/pyproject.toml` until A2 (#14) merges; we commented there asking for openai>=1.109,<2,
+pyyaml, pypdfium2, pillow, types-PyYAML. The table below is the history of what each PR held.
+
+
 `main` has: A1 scaffold, P3's web app (A5, S1 sandbox worker, UI1, UI1b, S6, E1, design pass,
 S1 self-test), P3 golden proposals (#12), and **A3 (merged 10 Oct, #6, merge c2bc388)**.
 
@@ -167,7 +175,7 @@ first-use of matplotlib/sympy forces a respawn; result body `{stdout, result, fi
 - Split: ~**61 h buildable without Nebius**, ~**27 h need a model** (Nebius), ~**12 h team
   activities** (kickoff, gates, standups, submit).
 - **Built: ~52.5 of the 61 non-Nebius hours (86 %)** = ~52 % of the 100 h by work done.
-- Tracker (merge-based, `python p1/progress.py`): **52.9 %** (A3 merged = 100 %, 11 PRs at 75 %).
+- Tracker (merge-based, `python p1/progress.py`): **67.9 %** after all P1 PRs merged 10 Oct (was 52.9 %).
 - Left without Nebius (~8.5 h), all blocked: DB store for the loop (P2's A4), Pyodide runner check
   for templates (S1b runner + jsDelivr), final README/Devpost (23/27 Oct), test days on their dates.
 
