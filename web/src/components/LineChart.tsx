@@ -5,9 +5,10 @@ export type Mark = { x: number; y: number; color: string; filled: boolean; big?:
 
 const W = 360, H = 230, L = 52, R = 12, T = 18, B = 40
 
-export function LineChart({ title, lines, marks = [], xLabel, yLabel }: { title: string; lines: Line[]; marks?: Mark[]; xLabel: string; yLabel: string }) {
-  const pts = lines.map((s) => s.x.flatMap((x, i) => (x != null && s.y[i] != null ? [[x, s.y[i] as number]] : [])))
-  const all = [...pts.flat(), ...marks.map((m) => [m.x, m.y])]
+export function LineChart({ title, lines, marks = [], xLabel, yLabel, logX }: { title: string; lines: Line[]; marks?: Mark[]; xLabel: string; yLabel: string; logX?: boolean }) {
+  const tx = (x: number) => (logX ? Math.log10(x) : x) // logX: points with x <= 0 are dropped, tick labels stay in real units
+  const pts = lines.map((s) => s.x.flatMap((x, i) => (x != null && (!logX || x > 0) && s.y[i] != null ? [[tx(x), s.y[i] as number]] : [])))
+  const all = [...pts.flat(), ...marks.map((m) => [tx(m.x), m.y])]
   if (!all.length) return null
   const ext = (i: number) => [Math.min(...all.map((p) => p[i])), Math.max(...all.map((p) => p[i]))]
   const [x0, x1] = ext(0), [y0, y1] = ext(1)
@@ -22,14 +23,14 @@ export function LineChart({ title, lines, marks = [], xLabel, yLabel }: { title:
         <text x={2} y={11}>{yLabel}</text>
         <text x={L - 4} y={sy(y1) + 4} textAnchor="end">{fmt(y1, 3)}</text>
         <text x={L - 4} y={sy(y0)} textAnchor="end">{fmt(y0, 3)}</text>
-        <text x={L} y={H - B + 14} textAnchor="start">{fmt(x0, 3)}</text>
-        <text x={W - R} y={H - B + 14} textAnchor="end">{fmt(x1, 3)}</text>
+        <text x={L} y={H - B + 14} textAnchor="start">{fmt(logX ? 10 ** x0 : x0, 3)}</text>
+        <text x={W - R} y={H - B + 14} textAnchor="end">{fmt(logX ? 10 ** x1 : x1, 3)}</text>
         <text x={(L + W - R) / 2} y={H - 6} textAnchor="middle">{xLabel}</text>
         {lines.map((s, i) => (
           <polyline key={i} points={pts[i].map(([x, y]) => `${sx(x).toFixed(1)},${sy(y).toFixed(1)}`).join(' ')} fill="none" strokeWidth="2" strokeDasharray={s.dash ? '5 3' : undefined} style={{ stroke: s.color }} />
         ))}
         {marks.map((m, i) => (
-          <circle key={i} cx={sx(m.x)} cy={sy(m.y)} r={m.big ? 7 : 5} strokeWidth="2" style={{ stroke: m.color, fill: m.filled ? m.color : 'var(--card)' }} />
+          <circle key={i} cx={sx(tx(m.x))} cy={sy(m.y)} r={m.big ? 7 : 5} strokeWidth="2" style={{ stroke: m.color, fill: m.filled ? m.color : 'var(--card)' }} />
         ))}
       </svg>
       <p className="mt-1 flex flex-wrap gap-x-4 text-xs text-muted-foreground">

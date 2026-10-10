@@ -19,12 +19,19 @@ const SLIDERS = ['V', 'v0', 'T0', 'Ta', 'UA', 'CA0']
 const num = (s: string) => (s.trim() === '' ? NaN : Number(s))
 const u = (s: Spec) => (s.unit === '-' ? '' : ` ${s.unit}`)
 const check = (s: Spec, v: string) => { const x = num(v); return x >= s.min && x <= s.max ? '' : `Enter a number from ${fmt(s.min)} to ${fmt(s.max)}${u(s)}.` }
-// Log slider: position 0..1000. ponytail: min <= 0 (UA) uses max*1e-6 as the floor, so position 0 means exactly min.
-const logLo = (s: Spec) => (s.min > 0 ? s.min : s.max * 1e-6)
-const isLog = (s: Spec) => s.max / logLo(s) > 1000
-const toPos = (s: Spec, v: number) => (!(v > 0) ? 0 : Math.round(Math.min(1000, Math.max(0, (Math.log(v / logLo(s)) / Math.log(s.max / logLo(s))) * 1000))))
+// Slider window (not the validation range): typed values outside it but inside SPEC [min,max] stay valid; the slider pins to its end.
+// ponytail: UA (default 0) is log with exact 0 at position 0 and floor hi*1e-6.
+type Win = { lo: number; hi: number; log: boolean }
+const win = (s: Spec): Win =>
+  s.unit === 'K' ? { lo: Math.max(s.min, s.default - 100), hi: Math.min(s.max, s.default + 300), log: false }
+    : s.default <= 0 ? { lo: 0, hi: Math.min(s.max, 1e5), log: true }
+      : { lo: Math.max(s.min, s.default / 100), hi: Math.min(s.max, s.default * 100), log: true }
+const floor = (w: Win) => (w.lo > 0 ? w.lo : w.hi * 1e-6)
+const clamp = (p: number) => Math.min(1000, Math.max(0, Math.round(p) || 0))
+const toPos = (w: Win, v: number) => clamp(w.log ? (v > 0 ? (Math.log(v / floor(w)) / Math.log(w.hi / floor(w))) * 1000 : 0) : ((v - w.lo) / (w.hi - w.lo)) * 1000)
 const fromPos = (s: Spec, p: number) => {
-  const v = !isLog(s) ? s.min + ((s.max - s.min) * p) / 1000 : p === 0 && s.min <= 0 ? 0 : logLo(s) * (s.max / logLo(s)) ** (p / 1000)
+  const w = win(s)
+  const v = !w.log ? w.lo + ((w.hi - w.lo) * p) / 1000 : p === 0 && w.lo <= 0 ? 0 : floor(w) * (w.hi / floor(w)) ** (p / 1000)
   return Math.min(s.max, Math.max(s.min, v))
 }
 const field = 'h-11 w-full rounded-lg border border-input bg-background px-3 text-base aria-invalid:border-destructive'
@@ -115,7 +122,7 @@ export default function ChemLab() {
                 onChange={(e) => setVals({ ...vals, [k]: e.target.value })} />
               {SLIDERS.includes(k) && (
                 <input type="range" aria-label={`${k} slider`} className="mt-1 h-11 w-full accent-primary" min={0} max={1000} step={1}
-                  value={isLog(s) ? toPos(s, num(vals[k])) : Math.round(((num(vals[k]) - s.min) / (s.max - s.min)) * 1000) || 0}
+                  value={toPos(win(s), num(vals[k]))}
                   onChange={(e) => setVals({ ...vals, [k]: fmt(fromPos(s, +e.target.value)) })} />
               )}
               <p id={`e-${k}`} role="alert" className="text-xs text-destructive">{errs[k]}</p>
@@ -155,7 +162,7 @@ export default function ChemLab() {
                   lines={[{ name: 'generated', x: sr.heat_generated.x, y: sr.heat_generated.y, color: 'var(--destructive)' }, { name: 'removed', x: sr.heat_removed.x, y: sr.heat_removed.y, color: 'var(--primary)' }]}
                   marks={ss.map((s, i) => ({ x: s.T, y: gen(s.X), color: 'currentColor', filled: s.stable, big: i === si }))} />
               )}
-              {sr.s_curve && <LineChart title="S-curve: conversion vs residence time" xLabel="residence time (s)" yLabel="conversion X (-)" lines={lines(sr.s_curve)} />}
+              {sr.s_curve && <LineChart title="S-curve: conversion vs residence time" logX xLabel="residence time (s)" yLabel="conversion X (-)" lines={lines(sr.s_curve)} />}
             </>
           )}
         </div>
