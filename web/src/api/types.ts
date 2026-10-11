@@ -23,3 +23,11 @@ export type WeakTopic = { topic: string; attempts: number; correct: number }
 export type RecentSolve = { id: string; question: string; status: string; created_at: string }
 export type Reminder = { id: string; title: string; due_at_utc: string; sent_at: string | null; channel: 'app' | 'push' } // push = phone notification (D1b); Telegram dropped 10 Oct
 export type Dashboard = { tasks: Task[]; weak_topics: WeakTopic[]; recent_solves: RecentSolve[]; reminders: Reminder[] }
+
+// Quiz schema mirrors api/app/agent/quiz.py (Q1). GET/POST /quizzes is §3.5; `id` is a gap (contract returns no quiz id yet).
+type ItemBase = { topic: string; source: string | null; tags: string[]; stem: string }
+export type MCQItem = ItemBase & { type: 'mcq'; options: string[]; correct_index: number; misconceptions: Record<string, string>; explanation: string } // keys "0".."3"
+export type NumericalItem = ItemBase & { type: 'numerical'; key_code: string; unit: string; tolerance_rel: number; worked_solution: string }
+export type SubjectiveItem = ItemBase & { type: 'subjective'; rubric: string[] }
+export type QuizItem = MCQItem | NumericalItem | SubjectiveItem
+export type Quiz = { id?: string; title: string; items: QuizItem[] }

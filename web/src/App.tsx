@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
 import Shell from './components/Shell'
 import Dashboard from './pages/Dashboard'
+import Quiz from './pages/Quiz'
 import Solve from './pages/Solve'
 
 const SelfTest = lazy(() => import('./SelfTest'))
@@ -21,7 +22,7 @@ export default function App() {
     )
   }
   return <Shell hash={hash}>
-      {hash === '#solve' ? <Solve /> : hash.startsWith('#chemlab') ? (
+      {hash === '#solve' ? <Solve /> : hash === '#quiz' ? <Quiz /> : hash.startsWith('#chemlab') ? (
         <Suspense fallback={<p role="status" className="mx-auto max-w-3xl px-4 py-6 text-sm text-muted-foreground">Loading ChemLab…</p>}><ChemLab key={hash} /></Suspense>
       ) : <Dashboard />}
     </Shell>

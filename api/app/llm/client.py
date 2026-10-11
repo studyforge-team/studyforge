@@ -27,6 +27,7 @@ from app.llm.errors import (
 )
 from app.llm.reasoning import extract_json, strip_reasoning
 from app.llm.registry import Registry, ResolvedModel
+from app.llm.replay import MissingFixture
 
 Message = dict[str, Any]
 T = TypeVar("T", bound=BaseModel)
@@ -200,6 +201,8 @@ class LLMClient:
                         **params,
                     )
                 except openai.APIError as exc:
+                    if isinstance(exc.__cause__, MissingFixture):
+                        raise exc.__cause__ from None  # tests: re-record, don't retry
                     last = _describe(exc)
                     await self._log(role, model, solve_id, start, last, 0, 0)
                     if isinstance(

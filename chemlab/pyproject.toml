@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "studyforge-chemlab"
+version = "0.1.0"
+description = "ChemLab simulation templates (plain numpy/scipy, also run in Pyodide)"
+requires-python = ">=3.12"
+dependencies = ["numpy", "scipy"]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+# Files live in templates/; the import name is chemlab (from chemlab.cstr import run).
+[tool.setuptools]
+package-dir = { "chemlab" = "templates" }
+packages = ["chemlab"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
