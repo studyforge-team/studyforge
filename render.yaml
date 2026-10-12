@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: studyforge-api
+    runtime: python
+    plan: free
+    region: singapore
+    branch: main
+    # No rootDir: the build needs ./chemlab, which lives at the repo root.
+    buildCommand: pip install ./chemlab ./api
+    startCommand: cd api && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: SUPABASE_URL
+        value: https://jcmlosmvfvwvnjyxsnys.supabase.co
+      - key: CORS_ORIGINS
+        value: https://studyforge-ten-alpha.vercel.app,http://localhost:5173
+      # Add later with `sync: false` (set in the Render dashboard) once the solve
+      # router is mounted: TF_API_KEY and any other secrets. Never commit values.
