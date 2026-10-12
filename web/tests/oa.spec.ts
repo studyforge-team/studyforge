@@ -96,8 +96,17 @@ test('OA prep: switching problem while tests run does not leave a stuck state', 
 
 test('OA prep: the starter example call and a student result variable are both handled', async ({ page }) => {
   await page.goto('/#oa')
-  // keeps the starter's last line `result = two_sum(...)`: only that line is skipped
-  expect(await runTests(page, TWO_SUM.replace('result = None', 'result = two_sum([2, 7, 11, 15], 9)'))).toBe('3/3 sample tests passed')
+  // the starter-style last line is skipped: here it would crash every test if it ran
+  const crashingExample = `def two_sum(nums, target):
+    if len(nums) < 2:
+        raise ValueError("needs two numbers")
+    seen = {}
+    for i, n in enumerate(nums):
+        if target - n in seen:
+            return [seen[target - n], i]
+        seen[n] = i
+result = two_sum([1], 5)`
+  expect(await runTests(page, crashingExample)).toBe('3/3 sample tests passed')
   // a module-level variable named result must not be deleted
   const usesResult = `result = []
 def two_sum(nums, target):
@@ -114,8 +123,18 @@ test('OA prep: damaged saved data is ignored and editing clears an old result', 
   await page.addInitScript(() => localStorage.setItem('studyforge.oa.v1', '{"codes":{"two-sum":5},"status":{"two-sum":7}}'))
   await page.goto('/#oa')
   await expect(page.getByLabel('Your python solution')).toHaveValue(/def two_sum/)
+  await expect(page.locator('main [role=status]')).toHaveText('No submission yet.')
   expect(await runTests(page, TWO_SUM)).toBe('3/3 sample tests passed')
   await page.getByLabel('Your python solution').press('End')
   await page.getByLabel('Your python solution').pressSequentially('\n# edited')
   await expect(page.locator('main [role=status]')).toHaveText('No submission yet.')
+})
+
+test('OA prep: editing during a run does not show a result for the old code', async ({ page }) => {
+  await page.goto('/#oa')
+  await page.getByLabel('Your python solution').fill('import time\ndef two_sum(nums, target):\n    time.sleep(1)\n    return [0, 1]')
+  await page.getByRole('button', { name: 'Run sample tests' }).click()
+  await page.getByLabel('Your python solution').press('End')
+  await page.getByLabel('Your python solution').pressSequentially('\n# edited')
+  await expect(page.locator('main [role=status]')).toHaveText('Code changed during the run. Run the tests again.', { timeout: 120_000 })
 })

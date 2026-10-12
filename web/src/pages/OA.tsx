@@ -122,6 +122,10 @@ export default function OA() {
   const [status, setStatus] = useState<Record<string, string>>(() => load().status)
   const [running, setRunning] = useState<string | null>(null) // id of the problem being run
   const alive = useRef(true)
+  const latest = useRef(codes) // the code as it is now, to spot edits made during a run
+  useEffect(() => {
+    latest.current = codes
+  }, [codes])
 
   useEffect(() => {
     alive.current = true
@@ -152,7 +156,9 @@ export default function OA() {
   async function submit() {
     if (running) return
     const target = problem
-    const source = withoutExampleCall(codes[selected])
+    const index = selected
+    const ranCode = codes[index]
+    const source = withoutExampleCall(ranCode)
     setRunning(target.id)
     setStatus((old) => ({ ...old, [target.id]: 'Running sample tests…' }))
 
@@ -178,6 +184,10 @@ export default function OA() {
         if (ok) passed += 1
       }
       if (!alive.current) return
+      if (latest.current[index] !== ranCode) {
+        setStatus((old) => ({ ...old, [target.id]: 'Code changed during the run. Run the tests again.' }))
+        return
+      }
       const total = target.tests.length
       setStatus((old) => ({
         ...old,
