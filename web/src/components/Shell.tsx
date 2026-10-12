@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import Auth from '@/components/Auth'
 import { Mark } from '@/components/icons'
 
 const demo = !import.meta.env.VITE_API_URL // same switch as api/client.ts
@@ -21,6 +22,7 @@ export default function Shell({ hash, children }: { hash: string; children: Reac
           </nav>
         </div>
       </header>
+      <Auth />
       {demo && (
         <div role="status" className="border-b border-warn-line bg-warn-bg print:hidden">
           <p className="mx-auto max-w-3xl px-4 py-2 text-xs text-warn sm:text-sm">Demo mode — sample answers. Nemotron connects when the backend is live.</p>

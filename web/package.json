@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@base-ui/react": "1.8.0",
+    "@supabase/supabase-js": "2.117.3",
     "@types/three": "0.186.0",
     "class-variance-authority": "0.7.1",
     "cn": "0.4.0",
