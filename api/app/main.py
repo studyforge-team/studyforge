@@ -3,6 +3,9 @@ import logging
 
 from fastapi import APIRouter, FastAPI
 
+from app import auth
+from app.routers import solve
+
 
 class JsonFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
@@ -27,4 +30,6 @@ def health_check() -> dict[str, str]:
     return {"status": "ok"}
 
 
+app.dependency_overrides[solve.current_user] = auth.current_user
+# solve.router is NOT included yet: it also needs get_deps (LLM/store wiring, a P1/P2 decision).
 app.include_router(api_router, prefix="/api/v1")
