@@ -1,9 +1,10 @@
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { LineChart, type Line } from '@/components/LineChart'
 import { fmt } from '@/lib/fmt'
 import { Button } from '@/components/ui/button'
 import { run } from '@/sandbox/client'
 import { McCabe } from '@/chemlab/drawings/McCabe'
+import { cstrViews } from '@/chemlab/drawings/cstr'
 
 const Cstr3D = lazy(() => import('@/chemlab/three/Cstr3D')) // three.js stays in its own chunk
 
@@ -13,7 +14,7 @@ type Spec = { unit: string; default: number; min: number; max: number; descripti
 type Ser = { x: (number | null)[]; y: (number | null)[]; x_unit?: string; y_unit?: string; branches?: { stable: boolean; start: number; stop: number }[] }
 type Out = {
   ok: boolean; errors: { message: string }[]; warnings: string[]
-  inputs: Record<string, { value: number }>; outputs: Record<string, { value: number; unit: string }>
+  inputs: Record<string, { value: number; unit: string }>; outputs: Record<string, { value: number; unit: string }>
   steady_states: { T: number; X: number; stable: boolean }[]
   geometry: { diameter_m: number; height_m: number }; series: Record<string, Ser>
 }
@@ -84,6 +85,8 @@ export default function ChemLab() {
     }, 150)
     return () => clearTimeout(h)
   }, [body, t])
+
+  const sheet = useMemo(() => (t === 'cstr' && out?.ok ? cstrViews(out.geometry, out.inputs) : ''), [t, out]) // hooks stay above the early returns
 
   if (loadErr) {
     return (
@@ -179,6 +182,18 @@ export default function ChemLab() {
                 <Suspense fallback={<p role="status" className="text-sm text-muted-foreground">Loading 3D view…</p>}>
                   <Cstr3D D={out.geometry.diameter_m} H={out.geometry.height_m} T={ss[si].T} T0={out.inputs.T0.value} Tmax={Math.max(...ss.map((s) => s.T))} UA={out.inputs.UA.value} />
                 </Suspense>
+              )}
+              {sheet && (
+                <section className="rounded-lg border bg-card p-4">
+                  <h2 className="text-base font-semibold">Drawing (2D, first-angle)</h2>
+                  {/* cstrViews escapes all text and every other interpolated value is a number */}
+                  <div className="mt-2 rounded-md bg-white [&>svg]:h-auto [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: sheet }} />
+                  <Button className="mt-3 min-h-11" onClick={() => {
+                    const a = document.createElement('a')
+                    a.href = URL.createObjectURL(new Blob([sheet], { type: 'image/svg+xml' }))
+                    a.download = 'cstr-drawing.svg'; a.click(); URL.revokeObjectURL(a.href)
+                  }}>Download SVG</Button>
+                </section>
               )}
               {sr.heat_generated && sr.heat_removed && (
                 <LineChart title="Heat generated and removed" xLabel="T (K)" yLabel="Heat (W)"
