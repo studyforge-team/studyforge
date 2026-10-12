@@ -1,4 +1,3 @@
-
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { run } from '@/sandbox/client'
@@ -10,15 +9,17 @@ type Problem = {
   description: string
   starter: string
   tests: { input: string; expected: unknown }[]
+  anyOrder?: boolean // a list answer counts in any order (e.g. the two indices)
 }
 
 const problems: Problem[] = [
   {
     id: 'two-sum',
+    anyOrder: true,
     title: '1. Two Sum',
     difficulty: 'Easy',
     description:
-      'Implement two_sum(nums, target). Return the indices of two distinct elements whose sum equals target. Assume exactly one solution exists.',
+      'Implement two_sum(nums, target). Return the indices of two distinct elements whose sum equals target, in any order. Assume exactly one solution exists.',
     starter: `def two_sum(nums, target):
     # Return the two indices
     pass
@@ -74,6 +75,16 @@ function sameValue(a: unknown, b: unknown): boolean {
   return false
 }
 
+function sorted(v: unknown): unknown {
+  return Array.isArray(v) ? [...v].sort((x, y) => String(x).localeCompare(String(y), undefined, { numeric: true })) : v
+}
+
+// The sandbox returns the last 600 characters of a Python traceback; show only the error line.
+function shortError(error: string): string {
+  const lines = error.split('\n').map((l) => l.trim()).filter(Boolean)
+  return lines.at(-1) ?? error
+}
+
 export default function OA() {
   const [selected, setSelected] = useState(0)
   const [codes, setCodes] = useState(() => problems.map((p) => p.starter))
@@ -96,12 +107,16 @@ export default function OA() {
         if (!response.ok) {
           setStatus((old) => ({
             ...old,
-            [problem.id]: `Execution error: ${response.error}`,
+            [problem.id]: `Execution error: ${shortError(response.error)}`,
           }))
           return
         }
 
-        results.push(sameValue(response.result, test.expected))
+        results.push(
+          problem.anyOrder
+            ? sameValue(sorted(response.result), sorted(test.expected))
+            : sameValue(response.result, test.expected),
+        )
       }
 
       const passed = results.filter(Boolean).length
@@ -124,7 +139,7 @@ export default function OA() {
         Practise Python coding problems and check your solution against sample tests.
       </p>
 
-      <div className="mt-6 flex flex-wrap gap-2" aria-label="Choose a problem">
+      <div role="group" className="mt-6 flex flex-wrap gap-2" aria-label="Choose a problem">
         {problems.map((p, i) => (
           <Button
             key={p.id}
