@@ -8,7 +8,7 @@ import { McCabe } from '@/chemlab/drawings/McCabe'
 const Cstr3D = lazy(() => import('@/chemlab/three/Cstr3D')) // three.js stays in its own chunk
 
 // gap: the frozen contract has no `final.chemlab` field, so AnswerCard has no "Open in ChemLab" button yet.
-// The hook is ready: link to `#chemlab?V=2&T0=310` and those inputs pre-fill (validated, bad params ignored).
+// The hook is ready: link to `#chemlab?V=2&T0=310` (or `#chemlab/pfr?L=3`) and those inputs pre-fill (validated, bad params ignored).
 type Spec = { unit: string; default: number; min: number; max: number; description: string }
 type Ser = { x: (number | null)[]; y: (number | null)[]; x_unit?: string; y_unit?: string; branches?: { stable: boolean; start: number; stop: number }[] }
 type Out = {
@@ -48,7 +48,8 @@ const field = 'h-11 w-full rounded-lg border border-input bg-background px-3 tex
 
 export default function ChemLab() {
   const q = new URLSearchParams(location.hash.split('?')[1] ?? '')
-  const t = TABS.find(([n]) => n === q.get('t'))?.[0] ?? 'cstr' // whitelisted; App remounts ChemLab per hash, so t is fixed per mount
+  // ponytail: template in the path (#chemlab/pfr?L=3), not the query: batch has its own input named `t`.
+  const t = TABS.find(([n]) => n === location.hash.split('?')[0].split('/')[1])?.[0] ?? 'cstr' // whitelisted; App remounts ChemLab per hash
   const [spec, setSpec] = useState<Record<string, Spec>>()
   const [loadErr, setLoadErr] = useState('')
   const [tries, setTries] = useState(0)
@@ -116,9 +117,9 @@ export default function ChemLab() {
     <main className="mx-auto max-w-3xl px-4 py-6 sm:py-8">
       <h1 className="text-2xl font-semibold tracking-tight">ChemLab</h1>
       <p className="mt-1 text-sm text-muted-foreground">Reactor and distillation calculators. Runs on your device, no credits used.</p>
-      <div role="tablist" aria-label="Template" className="mt-3 flex flex-wrap gap-2">
+      <div aria-label="Template" className="mt-3 flex flex-wrap gap-2">
         {TABS.map(([n, l]) => (
-          <button key={n} role="tab" aria-selected={n === t} onClick={() => { location.hash = `#chemlab?t=${n}` }}
+          <button key={n} aria-pressed={n === t} onClick={() => { location.hash = `#chemlab/${n}` }}
             className={`min-h-11 min-w-11 rounded-lg border px-4 text-sm font-medium ${n === t ? 'border-primary bg-primary text-primary-foreground' : 'bg-card'}`}>{l}</button>
         ))}
       </div>

@@ -7,7 +7,7 @@ const sy = (y: number) => S - B - y * (S - B - P)
 const LINES: [string, string, string, boolean][] = [ // [series key, legend, colour, dashed]
   ['diagonal', 'y = x', 'var(--muted-foreground)', true], ['equilibrium', 'equilibrium', 'var(--destructive)', false],
   ['q_line', 'q-line', 'var(--muted-foreground)', false], ['rectifying_line', 'rectifying', 'var(--primary)', false],
-  ['stripping_line', 'stripping', 'currentColor', false], ['stages', 'stages', 'var(--primary)', false],
+  ['stripping_line', 'stripping', 'var(--warn)', false], ['stages', 'stages', 'currentColor', false],
 ]
 
 export function McCabe({ series, stages }: { series: Record<string, Ser>; stages?: number }) {
