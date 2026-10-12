@@ -1,0 +1,23 @@
+# Stand-in registry: OpenRouter (OpenAI-compatible, many providers behind one key).
+# Rehearsal only, never merged. Prefer NVIDIA Nemotron models from its catalogue, so the
+# behaviour is close to the final Nebius setup; ":free" models cost nothing but have tight
+# daily request limits (check openrouter.ai/docs before a long run).
+# Fill the ids from the model list that `python p1/g10_probe.py --base-url
+# https://openrouter.ai/api/v1 --key-env OPENROUTER_API_KEY` prints.
+# Needs: OPENROUTER_API_KEY in the environment settings; allowed domain openrouter.ai.
+# If check.py --live shows 400s on every text role, the thinking flag is rejected: delete
+# the `reasoning:` lines first, then see SWITCH.md "thinking flag".
+base_url: https://openrouter.ai/api/v1/
+api_key_env: OPENROUTER_API_KEY
+
+models:
+  nano:   {id: null}
+  super:  {id: null}
+  ultra:  {id: null}
+  vision: {id: null}
+
+roles:
+  router:      {models: [nano, super], timeout_s: 30, reasoning: false}
+  solver:      {models: [super], timeout_s: 90, reasoning: true, temperature: 1.0, top_p: 0.95}
+  cross_check: {models: [ultra, super], timeout_s: 90, reasoning: true, temperature: 1.0, top_p: 0.95}
+  vision:      {models: [vision], timeout_s: 60}

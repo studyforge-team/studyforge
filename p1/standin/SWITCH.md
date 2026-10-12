@@ -30,6 +30,7 @@ No code changes either way.
 1. Pick a provider and add its key in the environment settings (never in chat):
    - NVIDIA (`NVIDIA_API_KEY`, allow `integrate.api.nvidia.com`), preferred: same Nemotron family.
    - Gemini (`GEMINI_API_KEY`), already reachable from the cloud session.
+   - OpenRouter (`OPENROUTER_API_KEY`, allow `openrouter.ai`): one key, many models incl. Nemotron; free models have tight daily limits.
    - Ollama on the laptop (`models.ollama.yaml`, `LOCAL_LLM_KEY=x`).
    Also allow `cdn.jsdelivr.net` (Pyodide packages for the sandbox runner).
 2. List models and run the G10 checks against it:
