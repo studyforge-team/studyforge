@@ -5,17 +5,20 @@ import Quiz from './pages/Quiz'
 import Solve from './pages/Solve'
 import InterviewBank from './pages/InterviewBank'
 import OA from './pages/OA'
+import PYQPredictor from './pages/PYQPredictor'
 
 const SelfTest = lazy(() => import('./SelfTest'))
-const ChemLab = lazy(() => import('./pages/ChemLab')) // keeps the sandbox page out of the main chunk
+const ChemLab = lazy(() => import('./pages/ChemLab'))
 
 export default function App() {
-  const [hash, setHash] = useState(location.hash) // ponytail: hash routing, no router library
+  const [hash, setHash] = useState(location.hash)
+
   useEffect(() => {
     const on = () => setHash(location.hash)
     addEventListener('hashchange', on)
     return () => removeEventListener('hashchange', on)
   }, [])
+
   if (location.search.includes('selftest')) {
     return (
       <Suspense fallback={null}>
@@ -23,9 +26,32 @@ export default function App() {
       </Suspense>
     )
   }
-  return <Shell hash={hash}>
-      {hash === '#solve' ? <Solve /> : hash === '#quiz' ? <Quiz /> : hash === '#oa' ? <OA /> : hash === '#interview-bank' ? <InterviewBank /> : hash.startsWith('#chemlab') ? (
-        <Suspense fallback={<p role="status" className="mx-auto max-w-3xl px-4 py-6 text-sm text-muted-foreground">Loading ChemLab…</p>}><ChemLab key={hash} /></Suspense>
-      ) : <Dashboard />}
+
+  return (
+    <Shell hash={hash}>
+      {hash === '#solve' ? (
+        <Solve />
+      ) : hash === '#quiz' ? (
+        <Quiz />
+      ) : hash === '#oa' ? (
+        <OA />
+      ) : hash === '#interview-bank' ? (
+        <InterviewBank />
+      ) : hash === '#pyq-predictor' ? (
+        <PYQPredictor />
+      ) : hash.startsWith('#chemlab') ? (
+        <Suspense
+          fallback={
+            <p role="status" className="mx-auto max-w-3xl px-4 py-6 text-sm text-muted-foreground">
+              Loading ChemLab...
+            </p>
+          }
+        >
+          <ChemLab key={hash} />
+        </Suspense>
+      ) : (
+        <Dashboard />
+      )}
     </Shell>
+  )
 }

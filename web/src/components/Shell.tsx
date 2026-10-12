@@ -11,6 +11,7 @@ export default function Shell({ hash, children }: { hash: string; children: Reac
   const quiz = hash === '#quiz'
   const oa = hash === '#oa'
   const interviewBank = hash === '#interview-bank'
+  const pyqPredictor = hash === '#pyq-predictor'
   return (
     <>
       <header className="sticky top-0 z-10 border-b bg-card print:hidden">
@@ -21,6 +22,7 @@ export default function Shell({ hash, children }: { hash: string; children: Reac
             <a href="#solve" className={link} aria-current={ask ? 'page' : undefined}>Ask</a>
             <a href="#quiz" className={link} aria-current={quiz ? 'page' : undefined}>Quiz</a>
             <a href="#interview-bank" className={link} aria-current={interviewBank ? 'page' : undefined}>Interview Bank</a>
+            <a href="#pyq-predictor" className={link} aria-current={pyqPredictor ? 'page' : undefined}>PYQ Predictor</a>
             <a href="#chemlab" className={link} aria-current={lab ? 'page' : undefined}>ChemLab</a>
             <a href="#oa" className={link} aria-current={oa ? 'page' : undefined}>OA Prep</a>
           </nav>
