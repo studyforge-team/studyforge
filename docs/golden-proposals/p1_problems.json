@@ -1,0 +1,142 @@
+[
+ {
+  "id": "P1-01",
+  "question": "A first-order liquid-phase reaction A -> B runs in a well-mixed batch reactor with k = 0.045 min^-1. How long does it take to reach 90% conversion of A? Give the answer in minutes.",
+  "answer": {
+   "value": 51.1686,
+   "unit": "min"
+  },
+  "tolerance_rel": 0.01,
+  "method_1": "t = ln(1/(1-X))/k",
+  "method_2": "solve_ivp dCA/dt = -k CA with a stop event at CA/CA0 = 0.1",
+  "topic": "CRE: batch reactor, first order",
+  "difficulty": "easy",
+  "source_note": "standard textbook form; numbers original"
+ },
+ {
+  "id": "P1-02",
+  "question": "A 0.50 m^3 tank holds nitrogen at 350 K and 4.2 bar absolute. Treating it as an ideal gas, how many moles of nitrogen are in the tank?",
+  "answer": {
+   "value": 72.1634,
+   "unit": "mol"
+  },
+  "tolerance_rel": 0.01,
+  "method_1": "n = PV/(RT) in SI (Pa, m^3, J/mol/K)",
+  "method_2": "n = PV/(RT) in bar, litres, R = 0.0831446 L bar/(mol K)",
+  "topic": "Thermodynamics: ideal gas",
+  "difficulty": "easy",
+  "source_note": "standard textbook form; numbers original"
+ },
+ {
+  "id": "P1-03",
+  "question": "Oil (viscosity 0.080 Pa s, density 880 kg/m^3) flows at 2.0 L/s through a 50 m long horizontal pipe of 0.050 m inside diameter. What is the pressure drop in kPa?",
+  "answer": {
+   "value": 52.1519,
+   "unit": "kPa"
+  },
+  "tolerance_rel": 0.01,
+  "method_1": "Hagen-Poiseuille dP = 128 mu L Q/(pi D^4); Re = 560 so laminar",
+  "method_2": "Darcy-Weisbach with f = 64/Re",
+  "topic": "Fluid flow: laminar pipe",
+  "difficulty": "easy",
+  "source_note": "standard textbook form; numbers original"
+ },
+ {
+  "id": "P1-04",
+  "question": "A furnace wall has 0.23 m of firebrick (k = 1.1 W/(m K)), 0.12 m of insulating brick (k = 0.15 W/(m K)) and a 10 mm steel plate (k = 45 W/(m K)). The hot face is at 1100 C and the outer steel surface is at 90 C. What is the heat loss per square metre of wall in W/m^2?",
+  "answer": {
+   "value": 1000.68,
+   "unit": "W/m^2"
+  },
+  "tolerance_rel": 0.01,
+  "method_1": "q = dT / sum(L/k)",
+  "method_2": "solve the two interface temperatures as a linear system, then q = k dT/L in layer 1",
+  "topic": "Heat transfer: composite wall",
+  "difficulty": "easy",
+  "source_note": "standard textbook form; numbers original"
+ },
+ {
+  "id": "P1-05",
+  "question": "Hot oil (2.0 kg/s, cp = 2.1 kJ/(kg K)) is cooled from 160 C to 100 C in a counter-current heat exchanger by water (2.5 kg/s, cp = 4.18 kJ/(kg K)) entering at 20 C. U = 350 W/(m^2 K). What heat transfer area is needed, in m^2?",
+  "answer": {
+   "value": 7.43518,
+   "unit": "m^2"
+  },
+  "tolerance_rel": 0.01,
+  "method_1": "Q = U A LMTD (counter-current)",
+  "method_2": "effectiveness-NTU, counter-flow formula, A = NTU Cmin/U",
+  "topic": "Heat transfer: counter-current exchanger",
+  "difficulty": "medium",
+  "source_note": "standard textbook form; numbers original"
+ },
+ {
+  "id": "P1-06",
+  "question": "Air (ideal gas, R = 0.287 kJ/(kg K), gamma = 1.4) enters a reversible adiabatic compressor at 100 kPa and 300 K and leaves at 600 kPa. What is the shaft work per kg of air in kJ/kg?",
+  "answer": {
+   "value": 201.456,
+   "unit": "kJ/kg"
+  },
+  "tolerance_rel": 0.01,
+  "method_1": "w = gamma/(gamma-1) R T1 [(P2/P1)^((gamma-1)/gamma) - 1]",
+  "method_2": "numerical integral of v dP along P v^gamma = const",
+  "topic": "Thermodynamics: isentropic compression",
+  "difficulty": "medium",
+  "source_note": "standard textbook form; numbers original"
+ },
+ {
+  "id": "P1-07",
+  "question": "A liquid feed with mole fractions 0.30 (A), 0.40 (B) and 0.30 (C) is flashed isothermally. The K-values at flash conditions are K_A = 3.2, K_B = 1.1, K_C = 0.25. What fraction of the feed leaves as vapour (V/F)?",
+  "answer": {
+   "value": 0.490018,
+   "unit": "-"
+  },
+  "tolerance_rel": 0.01,
+  "method_1": "Rachford-Rice equation solved with brentq on [0, 1]",
+  "method_2": "Rachford-Rice cleared of denominators, polynomial roots, root in [0, 1]",
+  "topic": "Separations: flash",
+  "difficulty": "medium",
+  "source_note": "standard textbook form; numbers original"
+ },
+ {
+  "id": "P1-08",
+  "question": "Two equal CSTRs of 150 L each are in series. A first-order reaction A -> B with k = 0.12 min^-1 occurs in liquid fed at 20 L/min. What is the overall conversion of A leaving the second reactor, in percent?",
+  "answer": {
+   "value": 72.2992,
+   "unit": "%"
+  },
+  "tolerance_rel": 0.01,
+  "method_1": "X = 1 - 1/(1 + k tau)^2 with tau = 7.5 min",
+  "method_2": "simultaneous steady-state mole balances solved with fsolve",
+  "topic": "CRE: CSTRs in series",
+  "difficulty": "medium",
+  "source_note": "standard textbook form; numbers original"
+ },
+ {
+  "id": "P1-09",
+  "question": "Solve dy/dt = 0.8 y - 0.05 y^3 with y(0) = 2. What is y(3)?",
+  "answer": {
+   "value": 3.95152,
+   "unit": "-"
+  },
+  "tolerance_rel": 0.01,
+  "method_1": "Bernoulli substitution u = y^-2 gives a linear ODE with a closed form",
+  "method_2": "scipy solve_ivp, DOP853, rtol 1e-13",
+  "topic": "Maths: nonlinear ODE initial value problem",
+  "difficulty": "hard",
+  "source_note": "standard textbook form; numbers original"
+ },
+ {
+  "id": "P1-10",
+  "question": "Find the smallest positive root of x tan(x) = 2.5, with x in radians (the first eigenvalue for a slab with Biot number 2.5).",
+  "answer": {
+   "value": 1.14223,
+   "unit": "rad"
+  },
+  "tolerance_rel": 0.01,
+  "method_1": "brentq on x tan x - 2.5 over (0.1, pi/2)",
+  "method_2": "Newton iteration on x sin x - 2.5 cos x (no pole)",
+  "topic": "Maths: root of a nonlinear equation",
+  "difficulty": "hard",
+  "source_note": "standard textbook form; numbers original"
+ }
+]
