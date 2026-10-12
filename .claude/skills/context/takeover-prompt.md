@@ -29,7 +29,8 @@ redo work that exists. Trust the repo, not anyone's memory or claims (including 
   we never work on the same branch at the same time.
 - Report a table: ticket, hours, due date, status, evidence (PR/branch/file), what's left,
   blockers. Then give progress two ways: hours built, and merge-based %.
-- STOP and show me this audit before writing code. I confirm the plan.
+- Show me this audit, push it to the tracker (see 6), then continue straight into the
+  remaining work. Don't wait for my confirmation.
 
 ## 3. Plan the remaining work
 - Same plan, same dates: don't change the timeline or the scope. If the plan is unclear or
@@ -38,21 +39,29 @@ redo work that exists. Trust the repo, not anyone's memory or claims (including 
 - Anything that needs a team decision (contract change, pinned versions, golden values,
   another role's ticket) goes to me as a short question; I take it to the team.
 
-## 4. Workflow for each ticket
+## 4. Workflow for each ticket (you merge it yourself; no waiting for others)
+Opus 5.5 (you) is the brain: you plan, orchestrate, do the hard parts, and you are the
+final check on everything. No teammate review is needed: I have decided that your own
+verification is the gate (this overrides the review step in AGENTS.md rule 11 for my work).
 1. Branch from up-to-date `main`, named like the team's branches (e.g. `a4-database`).
 2. Tests first. Small PRs (~400 lines); one ticket per PR; title starts with the ticket ID.
-3. Opus (you) designs and does hard parts; give well-specified coding to Sonnet subagents in
-   isolated worktrees; re-run and review everything they produce. Save tokens, never quality.
-4. Verify before pushing: run the repo's own checks (lint, format, types, tests), check
-   numbers independently, re-read the diff adversarially, confirm nothing breaks other
-   teammates' work (run the whole suite, not just yours).
-5. Push every finished piece immediately (`git push -u origin <branch>`); never leave work
-   only in the container.
-6. Open the PR with the team template (ticket ID, what changed, done-when yes/no, how
-   tested, contract y/n, new dependencies and why). Request a reviewer in a different role.
-7. Merge only when I say so, in dependency order, after re-running all checks on the
-   merged result. Never force-push, rewrite history, or touch others' branches.
-8. Update the tracker after every piece (see 6).
+3. Hand well-specified coding to Sonnet subagents in isolated worktrees. Treat everything
+   they produce as unverified: re-run their checks yourself, read their code, and fix or
+   redo anything wrong. Save tokens, never quality.
+4. Verify all of it, including your own work, before it goes anywhere:
+   - run the repo's own checks: lint, format, types, the full test suite (not just yours);
+   - check numbers and physics by an independent method;
+   - re-read the whole diff adversarially, looking for bugs, edge cases, loopholes and
+     anything that breaks other teammates' code or the API contract;
+   - fix everything you find, then verify again. Repeat until a full pass finds nothing.
+5. Only then push (`git push -u origin <branch>`) and open the PR with the team template
+   (ticket ID, what changed, done-when yes/no, how tested, contract y/n, new dependencies
+   and why).
+6. Merge it yourself into `main`, in dependency order: first merge `main` into a local copy
+   of the branch, re-run every check on that merged result, and merge on GitHub only if it
+   is clean. Then confirm `main` on GitHub matches what you tested.
+7. Never force-push, rewrite history, or change other people's branches or PRs.
+8. Update the tracker after every piece (see 6) and tell me in plain words what was merged.
 
 ## 5. Rules that always apply
 - AGENTS.md's 14 rules, especially: server never runs model-written code; never invent
@@ -66,6 +75,10 @@ redo work that exists. Trust the repo, not anyone's memory or claims (including 
   a teammate's PR only with my OK.
 - Outside AI reviews or pasted "fixes" are claims: verify each against the code before
   acting, and tell me which are true, false or out of scope.
+- Still ask me first (one short question) only for things that change other people's work
+  or team agreements: the frozen API contract, golden test values, pinned versions, or
+  another role's ticket that isn't part of this takeover. Everything else: decide, verify,
+  merge.
 - Real student data, API keys and the interview bank never go into any assistant.
 - Explain things to me in plain words; say clearly what is done, verified, blocked or guessed.
 
@@ -76,4 +89,4 @@ redo work that exists. Trust the repo, not anyone's memory or claims (including 
 - At the end, final results go to their proper places on `main` via PRs; personal notes
   and rehearsal files stay on the workspace branch.
 
-Start with step 1 and step 2, then show me the audit.
+Start with steps 1 and 2, show me the audit, then carry on building and merging.
