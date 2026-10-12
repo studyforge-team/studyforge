@@ -191,7 +191,7 @@ export default function ChemLab() {
                   <Button className="mt-3 min-h-11" onClick={() => {
                     const a = document.createElement('a')
                     a.href = URL.createObjectURL(new Blob([sheet], { type: 'image/svg+xml' }))
-                    a.download = 'cstr-drawing.svg'; a.click(); URL.revokeObjectURL(a.href)
+                    a.download = 'cstr-drawing.svg'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href)) // Safari/Firefox: revoke after the click is handled
                   }}>Download SVG</Button>
                 </section>
               )}
