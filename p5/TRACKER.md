@@ -47,8 +47,15 @@ Checks run on main (12 Oct): web `oxlint` 0 errors (2 warnings, not P5), `tsc -b
 - 12 Oct: browser e2e here: `npm run build` needs cdn.jsdelivr.net (blocked); offline config (vite build, no Pyodide,
   executablePath /opt/pw-browsers/chromium) runs dashboard.spec 6/6 on main. Baseline api 418 passed/1 skipped, chemlab 165.
 
+- 12 Oct (re-check, main = 5dc4085): P2 work on main = A2 (#14), AU1 (#36), A6 (#37, #39). Still missing: A4 DB, C1
+  uploads, NR notes search, D6 scheduler, /dashboard endpoint, mounted LLM wiring. Can-do-now: D1 ~80 % (all but DB
+  persistence), D1b ~80 % (all but DB + D6 calling it; a live phone test is possible once VAPID keys are in Render/Vercel),
+  D5 ~60 % (needs NR for links + LLM wiring/model for real questions).
+- 12 Oct: **PR #40 "feat: add OA prep practice page" (shreyasgoudar251ch056, open, 18:14 UTC)** = P5 ticket OA. Shreyas also
+  built V2Da (#13). Shreyas looks like the active previous P5 owner: confirm before building any P5 ticket (risk of duplicates).
+
 ## Open questions (for Supreeth / the team)
-1. Is `sudhanvaad1106-spec` the previous P5? Any local, unpushed work?
+1. Is Shreyas (`shreyasgoudar251ch056`, PR #40 OA, #13 V2Da) the previous/current P5? (`sudhanvaad1106-spec` has no activity.) Is Shreyas also doing D1/D1b/D5? Any local, unpushed work?
 2. IB vs rule 13: OK to build the filter/practice code with a synthetic sample bank, real bank loaded by a human?
 3. D1/D1b add new endpoints (notices, push subscriptions): needs a contract note (rule 3)?
 4. D1/D1b/D5/PY/TE back ends need P2's A4/NR/C1: build now against an interface + fakes, wire when P2 lands?
