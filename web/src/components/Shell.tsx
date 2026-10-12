@@ -9,16 +9,18 @@ export default function Shell({ hash, children }: { hash: string; children: Reac
   const ask = hash === '#solve'
   const lab = hash.startsWith('#chemlab')
   const quiz = hash === '#quiz'
+  const oa = hash === '#oa'
   return (
     <>
       <header className="sticky top-0 z-10 border-b bg-card print:hidden">
         <div className="mx-auto flex h-14 max-w-3xl items-center justify-between px-4">
           <span className="flex items-center gap-2 font-semibold tracking-tight text-primary"><Mark />StudyForge</span>
           <nav aria-label="Main" className="flex">
-            <a href="#" className={link} aria-current={ask || lab || quiz ? undefined : 'page'}>Today</a>
+            <a href="#" className={link} aria-current={ask || lab || quiz || oa ? undefined : 'page'}>Today</a>
             <a href="#solve" className={link} aria-current={ask ? 'page' : undefined}>Ask</a>
             <a href="#quiz" className={link} aria-current={quiz ? 'page' : undefined}>Quiz</a>
             <a href="#chemlab" className={link} aria-current={lab ? 'page' : undefined}>ChemLab</a>
+            <a href="#oa" className={link} aria-current={oa ? 'page' : undefined}>OA Prep</a>
           </nav>
         </div>
       </header>
