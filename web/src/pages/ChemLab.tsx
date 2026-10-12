@@ -3,13 +3,14 @@ import { LineChart, type Line } from '@/components/LineChart'
 import { fmt } from '@/lib/fmt'
 import { Button } from '@/components/ui/button'
 import { run } from '@/sandbox/client'
+import { McCabe } from '@/chemlab/drawings/McCabe'
 
 const Cstr3D = lazy(() => import('@/chemlab/three/Cstr3D')) // three.js stays in its own chunk
 
 // gap: the frozen contract has no `final.chemlab` field, so AnswerCard has no "Open in ChemLab" button yet.
 // The hook is ready: link to `#chemlab?V=2&T0=310` and those inputs pre-fill (validated, bad params ignored).
 type Spec = { unit: string; default: number; min: number; max: number; description: string }
-type Ser = { x: (number | null)[]; y: (number | null)[]; branches?: { stable: boolean; start: number; stop: number }[] }
+type Ser = { x: (number | null)[]; y: (number | null)[]; x_unit?: string; y_unit?: string; branches?: { stable: boolean; start: number; stop: number }[] }
 type Out = {
   ok: boolean; errors: { message: string }[]; warnings: string[]
   inputs: Record<string, { value: number }>; outputs: Record<string, { value: number; unit: string }>
@@ -17,6 +18,13 @@ type Out = {
   geometry: { diameter_m: number; height_m: number }; series: Record<string, Ser>
 }
 
+const TABS = [['cstr', 'CSTR'], ['batch', 'Batch'], ['pfr', 'PFR'], ['mccabe', 'McCabe-Thiele']]
+// [series key, title, x name, y name]; axis units come from the series' own x_unit / y_unit
+const CHARTS: Record<string, [string, string, string, string][]> = {
+  batch: [['concentration_time', 'Concentration vs time', 'time', 'CA'], ['conversion_time', 'Conversion vs time', 'time', 'X']],
+  pfr: [['concentration_profile', 'Concentration along the reactor', 'length', 'CA'], ['conversion_profile', 'Conversion along the reactor', 'length', 'X'], ['levenspiel', 'Levenspiel plot', 'X', '1/(-rA)']],
+}
+const ax = (n: string, unit?: string) => (unit && unit !== '-' ? `${n} (${unit})` : n)
 const SLIDERS = ['V', 'v0', 'T0', 'Ta', 'UA', 'CA0']
 const num = (s: string) => (s.trim() === '' ? NaN : Number(s))
 const u = (s: Spec) => (s.unit === '-' ? '' : ` ${s.unit}`)
@@ -39,6 +47,8 @@ const fromPos = (s: Spec, p: number) => {
 const field = 'h-11 w-full rounded-lg border border-input bg-background px-3 text-base aria-invalid:border-destructive'
 
 export default function ChemLab() {
+  const q = new URLSearchParams(location.hash.split('?')[1] ?? '')
+  const t = TABS.find(([n]) => n === q.get('t'))?.[0] ?? 'cstr' // whitelisted; App remounts ChemLab per hash, so t is fixed per mount
   const [spec, setSpec] = useState<Record<string, Spec>>()
   const [loadErr, setLoadErr] = useState('')
   const [tries, setTries] = useState(0)
@@ -50,16 +60,15 @@ export default function ChemLab() {
   // SPEC comes from Python (single source of truth); the first call also boots the sandbox.
   useEffect(() => {
     let live = true
-    void run('from chemlab.cstr import SPEC\nresult = {k: dict(v) for k, v in SPEC.items()}', { mode: 'chemlab' }).then((r) => {
+    void run(`from chemlab.${t} import SPEC\nresult = {k: dict(v) for k, v in SPEC.items()}`, { mode: 'chemlab' }).then((r) => {
       if (!live) return
       if (!r.ok) return setLoadErr(r.error)
       const s = r.result as Record<string, Spec>
-      const q = new URLSearchParams(location.hash.split('?')[1] ?? '')
       setVals(Object.fromEntries(Object.entries(s).map(([k, sp]) => { const p = q.get(k); return [k, p !== null && !check(sp, p) ? p : String(sp.default)] })))
       setSpec(s)
     })
     return () => { live = false }
-  }, [tries])
+  }, [tries, t])
 
   const names = spec ? Object.keys(spec) : []
   const errs = Object.fromEntries(names.map((k) => [k, check(spec![k], vals[k] ?? '')]).filter(([, e]) => e))
@@ -67,13 +76,13 @@ export default function ChemLab() {
 
   useEffect(() => {
     if (!body) return // out-of-range input: do not run
-    const t = setTimeout(() => {
-      void run(`from chemlab.cstr import run\nresult = run(${body})`, { mode: 'chemlab', latestWins: true }).then((r) => {
+    const h = setTimeout(() => {
+      void run(`from chemlab.${t} import run\nresult = run(${body})`, { mode: 'chemlab', latestWins: true }).then((r) => {
         if (r.ok) { setFail(''); setOut(r.result as Out) } else if (r.error !== 'superseded') setFail(r.error)
       })
     }, 150)
-    return () => clearTimeout(t)
-  }, [body])
+    return () => clearTimeout(h)
+  }, [body, t])
 
   if (loadErr) {
     return (
@@ -95,10 +104,10 @@ export default function ChemLab() {
 
   const ss = out?.steady_states ?? []
   const si = sel >= 0 && sel < ss.length ? sel : Math.max(0, ss.findIndex((s) => s.stable))
-  const gen = out ? (x: number) => -out.inputs.dHr.value * out.inputs.v0.value * out.inputs.CA0.value * x : () => 0
-  const lines = (s: Ser): Line[] =>
+  const gen = t === 'cstr' && out ? (x: number) => -out.inputs.dHr.value * out.inputs.v0.value * out.inputs.CA0.value * x : () => 0
+  const lines = (s: Ser, nm = 'conversion'): Line[] =>
     (s.branches ?? [{ stable: true, start: 0, stop: s.x.length }]).map((b) => ({
-      name: s.branches ? (b.stable ? 'stable' : 'unstable') : 'conversion',
+      name: s.branches ? (b.stable ? 'stable' : 'unstable') : nm,
       x: s.x.slice(b.start, b.stop), y: s.y.slice(b.start, b.stop), color: b.stable ? 'var(--primary)' : 'var(--destructive)', dash: !b.stable,
     }))
   const sr = out?.series ?? {}
@@ -106,7 +115,13 @@ export default function ChemLab() {
   return (
     <main className="mx-auto max-w-3xl px-4 py-6 sm:py-8">
       <h1 className="text-2xl font-semibold tracking-tight">ChemLab</h1>
-      <p className="mt-1 text-sm text-muted-foreground">Continuous stirred-tank reactor (CSTR). Runs on your device, no credits used.</p>
+      <p className="mt-1 text-sm text-muted-foreground">Reactor and distillation calculators. Runs on your device, no credits used.</p>
+      <div role="tablist" aria-label="Template" className="mt-3 flex flex-wrap gap-2">
+        {TABS.map(([n, l]) => (
+          <button key={n} role="tab" aria-selected={n === t} onClick={() => { location.hash = `#chemlab?t=${n}` }}
+            className={`min-h-11 min-w-11 rounded-lg border px-4 text-sm font-medium ${n === t ? 'border-primary bg-primary text-primary-foreground' : 'bg-card'}`}>{l}</button>
+        ))}
+      </div>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         {names.map((k) => {
           const s = spec[k]
@@ -121,7 +136,7 @@ export default function ChemLab() {
               <p className="text-xs text-muted-foreground">{s.description}</p>
               <input id={`f-${k}`} type="number" step="any" inputMode="decimal" className={`mt-2 ${field}`} value={vals[k]} aria-invalid={!!errs[k]} aria-describedby={`e-${k}`}
                 onChange={(e) => setVals({ ...vals, [k]: e.target.value })} />
-              {SLIDERS.includes(k) && (
+              {t === 'cstr' && SLIDERS.includes(k) && (
                 <input type="range" aria-label={`${k} slider`} className="mt-1 h-11 w-full accent-primary" min={0} max={1000} step={1}
                   value={toPos(win(s), num(vals[k]))}
                   onChange={(e) => setVals({ ...vals, [k]: fmt(fromPos(s, +e.target.value)) })} />
@@ -146,9 +161,10 @@ export default function ChemLab() {
                   {Object.entries(out.outputs).map(([k, o]) => (
                     <div key={k}><dt className="text-xs text-muted-foreground">{k}</dt><dd><span data-out={k} className="font-medium tabular-nums">{fmt(o.value)}</span> {o.unit === '-' ? '' : o.unit}</dd></div>
                   ))}
-                  <div><dt className="text-xs text-muted-foreground">D, H</dt><dd className="font-medium tabular-nums">{fmt(out.geometry.diameter_m)} m, {fmt(out.geometry.height_m)} m</dd></div>
+                  {out.geometry.height_m != null && <div><dt className="text-xs text-muted-foreground">D, H</dt><dd className="font-medium tabular-nums">{fmt(out.geometry.diameter_m)} m, {fmt(out.geometry.height_m)} m</dd></div>}
                 </dl>
               </section>
+              {t === 'cstr' && <>
               <fieldset className="rounded-lg border bg-card p-4">
                 <legend className="px-1 text-base font-semibold">Steady states ({ss.length})</legend>
                 {ss.map((s, i) => (
@@ -169,6 +185,11 @@ export default function ChemLab() {
                   marks={ss.map((s, i) => ({ x: s.T, y: gen(s.X), color: 'currentColor', filled: s.stable, big: i === si }))} />
               )}
               {sr.s_curve && <LineChart title="S-curve: conversion vs residence time" logX xLabel="residence time (s)" yLabel="conversion X (-)" lines={lines(sr.s_curve)} />}
+              </>}
+              {(CHARTS[t] ?? []).map(([k, title, xn, yn]) => sr[k] && (
+                <LineChart key={k} title={title} xLabel={ax(xn, sr[k].x_unit)} yLabel={ax(yn, sr[k].y_unit)} lines={lines(sr[k], yn)} />
+              ))}
+              {t === 'mccabe' && sr.stages && <McCabe series={sr} stages={out.outputs.N_theoretical?.value} />}
             </>
           )}
         </div>
