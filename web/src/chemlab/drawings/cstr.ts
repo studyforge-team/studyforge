@@ -101,7 +101,7 @@ export function cstrViews(g: { diameter_m: number; height_m: number }, inputs: I
   for (const a of [45, 135, 225, 315]) o.push(`<rect class="baf" x="${n(xc + r - w)}" y="${n(yp - 1.5)}" width="${n(w)}" height="3" transform="rotate(${a} ${n(xc)} ${n(yp)})"/>`)
   rect(xc - r - stub, yp - nr, stub, 2 * nr, 'noz'); rect(xc + r, yp - nr, stub, 2 * nr, 'noz')
   circ(xc, yp, ri, 'hid'); line(xc - ri, yp, xc + ri, yp, 'hid'); line(xc, yp - ri, xc, yp + ri, 'hid')
-  circ(xc, yp, 3, 'sh')
+  rect(xc - 0.12 * D * s, yp - 0.12 * D * s, 0.24 * D * s, 0.24 * D * s, 'mot') // motor on top is visible in plan; shaft is under it
   lead(xc - r - stub / 2, yp - 32, xc - r - stub / 2, yp - nr, 'Feed in', 'end', yp - 29, xc - r - stub / 2 - 6)
   lead(xc + r + stub / 2, yp + 32, xc + r + stub / 2, yp + nr, 'Product out', 'start', yp + 44, xc + r + stub / 2 + 6)
   const ab = c * (r - w / 2)
