@@ -26,7 +26,11 @@ app = FastAPI(title="StudyForge API")
 # Bearer tokens, not cookies: no credentials. Never "*".
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[o.strip() for o in os.environ.get("CORS_ORIGINS", "https://studyforge-ten-alpha.vercel.app").split(",")],
+    allow_origins=[  # trailing "/" and empty entries would silently never match
+        o.strip().rstrip("/")
+        for o in os.environ.get("CORS_ORIGINS", "https://studyforge-ten-alpha.vercel.app").split(",")
+        if o.strip()
+    ],
     allow_methods=["GET", "POST"],
     allow_headers=["Authorization", "Content-Type"],
 )
