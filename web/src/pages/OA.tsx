@@ -86,10 +86,12 @@ function shortError(error: string): string {
   return lines.at(-1) ?? error
 }
 
-// Top-level `result = ...` lines (like the starter's example call) would run once per
-// test and could fail before the test's own call; only the test sets `result`.
-function withoutTopLevelResult(code: string): string {
-  return code.split('\n').filter((line) => !/^result\s*=/.test(line)).join('\n')
+// The starter ends with an example call (`result = two_sum([...], 9)`). Drop only that
+// last line if it is a plain call, so it isn't re-run before every test; any other use
+// of a `result` variable in the student's code is left alone.
+function withoutExampleCall(code: string): string {
+  const lines = code.replace(/\s+$/, '').split('\n')
+  return /^result\s*=\s*[A-Za-z_]\w*\(.*\)\s*$/.test(lines.at(-1) ?? '') ? lines.slice(0, -1).join('\n') : code
 }
 
 const STORE = 'studyforge.oa.v1' // per-browser drafts and results, so leaving the page keeps work
@@ -99,8 +101,13 @@ type Saved = { codes: Record<string, string>; status: Record<string, string> }
 function load(): Saved {
   try {
     const raw = localStorage.getItem(STORE)
-    const v = raw ? (JSON.parse(raw) as Partial<Saved>) : {}
-    return { codes: v.codes ?? {}, status: v.status ?? {} }
+    const v: unknown = raw ? JSON.parse(raw) : {}
+    const strings = (o: unknown): Record<string, string> =>
+      o && typeof o === 'object'
+        ? Object.fromEntries(Object.entries(o).filter(([, x]) => typeof x === 'string'))
+        : {}
+    const obj = (v && typeof v === 'object' ? v : {}) as Record<string, unknown>
+    return { codes: strings(obj.codes), status: strings(obj.status) }
   } catch {
     return { codes: {}, status: {} }
   }
@@ -125,7 +132,12 @@ export default function OA() {
 
   useEffect(() => {
     try {
-      const done = Object.fromEntries(Object.entries(status).filter(([, v]) => !v.startsWith('Running')))
+      const before = load().status // a run in progress keeps the last finished result saved
+      const done = Object.fromEntries(
+        Object.entries(status).flatMap(([k, v]) =>
+          v.startsWith('Running') ? (before[k] ? [[k, before[k]]] : []) : [[k, v]],
+        ),
+      )
       localStorage.setItem(
         STORE,
         JSON.stringify({ codes: Object.fromEntries(problems.map((p, i) => [p.id, codes[i]])), status: done }),
@@ -140,7 +152,7 @@ export default function OA() {
   async function submit() {
     if (running) return
     const target = problem
-    const source = withoutTopLevelResult(codes[selected])
+    const source = withoutExampleCall(codes[selected])
     setRunning(target.id)
     setStatus((old) => ({ ...old, [target.id]: 'Running sample tests…' }))
 
@@ -154,6 +166,10 @@ export default function OA() {
         if (!response.ok) {
           errors += 1
           firstError ||= `test ${i + 1}: ${shortError(response.error)}`
+          if (response.error === 'timeout' || response.error === 'sandbox failed to start') {
+            errors += target.tests.length - i - 1 // an infinite loop or a dead sandbox fails the rest too
+            break
+          }
           continue
         }
         const ok = target.anyOrder
@@ -220,9 +236,18 @@ export default function OA() {
           spellCheck={false}
           value={codes[selected]}
           onChange={(event) =>
-            setCodes((old) =>
-              old.map((code, i) => (i === selected ? event.target.value : code)),
-            )
+            {
+              setCodes((old) =>
+                old.map((code, i) => (i === selected ? event.target.value : code)),
+              )
+              if (running !== problem.id) {
+                setStatus((old) => {
+                  const next = { ...old }
+                  delete next[problem.id] // the old result no longer matches this code
+                  return next
+                })
+              }
+            }
           }
           className="mt-2 min-h-80 w-full resize-y rounded-lg border bg-background p-4 font-mono text-sm leading-6 outline-none focus-visible:ring-2 focus-visible:ring-ring"
         />
@@ -236,10 +261,9 @@ export default function OA() {
             aria-live="polite"
             className="text-sm text-muted-foreground"
           >
-            {status[problem.id] ??
-              (running && running !== problem.id
-                ? 'Another problem is still running its tests…'
-                : 'No submission yet.')}
+            {running && running !== problem.id
+              ? 'Another problem is still running its tests…'
+              : (status[problem.id] ?? 'No submission yet.')}
           </p>
         </div>
       </section>

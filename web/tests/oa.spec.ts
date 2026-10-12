@@ -93,3 +93,29 @@ test('OA prep: switching problem while tests run does not leave a stuck state', 
   await expect(page.locator('main [role=status]')).toHaveText(/sample tests passed/, { timeout: 120_000 })
   await expect(page.getByRole('button', { name: 'Run sample tests' })).toBeEnabled()
 })
+
+test('OA prep: the starter example call and a student result variable are both handled', async ({ page }) => {
+  await page.goto('/#oa')
+  // keeps the starter's last line `result = two_sum(...)`: only that line is skipped
+  expect(await runTests(page, TWO_SUM.replace('result = None', 'result = two_sum([2, 7, 11, 15], 9)'))).toBe('3/3 sample tests passed')
+  // a module-level variable named result must not be deleted
+  const usesResult = `result = []
+def two_sum(nums, target):
+    result.clear()
+    for i in range(len(nums)):
+        for j in range(i + 1, len(nums)):
+            if nums[i] + nums[j] == target:
+                result.extend([i, j])
+                return list(result)`
+  expect(await runTests(page, usesResult)).toBe('3/3 sample tests passed')
+})
+
+test('OA prep: damaged saved data is ignored and editing clears an old result', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('studyforge.oa.v1', '{"codes":{"two-sum":5},"status":{"two-sum":7}}'))
+  await page.goto('/#oa')
+  await expect(page.getByLabel('Your python solution')).toHaveValue(/def two_sum/)
+  expect(await runTests(page, TWO_SUM)).toBe('3/3 sample tests passed')
+  await page.getByLabel('Your python solution').press('End')
+  await page.getByLabel('Your python solution').pressSequentially('\n# edited')
+  await expect(page.locator('main [role=status]')).toHaveText('No submission yet.')
+})

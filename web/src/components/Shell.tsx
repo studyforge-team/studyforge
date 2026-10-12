@@ -13,7 +13,7 @@ export default function Shell({ hash, children }: { hash: string; children: Reac
   const interviewBank = hash === '#interview-bank'
   useEffect(() => {
     // On narrow phones the nav scrolls; keep the current page's link in view.
-    document.querySelector('nav[aria-label="Main"] [aria-current="page"]')?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+    document.querySelector('nav[aria-label="Main"] [aria-current="page"]')?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' })
   }, [hash])
   return (
     <>
