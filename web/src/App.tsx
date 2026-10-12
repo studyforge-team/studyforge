@@ -3,6 +3,7 @@ import Shell from './components/Shell'
 import Dashboard from './pages/Dashboard'
 import Quiz from './pages/Quiz'
 import Solve from './pages/Solve'
+import InterviewBank from './pages/InterviewBank'
 import OA from './pages/OA'
 
 const SelfTest = lazy(() => import('./SelfTest'))
@@ -23,7 +24,7 @@ export default function App() {
     )
   }
   return <Shell hash={hash}>
-      {hash === '#solve' ? <Solve /> : hash === '#quiz' ? <Quiz /> : hash === '#oa' ? <OA /> : hash.startsWith('#chemlab') ? (
+      {hash === '#solve' ? <Solve /> : hash === '#quiz' ? <Quiz /> : hash === '#oa' ? <OA /> : hash === '#interview-bank' ? <InterviewBank /> : hash.startsWith('#chemlab') ? (
         <Suspense fallback={<p role="status" className="mx-auto max-w-3xl px-4 py-6 text-sm text-muted-foreground">Loading ChemLab…</p>}><ChemLab key={hash} /></Suspense>
       ) : <Dashboard />}
     </Shell>
