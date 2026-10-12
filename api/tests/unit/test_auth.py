@@ -35,7 +35,7 @@ def mint(sub: str = "A", key: Any = KEY, alg: str = "ES256", kid: str = "k1", **
 def jwks(monkeypatch: pytest.MonkeyPatch) -> list[int]:
     monkeypatch.setenv("SUPABASE_URL", URL)
     monkeypatch.setattr(auth, "_keys", {})
-    monkeypatch.setattr(auth, "_fetched_at", 0.0)
+    monkeypatch.setattr(auth, "_fetched_at", None)
     calls: list[int] = []
 
     def fake() -> dict[str, jwt.PyJWK]:
@@ -98,7 +98,7 @@ def test_unknown_kid_refetches_once(jwks: list[int], monkeypatch: pytest.MonkeyP
     assert get(mint(kid="junk")).status_code == 401
     assert len(jwks) == 1  # cooldown: a junk kid right after a fetch doesn't refetch
     monkeypatch.setattr(auth, "fetch_jwks", lambda: {"rotated": jwt.PyJWK(jwk(KEY, "rotated"))})
-    monkeypatch.setattr(auth, "_fetched_at", 0.0)  # cooldown elapsed
+    monkeypatch.setattr(auth, "_fetched_at", time.monotonic() - 61)  # cooldown elapsed
     assert get(mint(kid="rotated")).status_code == 200  # rotation picked up
     assert get(mint(kid="rotated")).status_code == 200  # cached, no further fetch needed
 
