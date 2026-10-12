@@ -37,6 +37,16 @@ Checks run on main (12 Oct): web `oxlint` 0 errors (2 warnings, not P5), `tsc -b
 ## Decisions
 - 12 Oct: tracker branch `p5-tracker` created from main 8769e79.
 
+- 12 Oct: verified Supreeth's plan "build our part first, P2 builds theirs, merge at the end" against the repo:
+  works for D1, D1b, D5 behind store/search interfaces with in-memory/fake versions (same pattern as P1's solve loop,
+  `api/app/agent/state.py`). Final done-when checks wait for A4 (DB), NR (notes search), D6 (scheduler), a model.
+  Recommendation: merge each ticket as soon as it is verified, not at the end: main.py, Shell.tsx, vercel.json change
+  several times a week (Samarth is landing P2 tickets AU1/A6 fast), so long-open branches would drift.
+- 12 Oct: pywebpush 2.5.0/2.4.0 need cryptography>=47 but api pins cryptography==46.0.3 -> use pywebpush 2.3.0
+  (no pin change). Transitive aiohappyeyeballs is PSF-2.0 (not on the MIT/Apache/MPL list): flag in the D1b PR.
+- 12 Oct: browser e2e here: `npm run build` needs cdn.jsdelivr.net (blocked); offline config (vite build, no Pyodide,
+  executablePath /opt/pw-browsers/chromium) runs dashboard.spec 6/6 on main. Baseline api 418 passed/1 skipped, chemlab 165.
+
 ## Open questions (for Supreeth / the team)
 1. Is `sudhanvaad1106-spec` the previous P5? Any local, unpushed work?
 2. IB vs rule 13: OK to build the filter/practice code with a synthetic sample bank, real bank loaded by a human?
@@ -45,3 +55,5 @@ Checks run on main (12 Oct): web `oxlint` 0 errors (2 warnings, not P5), `tsc -b
 
 ## Log
 - 12 Oct: audit done (this file). Nothing built yet; waiting for Supreeth's go-ahead before code.
+- 12 Oct: started D1/D1b/D5 helpers, then stopped them at Supreeth's request ("verify first"). Nothing was
+  committed or pushed; no worktrees left. Verification of the plan recorded under Decisions. Waiting for go-ahead.
