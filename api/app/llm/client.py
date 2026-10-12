@@ -338,5 +338,5 @@ def _with_schema(messages: list[Message], schema: type[BaseModel]) -> list[Messa
     return [{"role": "system", "content": instruction}, *messages]
 
 
-def _validate(schema: type[T], text: str) -> T:
+def _validate[T: BaseModel](schema: type[T], text: str) -> T:
     return schema.model_validate(extract_json(text))  # ValidationError is a ValueError
