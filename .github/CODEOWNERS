@@ -1,2 +1,2 @@
 # P4 must review changes to golden test data
-/tests/golden/ @sudhanvaad1106-spec
+/api/tests/golden/ @sudhanvaad1106-spec
