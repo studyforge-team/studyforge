@@ -8,10 +8,10 @@ import OA from './pages/OA'
 import PYQPredictor from './pages/PYQPredictor'
 
 const SelfTest = lazy(() => import('./SelfTest'))
-const ChemLab = lazy(() => import('./pages/ChemLab'))
+const ChemLab = lazy(() => import('./pages/ChemLab')) // keeps the sandbox page out of the main chunk
 
 export default function App() {
-  const [hash, setHash] = useState(location.hash)
+  const [hash, setHash] = useState(location.hash) // ponytail: hash routing, no router library
 
   useEffect(() => {
     const on = () => setHash(location.hash)
@@ -43,7 +43,7 @@ export default function App() {
         <Suspense
           fallback={
             <p role="status" className="mx-auto max-w-3xl px-4 py-6 text-sm text-muted-foreground">
-              Loading ChemLab...
+              Loading ChemLab…
             </p>
           }
         >
