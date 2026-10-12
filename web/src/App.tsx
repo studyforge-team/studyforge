@@ -3,6 +3,7 @@ import Shell from './components/Shell'
 import Dashboard from './pages/Dashboard'
 import Quiz from './pages/Quiz'
 import Solve from './pages/Solve'
+import InterviewBank from './pages/InterviewBank'
 
 const SelfTest = lazy(() => import('./SelfTest'))
 const ChemLab = lazy(() => import('./pages/ChemLab')) // keeps the sandbox page out of the main chunk
@@ -21,9 +22,17 @@ export default function App() {
       </Suspense>
     )
   }
-  return <Shell hash={hash}>
-      {hash === '#solve' ? <Solve /> : hash === '#quiz' ? <Quiz /> : hash.startsWith('#chemlab') ? (
-        <Suspense fallback={<p role="status" className="mx-auto max-w-3xl px-4 py-6 text-sm text-muted-foreground">Loading ChemLab…</p>}><ChemLab key={hash} /></Suspense>
-      ) : <Dashboard />}
+    return (
+    <Shell hash={hash}>
+      {hash === '#solve' ? <Solve />
+        : hash === '#quiz' ? <Quiz />
+        : hash.startsWith('#chemlab') ? (
+          <Suspense fallback={<p role="status" className="mx-auto max-w-3xl px-4 py-6 text-sm text-muted-foreground">Loading ChemLab…</p>}>
+            <ChemLab key={hash} />
+          </Suspense>
+        )
+        : hash === '#interview-bank' ? <InterviewBank />
+        : <Dashboard />}
     </Shell>
+  )
 }
