@@ -1,7 +1,14 @@
+import { supabase } from '@/lib/supabase'
 import * as mock from './mock'
 import type { Dashboard, Quiz, ResultBody, SolveStart, Step, UploadKind, UploadRead } from './types'
 
 const BASE = import.meta.env.VITE_API_URL as string | undefined
+
+// Bearer token for the backend (AU1 verifies it). Never passed to the Pyodide worker.
+const auth = async (): Promise<Record<string, string>> => {
+  const t = (await supabase?.auth.getSession())?.data.session?.access_token
+  return t ? { Authorization: `Bearer ${t}` } : {}
+}
 
 // ponytail: no retry — retrying POST /solve could create duplicate solves
 async function post<T>(path: string, body: unknown | FormData, onSlow?: () => void): Promise<T> {
@@ -10,7 +17,7 @@ async function post<T>(path: string, body: unknown | FormData, onSlow?: () => vo
     const r = await fetch(`${BASE}/api/v1${path}`, {
       method: 'POST',
       // FormData: the browser sets the multipart Content-Type (with boundary) itself
-      ...(body instanceof FormData ? { body } : { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
+      ...(body instanceof FormData ? { body, headers: await auth() } : { headers: { 'Content-Type': 'application/json', ...(await auth()) }, body: JSON.stringify(body) }),
     })
     if (!r.ok) throw new Error(`Server error (HTTP ${r.status})`)
     return (await r.json()) as T
@@ -37,7 +44,7 @@ export const postResult = async (id: string, body: ResultBody, onSlow?: () => vo
 
 export async function getDashboard(): Promise<Dashboard> {
   if (!BASE) return mock.getDashboard()
-  const r = await fetch(`${BASE}/api/v1/dashboard`)
+  const r = await fetch(`${BASE}/api/v1/dashboard`, { headers: await auth() })
   if (!r.ok) throw new Error(`Server error (HTTP ${r.status})`)
   return (await r.json()) as Dashboard
 }
