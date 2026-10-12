@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import Auth from '@/components/Auth'
 import { Mark } from '@/components/icons'
 
@@ -11,6 +11,10 @@ export default function Shell({ hash, children }: { hash: string; children: Reac
   const quiz = hash === '#quiz'
   const oa = hash === '#oa'
   const interviewBank = hash === '#interview-bank'
+  useEffect(() => {
+    // On narrow phones the nav scrolls; keep the current page's link in view.
+    document.querySelector('nav[aria-label="Main"] [aria-current="page"]')?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+  }, [hash])
   return (
     <>
       <header className="sticky top-0 z-10 border-b bg-card print:hidden">

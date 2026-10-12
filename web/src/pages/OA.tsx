@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { run } from '@/sandbox/client'
 
@@ -81,51 +81,99 @@ function sorted(v: unknown): unknown {
 
 // The sandbox returns the last 600 characters of a Python traceback; show only the error line.
 function shortError(error: string): string {
+  if (error === 'timeout') return 'took longer than 10 s (an infinite loop?)'
   const lines = error.split('\n').map((l) => l.trim()).filter(Boolean)
   return lines.at(-1) ?? error
 }
 
+// Top-level `result = ...` lines (like the starter's example call) would run once per
+// test and could fail before the test's own call; only the test sets `result`.
+function withoutTopLevelResult(code: string): string {
+  return code.split('\n').filter((line) => !/^result\s*=/.test(line)).join('\n')
+}
+
+const STORE = 'studyforge.oa.v1' // per-browser drafts and results, so leaving the page keeps work
+
+type Saved = { codes: Record<string, string>; status: Record<string, string> }
+
+function load(): Saved {
+  try {
+    const raw = localStorage.getItem(STORE)
+    const v = raw ? (JSON.parse(raw) as Partial<Saved>) : {}
+    return { codes: v.codes ?? {}, status: v.status ?? {} }
+  } catch {
+    return { codes: {}, status: {} }
+  }
+}
+
 export default function OA() {
   const [selected, setSelected] = useState(0)
-  const [codes, setCodes] = useState(() => problems.map((p) => p.starter))
-  const [status, setStatus] = useState<Record<string, string>>({})
-  const [running, setRunning] = useState(false)
+  const [codes, setCodes] = useState(() => {
+    const saved = load().codes
+    return problems.map((p) => saved[p.id] ?? p.starter)
+  })
+  const [status, setStatus] = useState<Record<string, string>>(() => load().status)
+  const [running, setRunning] = useState<string | null>(null) // id of the problem being run
+  const alive = useRef(true)
+
+  useEffect(() => {
+    alive.current = true
+    return () => {
+      alive.current = false // stop an unfinished run from queueing more tests after leaving
+    }
+  }, [])
+
+  useEffect(() => {
+    try {
+      const done = Object.fromEntries(Object.entries(status).filter(([, v]) => !v.startsWith('Running')))
+      localStorage.setItem(
+        STORE,
+        JSON.stringify({ codes: Object.fromEntries(problems.map((p, i) => [p.id, codes[i]])), status: done }),
+      )
+    } catch {
+      // storage blocked (private window): the page still works, drafts just aren't kept
+    }
+  }, [codes, status])
 
   const problem = problems[selected]
 
   async function submit() {
-    setRunning(true)
-    setStatus((old) => ({ ...old, [problem.id]: 'Running sample tests…' }))
+    if (running) return
+    const target = problem
+    const source = withoutTopLevelResult(codes[selected])
+    setRunning(target.id)
+    setStatus((old) => ({ ...old, [target.id]: 'Running sample tests…' }))
 
     try {
-      const results: boolean[] = []
-
-      for (const test of problem.tests) {
-        const code = `${codes[selected]}\nresult = ${test.input}`
-        const response = await run(code, { mode: 'solve' })
-
+      let passed = 0
+      let errors = 0
+      let firstError = ''
+      for (const [i, test] of target.tests.entries()) {
+        if (!alive.current) return
+        const response = await run(`${source}\nresult = ${test.input}`, { mode: 'solve' })
         if (!response.ok) {
-          setStatus((old) => ({
-            ...old,
-            [problem.id]: `Execution error: ${shortError(response.error)}`,
-          }))
-          return
+          errors += 1
+          firstError ||= `test ${i + 1}: ${shortError(response.error)}`
+          continue
         }
-
-        results.push(
-          problem.anyOrder
-            ? sameValue(sorted(response.result), sorted(test.expected))
-            : sameValue(response.result, test.expected),
-        )
+        const ok = target.anyOrder
+          ? sameValue(sorted(response.result), sorted(test.expected))
+          : sameValue(response.result, test.expected)
+        if (ok) passed += 1
       }
-
-      const passed = results.filter(Boolean).length
+      if (!alive.current) return
+      const total = target.tests.length
       setStatus((old) => ({
         ...old,
-        [problem.id]: `${passed}/${results.length} sample tests passed`,
+        [target.id]:
+          errors === total // the code never ran (syntax error, import error, ...)
+            ? `Execution error: ${firstError.replace(/^test \d+: /, '')}`
+            : firstError
+              ? `${passed}/${total} sample tests passed. Error in ${firstError}`
+              : `${passed}/${total} sample tests passed`,
       }))
     } finally {
-      setRunning(false)
+      if (alive.current) setRunning(null)
     }
   }
 
@@ -144,6 +192,7 @@ export default function OA() {
           <Button
             key={p.id}
             variant={selected === i ? 'default' : 'outline'}
+            aria-pressed={selected === i}
             onClick={() => setSelected(i)}
           >
             {p.title}
@@ -179,15 +228,18 @@ export default function OA() {
         />
 
         <div className="mt-4 flex flex-wrap items-center gap-3">
-          <Button onClick={() => void submit()} disabled={running}>
-            {running ? 'Running…' : 'Run sample tests'}
+          <Button onClick={() => void submit()} disabled={running !== null}>
+            {running === problem.id ? 'Running…' : 'Run sample tests'}
           </Button>
           <p
             role="status"
             aria-live="polite"
             className="text-sm text-muted-foreground"
           >
-            {status[problem.id] ?? 'No submission yet.'}
+            {status[problem.id] ??
+              (running && running !== problem.id
+                ? 'Another problem is still running its tests…'
+                : 'No submission yet.')}
           </p>
         </div>
       </section>

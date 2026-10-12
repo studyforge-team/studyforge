@@ -44,3 +44,52 @@ for (const width of [320, 360, 375]) {
     }
   })
 }
+
+async function pick(page: import('@playwright/test').Page, name: RegExp) {
+  await page.getByRole('group', { name: 'Choose a problem' }).getByRole('button', { name }).click()
+}
+
+test('OA prep: wrong answers fail, None compares, errors keep the other results', async ({ page }) => {
+  await page.goto('/#oa')
+  expect(await runTests(page, 'def two_sum(nums, target):\n    return [0, 0]')).toBe('0/3 sample tests passed')
+  await pick(page, /First Non-Repeating/)
+  const firstUnique = `from collections import Counter
+def first_unique(s):
+    c = Counter(s)
+    return next((ch for ch in s if c[ch] == 1), None)`
+  expect(await runTests(page, firstUnique)).toBe('3/3 sample tests passed')
+  // crashes only on "aabb" (test 2): the other two results still count
+  const crashOnAabb = `def first_unique(s):
+    if s == "aabb":
+        raise ValueError("boom")
+    return {"swiss": "w", "leetcode": "l"}[s]`
+  expect(await runTests(page, crashOnAabb)).toBe('2/3 sample tests passed. Error in test 2: ValueError: boom')
+})
+
+test('OA prep: an infinite loop is explained', async ({ page }) => {
+  await page.goto('/#oa')
+  await pick(page, /Valid Palindrome/)
+  const out = await runTests(page, 'def is_palindrome(s):\n    while True:\n        pass')
+  expect(out).toContain('took longer than 10 s')
+})
+
+test('OA prep: drafts and results survive leaving the page', async ({ page }) => {
+  await page.goto('/#oa')
+  expect(await runTests(page, TWO_SUM)).toBe('3/3 sample tests passed')
+  await page.getByRole('link', { name: 'Quiz' }).click()
+  await page.getByRole('link', { name: 'OA Prep' }).click()
+  await expect(page.getByLabel('Your python solution')).toHaveValue(TWO_SUM)
+  await expect(page.locator('main [role=status]')).toHaveText('3/3 sample tests passed')
+  await expect(page.getByRole('button', { name: /Two Sum/ })).toHaveAttribute('aria-pressed', 'true')
+})
+
+test('OA prep: switching problem while tests run does not leave a stuck state', async ({ page }) => {
+  await page.goto('/#oa')
+  await page.getByLabel('Your python solution').fill('import time\ndef two_sum(nums, target):\n    time.sleep(1)\n    return [0, 1]')
+  await page.getByRole('button', { name: 'Run sample tests' }).click()
+  await pick(page, /Valid Palindrome/)
+  await expect(page.locator('main [role=status]')).toHaveText('Another problem is still running its tests…')
+  await pick(page, /Two Sum/)
+  await expect(page.locator('main [role=status]')).toHaveText(/sample tests passed/, { timeout: 120_000 })
+  await expect(page.getByRole('button', { name: 'Run sample tests' })).toBeEnabled()
+})
