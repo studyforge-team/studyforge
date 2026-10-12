@@ -4,12 +4,15 @@ Our project signs ES256; it does not use the legacy HS256 secret, so there is no
 """
 
 import os
+import time
 
 import httpx
 import jwt
 from fastapi import Header, HTTPException
 
 _keys: dict[str, jwt.PyJWK] = {}  # ponytail: process-wide cache, no TTL — rotation handled by refetch-on-unknown-kid
+_fetched_at = 0.0
+REFETCH_COOLDOWN_S = 60  # junk kids can't make us hammer the JWKS endpoint
 
 
 def _base() -> str:
@@ -23,9 +26,10 @@ def fetch_jwks() -> dict[str, jwt.PyJWK]:
 
 
 def _key(kid: str) -> jwt.PyJWK:
-    if kid not in _keys:  # ponytail: one refetch per unknown kid; add a cooldown if junk kids ever hammer JWKS
-        _keys.clear()
-        _keys.update(fetch_jwks())
+    global _keys, _fetched_at
+    if kid not in _keys and time.monotonic() - _fetched_at > REFETCH_COOLDOWN_S:
+        _fetched_at = time.monotonic()
+        _keys = fetch_jwks()  # swap the whole dict: concurrent readers never see it empty
     return _keys[kid]
 
 
