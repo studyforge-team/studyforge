@@ -24,3 +24,8 @@ test('answers stay hidden until revealed', async ({ page }) => {
   await firstQuestion.getByRole('button', { name: 'Show answer' }).click()
   await expect(firstQuestion.getByText('Answer:', { exact: false })).toBeVisible()
 })
+
+test('interview bank says the questions are illustrative, not real company questions', async ({ page }) => {
+  await page.goto('/#interview-bank')
+  await expect(page.getByTestId('ib-disclaimer')).toContainText('not actual questions')
+})

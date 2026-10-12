@@ -86,6 +86,10 @@ export default function InterviewBank() {
         </p>
       </header>
 
+      <p className="mt-3 rounded-lg border border-warn-line bg-warn-bg px-3 py-2 text-xs text-warn" data-testid="ib-disclaimer">
+        Illustrative practice questions in the style of each company's interviews, not actual questions asked by these companies.
+      </p>
+
       <section className="mt-6 rounded-lg border bg-card p-4">
         <label htmlFor="company-filter" className="block text-sm font-medium">
           Filter by company
