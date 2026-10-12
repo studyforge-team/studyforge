@@ -14,9 +14,20 @@ export type Step =
 export type SolveStart = { solve_id: string; step: Step }
 export type ResultBody = { stdout: string; result: unknown; figures: string[]; error: string | null; ms: number }
 
+export type UploadRead = { text: string; latex: string; confidence: 'high' | 'medium' | 'low' } // POST /uploads/{id}/read
+export type UploadKind = 'question' | 'notes' // gap: contract doesn't say how the server tells these apart; we send multipart field `kind`
+
 // GET /api/v1/dashboard: PROPOSED (E1), not in the frozen contract yet.
 export type Task = { id: string; title: string; action: string; due_at_utc: string; source: string; status: 'open' | 'done' }
 export type WeakTopic = { topic: string; attempts: number; correct: number }
 export type RecentSolve = { id: string; question: string; status: string; created_at: string }
-export type Reminder = { id: string; title: string; due_at_utc: string; sent_at: string | null; channel: 'app' | 'telegram' }
+export type Reminder = { id: string; title: string; due_at_utc: string; sent_at: string | null; channel: 'app' | 'push' } // push = phone notification (D1b); Telegram dropped 10 Oct
 export type Dashboard = { tasks: Task[]; weak_topics: WeakTopic[]; recent_solves: RecentSolve[]; reminders: Reminder[] }
+
+// Quiz schema mirrors api/app/agent/quiz.py (Q1). GET/POST /quizzes is §3.5; `id` is a gap (contract returns no quiz id yet).
+type ItemBase = { topic: string; source: string | null; tags: string[]; stem: string }
+export type MCQItem = ItemBase & { type: 'mcq'; options: string[]; correct_index: number; misconceptions: Record<string, string>; explanation: string } // keys "0".."3"
+export type NumericalItem = ItemBase & { type: 'numerical'; key_code: string; unit: string; tolerance_rel: number; worked_solution: string }
+export type SubjectiveItem = ItemBase & { type: 'subjective'; rubric: string[] }
+export type QuizItem = MCQItem | NumericalItem | SubjectiveItem
+export type Quiz = { id?: string; title: string; items: QuizItem[] }

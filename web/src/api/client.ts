@@ -1,16 +1,16 @@
 import * as mock from './mock'
-import type { Dashboard, ResultBody, SolveStart, Step } from './types'
+import type { Dashboard, Quiz, ResultBody, SolveStart, Step, UploadKind, UploadRead } from './types'
 
 const BASE = import.meta.env.VITE_API_URL as string | undefined
 
 // ponytail: no retry — retrying POST /solve could create duplicate solves
-async function post<T>(path: string, body: unknown, onSlow?: () => void): Promise<T> {
+async function post<T>(path: string, body: unknown | FormData, onSlow?: () => void): Promise<T> {
   const t = setTimeout(() => onSlow?.(), 3000) // Render free tier sleeps
   try {
     const r = await fetch(`${BASE}/api/v1${path}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+      // FormData: the browser sets the multipart Content-Type (with boundary) itself
+      ...(body instanceof FormData ? { body } : { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
     })
     if (!r.ok) throw new Error(`Server error (HTTP ${r.status})`)
     return (await r.json()) as T
@@ -19,8 +19,18 @@ async function post<T>(path: string, body: unknown, onSlow?: () => void): Promis
   }
 }
 
-export const startSolve = (question: string, onSlow?: () => void): Promise<SolveStart> =>
-  BASE ? post('/solve', { question }, onSlow) : mock.startSolve(question)
+export const startSolve = (question: string, onSlow?: () => void, uploadId?: string): Promise<SolveStart> =>
+  BASE ? post('/solve', uploadId ? { question, upload_id: uploadId } : { question }, onSlow) : mock.startSolve(question)
+
+export function uploadFile(file: File, kind: UploadKind, onSlow?: () => void): Promise<{ upload_id: string }> {
+  const form = new FormData()
+  form.append('file', file)
+  form.append('kind', kind)
+  return BASE ? post('/uploads', form, onSlow) : mock.uploadFile()
+}
+
+export const readUpload = (id: string, onSlow?: () => void): Promise<UploadRead> =>
+  BASE ? post(`/uploads/${id}/read`, {}, onSlow) : mock.readUpload()
 
 export const postResult = async (id: string, body: ResultBody, onSlow?: () => void): Promise<Step> =>
   BASE ? (await post<{ step: Step }>(`/solve/${id}/result`, body, onSlow)).step : mock.postResult(id, body)
@@ -30,4 +40,21 @@ export async function getDashboard(): Promise<Dashboard> {
   const r = await fetch(`${BASE}/api/v1/dashboard`)
   if (!r.ok) throw new Error(`Server error (HTTP ${r.status})`)
   return (await r.json()) as Dashboard
+}
+
+// POST /api/v1/quizzes {topic|upload_id} -> quiz (§3.5). Response `id` is a gap.
+export const getQuiz = (topic: string, onSlow?: () => void): Promise<Quiz> =>
+  BASE ? post('/quizzes', { topic }, onSlow) : mock.getQuiz()
+
+// Fire-and-forget; failures are swallowed (a missed report or save must never block the student).
+const quiet = (path: string, body: unknown) => { void post(path, body).catch(() => {}) }
+
+// P1 request #8, endpoint not built yet. Body shape is a gap. No-op in demo or without a quiz id.
+export const reportItem = (quizId: string | undefined, index: number, reason: string) => {
+  if (BASE && quizId) quiet(`/quizzes/${quizId}/report`, { index, reason })
+}
+
+// Not in the contract; body shape is a gap. Demo mode saves to localStorage in the page instead.
+export const saveAnswers = (quizId: string | undefined, answers: string[], score: number) => {
+  if (BASE && quizId) quiet(`/quizzes/${quizId}/answers`, { answers, score })
 }

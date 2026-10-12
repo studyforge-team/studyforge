@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { getDashboard } from '@/api/client'
+import { getDashboard, uploadFile } from '@/api/client'
 import type { Dashboard as Data } from '@/api/types'
+import { FilePick } from '@/components/FilePick'
 import { Button } from '@/components/ui/button'
 import { warm } from '@/sandbox/client'
 
@@ -29,6 +30,7 @@ const Card = ({ title, empty, children }: { title: string; empty: string; childr
 
 const Chip = ({ children }: { children: ReactNode }) => <span className="inline-flex items-center rounded-full bg-tint px-3 py-1 text-sm font-medium text-primary">{children}</span>
 const Shade = ({ className }: { className: string }) => <div className={`animate-pulse rounded-lg bg-muted ${className}`} />
+const demo = !import.meta.env.VITE_API_URL // same switch as api/client.ts
 const wrap = 'mx-auto max-w-3xl px-4 py-6 sm:py-8'
 
 export default function Dashboard() {
@@ -37,6 +39,8 @@ export default function Dashboard() {
   const [tries, setTries] = useState(0)
   const [now] = useState(Date.now)
   const [seen] = useState(loadSeen) // read once, so "New" badges stay until the next visit
+  const [note, setNote] = useState('') // upload status or error
+  const [noteBad, setNoteBad] = useState(false)
   const inboxRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -70,6 +74,16 @@ export default function Dashboard() {
       io.disconnect()
     }
   }, [data])
+
+  async function addNotes(f: File) {
+    setNoteBad(false); setNote(`Uploading ${f.name}…`)
+    try {
+      await uploadFile(f, 'notes') // ponytail: upload only, no read; the backend indexes notes itself
+      setNote(demo ? `Demo mode — ${f.name} wasn't stored.` : `Added ${f.name} to your notes.`)
+    } catch (e) {
+      setNoteBad(true); setNote(e instanceof Error ? e.message : 'Upload failed')
+    }
+  }
 
   if (error) {
     return (
@@ -118,6 +132,11 @@ export default function Dashboard() {
         <Button className="mt-5 w-full sm:w-auto" onClick={() => { location.hash = '#solve' }}>Ask a question</Button>
       </section>
 
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <FilePick label="Add lecture notes" className="w-full sm:w-auto" disabled={note.startsWith('Uploading')} onFile={(f) => void addNotes(f)} onError={(m) => { setNoteBad(true); setNote(m) }} />
+        <p role={noteBad ? 'alert' : 'status'} className={`text-sm ${noteBad ? 'font-medium text-destructive' : 'text-muted-foreground'}`}>{note}</p>
+      </div>
+
       {/* ponytail: prep-pack link lands with D5 */}
       <div className="mt-4 grid grid-cols-1 items-start gap-4 md:grid-cols-2">
         <Card title="Deadlines" empty="No open deadlines.">
@@ -148,7 +167,7 @@ export default function Dashboard() {
                   <span>{r.title}</span>
                 </p>
                 <p className="text-muted-foreground">
-                  {r.sent_at ? `Sent ${rel(r.sent_at)}` : `Scheduled ${rel(r.due_at_utc)}`} · {r.channel === 'telegram' ? 'Telegram' : 'In app'}
+                  {r.sent_at ? `Sent ${rel(r.sent_at)}` : `Scheduled ${rel(r.due_at_utc)}`} · {r.channel === 'push' ? 'Phone notification' : 'In app'}
                 </p>
               </li>
             ))}
