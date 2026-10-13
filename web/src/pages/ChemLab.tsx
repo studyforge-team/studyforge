@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { run } from '@/sandbox/client'
 import { McCabe } from '@/chemlab/drawings/McCabe'
 import { cstrViews } from '@/chemlab/drawings/cstr'
+import { columnViews } from '@/chemlab/drawings/column'
 
 const Cstr3D = lazy(() => import('@/chemlab/three/Cstr3D')) // three.js stays in its own chunk
 
@@ -16,7 +17,7 @@ type Out = {
   ok: boolean; errors: { message: string }[]; warnings: string[]
   inputs: Record<string, { value: number; unit: string }>; outputs: Record<string, { value: number; unit: string }>
   steady_states: { T: number; X: number; stable: boolean }[]
-  geometry: { diameter_m: number; height_m: number }; series: Record<string, Ser>
+  geometry: { diameter_m: number; height_m: number; n_trays?: number; feed_tray?: number }; series: Record<string, Ser>
 }
 
 const TABS = [['cstr', 'CSTR'], ['batch', 'Batch'], ['pfr', 'PFR'], ['mccabe', 'McCabe-Thiele']]
@@ -86,7 +87,13 @@ export default function ChemLab() {
     return () => clearTimeout(h)
   }, [body, t])
 
-  const sheet = useMemo(() => (t === 'cstr' && out?.ok ? cstrViews(out.geometry, out.inputs) : ''), [t, out]) // hooks stay above the early returns
+  // hooks stay above the early returns; each drawing comes from the template's own geometry and inputs
+  const sheet = useMemo(() => {
+    if (!out?.ok) return ''
+    if (t === 'cstr') return cstrViews(out.geometry, out.inputs)
+    if (t === 'mccabe') return columnViews({ ...out.geometry, n_trays: out.geometry.n_trays ?? 0, feed_tray: out.geometry.feed_tray ?? 1 }, out.inputs)
+    return ''
+  }, [t, out])
 
   if (loadErr) {
     return (
@@ -115,6 +122,18 @@ export default function ChemLab() {
       x: s.x.slice(b.start, b.stop), y: s.y.slice(b.start, b.stop), color: b.stable ? 'var(--primary)' : 'var(--destructive)', dash: !b.stable,
     }))
   const sr = out?.series ?? {}
+  const drawing = sheet && (
+    <section className="rounded-lg border bg-card p-4">
+      <h2 className="text-base font-semibold">Drawing (2D, first-angle)</h2>
+      {/* the drawing functions escape all text and every other interpolated value is a number */}
+      <div className="mt-2 rounded-md bg-white [&>svg]:h-auto [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: sheet }} />
+      <Button className="mt-3 min-h-11" onClick={() => {
+        const a = document.createElement('a')
+        a.href = URL.createObjectURL(new Blob([sheet], { type: 'image/svg+xml' }))
+        a.download = `${t === 'mccabe' ? 'column' : t}-drawing.svg`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href)) // Safari/Firefox: revoke after the click is handled
+      }}>Download SVG</Button>
+    </section>
+  )
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-6 sm:py-8">
@@ -183,18 +202,7 @@ export default function ChemLab() {
                   <Cstr3D D={out.geometry.diameter_m} H={out.geometry.height_m} T={ss[si].T} T0={out.inputs.T0.value} Tmax={Math.max(...ss.map((s) => s.T))} UA={out.inputs.UA.value} />
                 </Suspense>
               )}
-              {sheet && (
-                <section className="rounded-lg border bg-card p-4">
-                  <h2 className="text-base font-semibold">Drawing (2D, first-angle)</h2>
-                  {/* cstrViews escapes all text and every other interpolated value is a number */}
-                  <div className="mt-2 rounded-md bg-white [&>svg]:h-auto [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: sheet }} />
-                  <Button className="mt-3 min-h-11" onClick={() => {
-                    const a = document.createElement('a')
-                    a.href = URL.createObjectURL(new Blob([sheet], { type: 'image/svg+xml' }))
-                    a.download = 'cstr-drawing.svg'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href)) // Safari/Firefox: revoke after the click is handled
-                  }}>Download SVG</Button>
-                </section>
-              )}
+              {drawing}
               {sr.heat_generated && sr.heat_removed && (
                 <LineChart title="Heat generated and removed" xLabel="T (K)" yLabel="Heat (W)"
                   lines={[{ name: 'generated', x: sr.heat_generated.x, y: sr.heat_generated.y, color: 'var(--destructive)' }, { name: 'removed', x: sr.heat_removed.x, y: sr.heat_removed.y, color: 'var(--primary)' }]}
@@ -206,6 +214,9 @@ export default function ChemLab() {
                 <LineChart key={k} title={title} xLabel={ax(xn, sr[k].x_unit)} yLabel={ax(yn, sr[k].y_unit)} lines={lines(sr[k], yn)} />
               ))}
               {t === 'mccabe' && sr.stages && <McCabe series={sr} stages={out.outputs.N_theoretical?.value} />}
+              {t === 'mccabe' && (drawing || (
+                <p className="text-sm text-muted-foreground">No column drawing: there are no real trays (the reboiler alone does the separation).</p>
+              ))}
             </>
           )}
         </div>
