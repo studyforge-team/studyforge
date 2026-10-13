@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app import auth, db
 from app.db import beat
-from app.routers import me, notices, solve
+from app.routers import me, notices, solve, uploads
 
 
 class JsonFormatter(logging.Formatter):
@@ -64,4 +64,6 @@ app.dependency_overrides[me.current_user] = auth.current_user
 app.include_router(me.router)  # carries its own /api/v1 prefix, like solve.router
 app.dependency_overrides[notices.current_user] = auth.current_user
 app.include_router(notices.router)  # carries its own /api/v1 prefix, like solve.router
+app.dependency_overrides[uploads.current_user] = auth.current_user
+app.include_router(uploads.router)  # carries its own /api/v1 prefix
 app.include_router(api_router, prefix="/api/v1")
