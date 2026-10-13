@@ -153,10 +153,11 @@ export function splitQuestions(paper: string): Question[] {
     }
     const m = marksOf(line)
     const n = numbered ? numberOf(line) : null
-    // A numbered line starts a question if it says "Q…", carries its own marks, restarts at 1,
-    // or its number follows on (same number for "1(a)", "1(b)"; up to 3 ahead for OR-alternatives).
-    // So a stray "5 (a) points" or "V. Large tank" inside a question stays part of it.
-    const follows = n !== null && (last === null || n === 1 || (n >= last && n <= last + 3))
+    // A numbered line starts a question if it says "Q…", carries its own marks, or its number
+    // does not go backwards (same number for "1(a)", "1(b)"; any gap allowed, since pasted papers
+    // often skip questions). A lower number without "Q" or marks is a step inside the current
+    // question ("1) given ..., 2) find ..."); a section heading resets the numbering instead.
+    const follows = n !== null && (last === null || n >= last)
     if (!numbered || (n !== null && (follows || explicitQ.test(line) || m !== null))) {
       blocks.push({ text: line, marks: m })
       if (n !== null) last = n
