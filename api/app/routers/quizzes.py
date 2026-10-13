@@ -17,7 +17,9 @@ router = APIRouter(prefix="/api/v1")
 
 
 class Answers(BaseModel):
-    answers: list[Annotated[str, Field(max_length=500)]] = Field(max_length=20)
+    # accepted but not stored: the server only needs `correct`. Cap is generous because subjective
+    # items send free text, and a 422 here is swallowed by the web client (quiz results lost).
+    answers: list[Annotated[str, Field(max_length=4000)]] = Field(max_length=20)
     score: float = Field(ge=0)  # float, not int: subjective items score fractionally
     correct: list[bool] = Field(max_length=20)
 

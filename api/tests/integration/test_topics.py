@@ -72,6 +72,10 @@ async def _exercise(sent: list[str]) -> None:
     assert r.status_code == 200 and r.json() == {"recorded": 2}
     assert await weak() == [{"topic": "Heat exchangers", "attempts": 1, "correct": 0}]
 
+    # long free-text answers (subjective items) must not 422 and lose the quiz's results
+    r = await call("POST", f"/api/v1/quizzes/{qid}/answers", json=body | {"answers": ["x" * 3000, "y"]})
+    assert r.status_code == 200
+
     # (b) re-posting is idempotent
     assert (await call("POST", f"/api/v1/quizzes/{qid}/answers", json=body)).json() == {"recorded": 2}
     assert await weak() == [{"topic": "Heat exchangers", "attempts": 1, "correct": 0}]
