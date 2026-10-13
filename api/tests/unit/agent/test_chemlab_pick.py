@@ -37,7 +37,8 @@ def one(
 
 
 def canon(canonical: str, value: float, unit: str) -> float:
-    specs = {"t": {"x": {"unit": canonical, "min": -1e30, "max": 1e30, "default": 0}}}
+    hi = 1.0 if canonical == "-" else 1e30  # "-" inputs taking "%" are fractions
+    specs = {"t": {"x": {"unit": canonical, "min": -1e30, "max": hi, "default": 0}}}
     pick = Pick(template="t", inputs={"x": Quantity(value=value, unit=unit)})
     return validate_pick(pick, specs)["x"]
 

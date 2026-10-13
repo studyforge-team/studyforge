@@ -23,6 +23,9 @@ def specs() -> dict[str, dict[str, dict]]:
     out = {}
     for name in names:
         mod = importlib.import_module(f"chemlab.{name}")
+        # a stale non-editable chemlab install would export the wrong SPECs
+        src = Path(mod.__file__ or "").resolve()
+        assert src.parent == (ROOT / "chemlab" / "templates").resolve(), src
         out[mod.TEMPLATE] = {k: dict(v) for k, v in mod.SPEC.items()}
     return out
 

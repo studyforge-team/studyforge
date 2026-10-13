@@ -180,6 +180,11 @@ def validate_pick(pick: Pick, specs: Specs) -> dict[str, float]:
     values: dict[str, float] = {}
     for name, q in pick.inputs.items():
         s = spec[name]
+        if q.unit.strip() == "%" and s["unit"] == "-" and s["max"] > 1:
+            # percent only for fractions: "100 %" must not become compound number 1
+            raise PickError(
+                "unknown_unit", name, f"{name}: '%' only applies to fractions"
+            )
         x = _convert(name, q, s["unit"], order)
         if not math.isfinite(x):
             raise PickError("not_finite", name, f"{name} is not finite")

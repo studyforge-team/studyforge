@@ -13,6 +13,7 @@ from app.agent.chemlab_pick import (
     RATE_UNIT,
     SPECS_PATH,
     Pick,
+    PickError,
     Quantity,
     build_code,
     load_template_specs,
@@ -96,3 +97,20 @@ def test_pipe_in_question_units_matches_canonical_run() -> None:
     assert r["outputs"]["head"]["value"] == pytest.approx(
         direct["outputs"]["head"]["value"], rel=1e-12
     )
+
+
+@pytest.mark.parametrize(("value", "ok"), [(100, False), (14, True)])
+def test_percent_never_rescales_a_compound_number(value: float, ok: bool) -> None:
+    unit = "%" if not ok else "-"
+    pick = Pick(template="flash", inputs={"c1": Quantity(value=value, unit=unit)})
+    if ok:
+        assert validate_pick(pick, load_template_specs())["c1"] == 14
+    else:
+        with pytest.raises(PickError) as e:
+            validate_pick(pick, load_template_specs())
+        assert e.value.code == "unknown_unit"
+
+
+def test_percent_still_works_for_fractions() -> None:
+    pick = Pick(template="recycle", inputs={"Xsp": Quantity(value=30, unit="%")})
+    assert validate_pick(pick, load_template_specs())["Xsp"] == pytest.approx(0.3)
