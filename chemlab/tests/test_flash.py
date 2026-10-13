@@ -137,7 +137,7 @@ def test_warnings_extrapolation_supercritical_and_ignored_n3() -> None:
     "over,code,field",
     [
         ({"c2": BENZENE}, "same_compound", "c2"),
-        ({"c3": TOLUENE}, "same_compound", "c2"),
+        ({"c3": TOLUENE}, "same_compound", "c3"),
         ({"c1": 2.5}, "not_an_integer", "c1"),
         ({"n1": 0, "n2": 0}, "empty_feed", "n1"),
         ({"c1": WATER, "T": 50}, "temperature_too_low", "T"),
@@ -181,6 +181,10 @@ def test_random_inputs_json_safe_and_balanced() -> None:
             for i in range(1, m + 1):
                 z, x, y = out(r, f"z{i}"), out(r, f"x{i}"), out(r, f"y{i}")
                 assert (1 - v) * x + v * y == pytest.approx(z, rel=1e-9, abs=1e-12)
+            # the sums are what pin V (the balance above holds for any V)
+            assert math.fsum(out(r, f"x{i}") for i in range(1, m + 1)) == pytest.approx(
+                1, abs=1e-9
+            )
             assert math.fsum(out(r, f"y{i}") for i in range(1, m + 1)) == pytest.approx(
                 1, abs=1e-9
             )
@@ -205,3 +209,50 @@ def test_vanishing_vapour_pressure_does_not_crash(inp: dict) -> None:
         ys = [v["value"] for k, v in r["outputs"].items() if k[0] == "y"]
         assert len(ys) == (3 if "c3" in inp else 2)
         assert math.fsum(ys) == pytest.approx(1, abs=1e-9)
+
+
+def test_pressure_within_rounding_of_bubble_and_dew_points() -> None:
+    base = run(series=False)
+    p_bub, p_dew = out(base, "P_bubble"), out(base, "P_dew")
+    for p in (
+        p_bub,
+        math.nextafter(p_bub, 0),
+        math.nextafter(p_bub, math.inf),
+        p_dew,
+        math.nextafter(p_dew, 0),
+        math.nextafter(p_dew, math.inf),
+    ):
+        r = run({"P": p}, series=False)
+        assert r["ok"] and 0 <= out(r, "V_frac") <= 1
+
+
+def test_trace_liquid_near_total_vaporisation() -> None:
+    # z3 = 1e-15 of o-xylene with K3 ~ 1e-45: liquid is ~1e-15 of the feed
+    r = run({"c1": 37, "c2": 26, "c3": 16, "n1": 1e6, "n2": 0, "n3": 1e-9,
+             "T": 89.6187, "P": 488.08}, series=False)  # fmt: skip
+    assert 1 - out(r, "V_frac") < 1e-12
+    xs = [out(r, f"x{i}") for i in (1, 2, 3)]
+    assert math.fsum(xs) == pytest.approx(1, abs=1e-9)
+
+
+def test_light_and_heavy_pair_still_finds_bubble_point() -> None:
+    r = run({"c1": 37, "c2": DECANE, "T": 300, "P": 1e5})  # nitrogen + n-decane
+    assert "T_bubble" in r["outputs"] and "T_dew" in r["outputs"]
+    assert len(r["series"]["T_x"]["x"]) == 41
+    assert not any("not found" in w for w in r["warnings"])
+
+
+def test_solved_temperatures_get_range_warnings() -> None:
+    r = run({"c1": WATER, "c2": 2, "P": 100}, series=False)  # 232.7 K bubble point
+    assert out(r, "T_bubble") < 273
+    assert any("water: T_bubble outside its Antoine range" in w for w in r["warnings"])
+
+
+def test_tiny_root_converges() -> None:
+    # needed more than brentq's default 100 iterations for full relative precision
+    r = run({"c1": 33, "c2": 29, "c3": 23, "n1": 0.000156404778010767,
+             "n2": 68425.22908756611, "n3": 99310.19744320352,
+             "T": 287.62223174524763, "P": 153531.41024580365}, series=False)  # fmt: skip
+    assert r["ok"]
+    ys = [v["value"] for k, v in r["outputs"].items() if k[0] == "y"]
+    assert not ys or math.fsum(ys) == pytest.approx(1, abs=1e-9)
