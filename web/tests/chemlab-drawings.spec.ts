@@ -15,7 +15,7 @@ test('column drawing: views, dimensions and trays come from the template geometr
     expect(s).toContain(t)
   expect(count(s, /class="tray"/g) + count(s, /class="feed"/g)).toBe(19) // every tray drawn at this spacing
   expect(count(s, /class="feed"/g)).toBe(1)
-  expect(count(s, /<line class="o" /g)).toBe(18) // one downcomer under each tray but the last
+  expect(count(s, /<line class="o" /g)).toBe(19) // one downcomer under each tray, the last one into the sump
   expect(s).not.toContain('width drawn') // a 1 m column fits at true proportions
 })
 
@@ -48,6 +48,26 @@ test('column drawing: valid references, unique ids, nothing past the sheet borde
       expect(x0, body).toBeGreaterThanOrEqual(12)
       expect(x0 + w, body).toBeLessThanOrEqual(988)
     }
+  }
+})
+
+test('column drawing: geometry is finite, inside the sheet, and section B-B matches the elevation', () => {
+  for (const [D, nT, f] of [[1.0169, 19, 10], [0.032, 192, 97], [10.17, 19, 10], [0.5, 1, 1], [1.0169, 19, 1], [1.0169, 19, 19], [2.4, 3980, 1990], [1.0169, 2, 2]]) {
+    const s = col(D, nT, f)
+    expect(s).not.toContain('NaN')
+    expect(s).toMatch(/Elevation approx\. (1:\d+|[\d.]+:1) at 1000 mm sheet width/) // the scale says what it assumes
+    for (const [, a, v] of s.matchAll(/\b(x|x1|x2|cx|y|y1|y2|cy)="(-?[\d.]+)"/g)) {
+      const lim = a.startsWith('x') || a === 'cx' ? 1000 : 700
+      expect(+v, `${a}=${v} (D ${D}, ${nT} trays)`).toBeGreaterThanOrEqual(0)
+      expect(+v, `${a}=${v} (D ${D}, ${nT} trays)`).toBeLessThanOrEqual(lim)
+    }
+    const m = +/SECTION B–B \(TRAY (\d+) DECK/.exec(s)![1]
+    // outlet weir: the vertical o2 line inside the section circle (cx 780) lies on the side the elevation shows
+    const weir = [...s.matchAll(/<line class="o2" x1="([\d.]+)" y1="[\d.]+" x2="([\d.]+)"/g)].map((r) => [+r[1], +r[2]]).filter(([a, b]) => a === b && Math.abs(a - 780) < 80)
+    expect(weir.length).toBe(1)
+    expect(m % 2 ? weir[0][0] > 780 : weir[0][0] < 780).toBe(true)
+    expect(s).toContain(m === 1 ? 'Inlet (reflux)' : '>Inlet<')
+    if (m === nT) expect(s).toContain('Downcomer to sump')
   }
 })
 

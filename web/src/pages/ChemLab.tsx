@@ -214,7 +214,9 @@ export default function ChemLab() {
                 <LineChart key={k} title={title} xLabel={ax(xn, sr[k].x_unit)} yLabel={ax(yn, sr[k].y_unit)} lines={lines(sr[k], yn)} />
               ))}
               {t === 'mccabe' && sr.stages && <McCabe series={sr} stages={out.outputs.N_theoretical?.value} />}
-              {t === 'mccabe' && drawing}
+              {t === 'mccabe' && (drawing || (
+                <p className="text-sm text-muted-foreground">No column drawing: there are no real trays (the reboiler alone does the separation).</p>
+              ))}
             </>
           )}
         </div>
