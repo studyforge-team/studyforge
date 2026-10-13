@@ -55,7 +55,7 @@ async def export_me(user: UserDep, engine: EngineDep, files: FilesDep) -> JSONRe
     out: dict[str, Any] = {"user_id": user, "exported_at": datetime.now(UTC)}
     async with engine.connect() as conn:
         for t in (solves, quizzes, llm_calls, notices, jobs, topic_results, note_chunks):  # heartbeats has no user_id
-            rows = (await conn.execute(select(t).where(t.c.user_id == user))).mappings().all()
+            rows = (await conn.execute(select(*[c for c in t.c if c.name != "tsv"]).where(t.c.user_id == user))).mappings().all()
             out[t.name] = [dict(r) for r in rows]
     try:  # names and sizes only: the file bytes are not in the JSON
         out["files"] = await files.list(f"{user}/") if files else []

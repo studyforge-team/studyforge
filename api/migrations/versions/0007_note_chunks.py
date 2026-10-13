@@ -2,6 +2,7 @@
 
 import sqlalchemy as sa
 from alembic import op
+from sqlalchemy.dialects.postgresql import TSVECTOR
 
 revision = "0007"
 down_revision = "0006"
@@ -16,7 +17,7 @@ def upgrade() -> None:
         sa.Column("upload_id", sa.Text, nullable=False),
         sa.Column("page", sa.Integer, nullable=False),  # 1-based slide/page
         sa.Column("text", sa.Text, nullable=False),
-        sa.Column("tsv", sa.dialects.postgresql.TSVECTOR, sa.Computed("to_tsvector('english', text)", persisted=True)),
+        sa.Column("tsv", TSVECTOR, sa.Computed("to_tsvector('english', text)", persisted=True)),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
         sa.UniqueConstraint("user_id", "upload_id", "page", name="uq_note_chunks_page"),
         schema="app",

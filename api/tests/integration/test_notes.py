@@ -150,6 +150,7 @@ async def _exercise() -> None:
 
         exp = (await c.get("/api/v1/me/export")).json()
         assert len(exp["note_chunks"]) == 10 and {r["user_id"] for r in exp["note_chunks"]} == {"A"}
+        assert all("tsv" not in r for r in exp["note_chunks"])  # generated column is derived noise
         assert (await c.delete("/api/v1/me")).status_code == 204
         assert await n("select count(*) from app.note_chunks where user_id='A'") == 0
         assert await n("select count(*) from app.note_chunks where user_id='B'") == 1

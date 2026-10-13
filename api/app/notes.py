@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 from app.db import note_chunks
 
 MAX_PAGES = 200
-MAX_PAGE_CHARS = 20_000
+MAX_PAGE_CHARS = 5_000  # slides are short; caps per-user storage on the free DB
 
 
 def pdf_pages(data: bytes) -> list[tuple[int, str]]:
