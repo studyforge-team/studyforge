@@ -83,3 +83,16 @@ def test_hx_golden_p1_05_in_question_units() -> None:
         },
     )
     assert r["outputs"]["A_counter"]["value"] == pytest.approx(7.43518, rel=1e-5)
+
+
+def test_pipe_in_question_units_matches_canonical_run() -> None:
+    from chemlab.pipe import run
+
+    r = run_pick(
+        "pipe",
+        {"Q": (10, "L/s"), "D": (100, "mm"), "mu": (0.89, "cP"), "dP": (1, "bar")},
+    )
+    direct = run({"Q": 0.01, "D": 0.1, "mu": 8.9e-4, "dP": 1e5}, series=False)
+    assert r["outputs"]["head"]["value"] == pytest.approx(
+        direct["outputs"]["head"]["value"], rel=1e-12
+    )
