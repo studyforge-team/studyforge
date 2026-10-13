@@ -32,7 +32,7 @@ from app.routers import me
 pytestmark = pytest.mark.skipif(not os.environ.get("DATABASE_URL"), reason="needs DATABASE_URL")
 
 CFG = Config(str(Path(__file__).parents[2] / "alembic.ini"))
-TABLES = ["solves", "quizzes", "llm_calls", "heartbeats", "notices"]
+TABLES = ["solves", "quizzes", "llm_calls", "heartbeats", "notices", "jobs"]
 QUIZ = Quiz(
     title="t",
     items=[
@@ -170,12 +170,15 @@ async def _me() -> None:
             await store.save(SolveState(id=f"{uid}{i}", user_id=uid, question="q"))
             await quizzes.save(uid, QUIZ)
             await PgNoticeStore(engine).add(uid, {"text": "lab due Fri", "source": "paste"}, 50)
+            async with engine.begin() as c:  # one reminder job per row
+                await c.execute(text("insert into app.jobs (user_id, kind, dedupe_key, due_at) "
+                                     "values (:u, 'reminder', :k, now())"), {"u": uid, "k": f"{uid}{i}:t-1d"})
             spend.who.set(spend.Who(uid, False, "9.9.9.9"))
             await rec.record(row)
     spend.who.set(spend.Who())
 
     async def counts(uid: str) -> list[object]:
-        return [await _scalar(f"select count(*) from app.{t} where user_id='{uid}'") for t in ("solves", "quizzes", "llm_calls", "notices")]
+        return [await _scalar(f"select count(*) from app.{t} where user_id='{uid}'") for t in ("solves", "quizzes", "llm_calls", "notices", "jobs")]
 
     sent: list[str] = []
 
@@ -190,15 +193,15 @@ async def _me() -> None:
     try:
         with TestClient(app) as client:  # one TestClient = one loop for the shared engine
             j = client.get("/api/v1/me/export").json()
-            assert [len(j[t]) for t in ("solves", "quizzes", "llm_calls", "notices")] == [2, 2, 2, 2]
-            assert {r["user_id"] for r in j["solves"] + j["quizzes"] + j["llm_calls"] + j["notices"]} == {"A"}
+            assert [len(j[t]) for t in ("solves", "quizzes", "llm_calls", "notices", "jobs")] == [2] * 5
+            assert {r["user_id"] for t in ("solves", "quizzes", "llm_calls", "notices", "jobs") for r in j[t]} == {"A"}
             total = await _scalar("select sum(cost_usd) from app.llm_calls")
             assert client.delete("/api/v1/me").status_code == 204
         assert sent == ["https://proj.supabase.co/auth/v1/admin/users/A"]
     finally:
         app.dependency_overrides[me.current_user] = auth.current_user
         app.dependency_overrides.pop(me.get_http, None)
-    assert await counts("A") == [0, 0, 0, 0] and await counts("B") == [1, 1, 1, 1]
+    assert await counts("A") == [0] * 5 and await counts("B") == [1] * 5
     assert await _scalar("select count(*) from app.llm_calls where user_id is null and ip is null") == 2
     assert await _scalar("select sum(cost_usd) from app.llm_calls") == total  # spend accounting intact
     await engine.dispose()
