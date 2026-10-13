@@ -64,8 +64,8 @@ export const reportItem = (quizId: string | undefined, index: number, reason: st
 }
 
 // Not in the contract; body shape is a gap. Demo mode saves to localStorage in the page instead.
-export const saveAnswers = (quizId: string | undefined, answers: string[], score: number) => {
-  if (BASE && quizId) quiet(`/quizzes/${quizId}/answers`, { answers, score })
+export const saveAnswers = (quizId: string | undefined, answers: string[], score: number, correct: boolean[]) => {
+  if (BASE && quizId) quiet(`/quizzes/${quizId}/answers`, { answers, score, correct })
 }
 
 // D10 privacy panel. No demo fallback: there is no account to export or delete.

@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from app.reminders import answer_checkin
@@ -24,6 +24,7 @@ def now() -> datetime:  # a dependency so tests can drive a fake clock
 
 class Answer(BaseModel):
     correct: bool
+    topic: str | None = Field(default=None, min_length=1, max_length=80)
 
 
 @router.post("/checkins/{job_id}")
@@ -33,7 +34,7 @@ async def answer(
     at: Annotated[datetime, Depends(now)],
 ) -> dict[str, Any]:
     try:
-        out = await answer_checkin(engine, user, job_id, body.correct, at)
+        out = await answer_checkin(engine, user, job_id, body.correct, at, body.topic)
     except ValueError as err:
         raise HTTPException(status_code=409, detail="check-in not answerable") from err
     if out is None:

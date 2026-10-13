@@ -16,6 +16,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from app.db import jobs
+from app.topics import record
 
 # ponytail: every student is IST (plan: "IST in, UTC stored"); a per-user timezone is a later change
 # fixed UTC+5:30 (India has no DST) instead of zoneinfo: Windows has no tzdata and we add no deps
@@ -138,7 +139,8 @@ async def sweep(engine: AsyncEngine, now_utc: datetime) -> int:
 
 
 async def answer_checkin(
-    engine: AsyncEngine, user_id: str, job_id: int, correct: bool, now_utc: datetime
+    engine: AsyncEngine, user_id: str, job_id: int, correct: bool, now_utc: datetime,
+    topic: str | None = None,
 ) -> dict[str, Any] | None:
     """Record the answer. None = unknown job (or someone else's); ValueError = not answerable."""
     async with engine.begin() as conn:
@@ -163,4 +165,6 @@ async def answer_checkin(
                                {"due": follow, "id": job_id, "max": MAX_ROUNDS})
         await conn.execute(text("UPDATE app.jobs SET payload = CAST(:p AS jsonb) WHERE id = :id"),
                            {"p": json.dumps(pl), "id": job_id})
+        if topic:  # D8: same transaction, so an answer and its weak-topic row land together
+            await record(conn, user_id, "checkin", str(job_id), [(0, topic, correct)])
     return {"done": correct, "follow_up_at": follow.isoformat() if follow else None}
