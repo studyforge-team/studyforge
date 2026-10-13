@@ -6,6 +6,11 @@ hours are Nebius runs (G10, live done-when checks, README/Devpost numbers) and t
 events (test days, fixes, submit). So the plan's SHOULD rule ("only if every MUST due is
 merged") is met and the SHOULD tickets start now.
 
+## Status (13 Oct)
+Done and merged: #48 HX, #51 compounds, #52 flash (CH2 complete), #49 recycle, #50 pipe/pump
+(CH5 complete). CH3 follow-up #53 in CI. Nothing else in P1 can be built without Nebius or
+another teammate (tables below).
+
 ## Build now (no Nebius, no other teammate needed)
 
 Each is one small PR (about 400 lines or fewer), tests first, brutal review until no
@@ -40,3 +45,11 @@ G10 probe; A3 live smoke; C2 7/8 photos; S2/S2b 8/10 golden runs (also need the 
 runner from P2); Q1 10 real quizzes; CH3 9/10 picks (also P4 labels; after PR 5 the new
 templates are pickable too); F4/F8 real numbers. Rehearse each on a free stand-in first.
 Nothing in PRs 1-5 calls a model, so none of them changes at the switch.
+
+## At the Nebius switch, for the new templates
+1. Whoever wires `get_deps` (P2) passes `templates=load_template_specs()` (from #53). Without it
+   the agent never opens a ChemLab template (true for the old four too).
+2. CH3 live check (9/10 picks) on Nebius: include questions for hx, flash, pipe, recycle; the
+   picker's system prompt now lists all 8 templates (about 4,500 characters).
+3. After adding or changing any template: `python chemlab/tools/export_specs.py`; the api
+   test `test_specs_file_in_sync_with_templates` fails until you do.
