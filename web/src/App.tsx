@@ -6,6 +6,7 @@ import Solve from './pages/Solve'
 import InterviewBank from './pages/InterviewBank'
 import OA from './pages/OA'
 import PYQPredictor from './pages/PYQPredictor'
+import TimeToFinish from './pages/TimeToFinish'
 
 const SelfTest = lazy(() => import('./SelfTest'))
 const ChemLab = lazy(() => import('./pages/ChemLab')) // keeps the sandbox page out of the main chunk
@@ -39,6 +40,8 @@ export default function App() {
         <InterviewBank />
       ) : hash === '#pyq-predictor' ? (
         <PYQPredictor />
+      ) : hash === '#time-to-finish' ? (
+        <TimeToFinish />
       ) : hash.startsWith('#chemlab') ? (
         <Suspense
           fallback={

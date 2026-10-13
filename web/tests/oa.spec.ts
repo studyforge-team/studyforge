@@ -36,11 +36,12 @@ test('OA prep: correct, reordered, wrong and broken solutions', async ({ page })
 for (const width of [320, 360, 375]) {
   test(`no sideways scroll with all nav links at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 800 })
-    for (const hash of ['#', '#oa', '#interview-bank', '#pyq-predictor', '#chemlab']) {
+    for (const hash of ['#', '#oa', '#interview-bank', '#pyq-predictor', '#time-to-finish', '#chemlab']) {
       await page.goto('/' + hash)
       await expect(page.getByRole('link', { name: 'OA Prep' })).toBeAttached()
       await expect(page.getByRole('link', { name: 'Interview Bank' })).toBeAttached()
       await expect(page.getByRole('link', { name: 'PYQ Predictor' })).toBeAttached()
+      await expect(page.getByRole('link', { name: 'Time to Finish' })).toBeAttached()
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), hash).toBe(true)
     }
   })
