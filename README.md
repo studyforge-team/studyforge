@@ -47,8 +47,8 @@ graph TD
     Browser -->|POST /solve and /solve/id/result| API[FastAPI agent loop]
     API -->|run_python step| Browser
     API --> TF[Nemotron on Nebius Token Factory]
-    API --> DB[Supabase: Postgres Auth Storage]
-    CI[CI and evals] --> Runner[Node Pyodide runner, docker network none]
+    API --> DB[Supabase: Auth now; Postgres and Storage planned]
+    CI[CI and evals] -.-> Runner[planned: Node Pyodide runner, docker network none]
     Runner -.->|same sandbox code path| Worker
 ```
 
@@ -115,16 +115,16 @@ Every template's inputs are also exported to `api/app/agent/chemlab_specs.json`
 if the file is out of date.
 
 The ChemLab page (`#chemlab`) has tabs for the CSTR, batch, PFR and McCabe-Thiele
-templates, with charts, a 2D CSTR drawing sheet and a 3D CSTR model; the newer templates
-are not on the page yet. <!-- TODO(F4): list the new template tabs once they are on the page -->
+templates, with charts, 2D drawings (CSTR sheet, McCabe-Thiele stages) and a 3D CSTR
+model; the newer templates are not on the page yet. <!-- TODO(F4): list the new template tabs once they are on the page -->
 
 ## Setup
 
 ```bash
 git clone https://github.com/studyforge-team/studyforge.git && cd studyforge       # https://github.com/studyforge-team/studyforge
 cd web && npm install && npm run dev        # demo mode, no backend needed
-cd api && pip install -e ".[dev]"           # after A2
-cd api && uvicorn app.main:app --reload     # after A2
+pip install -e "./chemlab[dev]" -e "./api[dev]"   # from the repo root
+cd api && uvicorn app.main:app --reload     # /health only until the solve route is mounted
 cp .env.example .env                        # then fill the names (never commit values)
 ```
 
@@ -141,10 +141,10 @@ connected. <!-- TODO(F4): hosted demo URL and any wider demo mode after A2/S4 --
 | Suite | Command | Notes |
 | --- | --- | --- |
 | api | `cd api && pytest` | lint: `ruff check . && mypy app`; needs `pip install -e ./chemlab` |
-| chemlab | `cd chemlab && pytest` | |
+| chemlab | `cd chemlab && pytest` | also run by CI |
 | web e2e | `cd web && npm run test:e2e` | Playwright; builds, then serves a preview |
 | web lint | `cd web && npm run lint && npx tsc --noEmit` | oxlint on `main` today |
-| runner | `node runner/node-pyodide.mjs` | after S1b; in docker with `--network none` |
+| runner | `node runner/node-pyodide.mjs` | not built yet (S1b; `runner/` is a placeholder); will run in docker with `--network none` |
 
 `npm test` (vitest) is listed in AGENTS.md but not defined in `web/package.json` on `main`
 yet. <!-- TODO(F4): confirm after T1/T5 -->
@@ -154,7 +154,7 @@ yet. <!-- TODO(F4): confirm after T1/T5 -->
 - `api/` FastAPI backend (agent loop, routers, tests)
 - `web/` React + Vite + TypeScript frontend, Pyodide sandbox, ChemLab screens
 - `chemlab/` simulation templates in plain Python, with tests
-- `runner/` Node Pyodide runner for CI and evals
+- `runner/` placeholder for the Node Pyodide runner for CI and evals (S1b)
 - `config/` model registry and settings
 - `docs/` architecture, decisions, feedback log
 
