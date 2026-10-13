@@ -102,7 +102,7 @@ test('unreadable photo shows a plain message and is not attached', async ({ page
   await page.setViewportSize({ width: 375, height: 812 })
   await page.goto('/#solve')
   await page.locator('input[type=file]').setInputFiles(PNG) // demo mock reads every upload as empty text
-  await expect(page.getByRole('alert')).toHaveText("Couldn't read that photo. Retake it in good light, or type the question.")
+  await expect(page.getByRole('alert')).toHaveText("Demo mode doesn't read photos or PDFs yet. Type the question instead.")
   await expect(page.getByRole('button', { name: 'Remove attachment' })).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Solve' })).toBeDisabled()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)

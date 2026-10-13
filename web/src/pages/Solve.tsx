@@ -12,6 +12,7 @@ const loadCard = () => import('../components/AnswerCard')
 const AnswerCard = lazy(loadCard)
 
 type Row = { code: string; stdout: string; status: 'running' | 'ok' | 'fail'; ms?: number; timeout?: boolean }
+const demo = !import.meta.env.VITE_API_URL // same switch as api/client.ts
 const MAX_STEPS = 8
 const disclose = 'inline-flex min-h-11 items-center rounded-lg px-3 text-sm text-muted-foreground hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground'
 const pre = 'mt-1 overflow-x-auto rounded-lg border bg-muted p-3 font-mono text-xs leading-relaxed'
@@ -62,7 +63,8 @@ export default function Solve() {
       const { upload_id } = await uploadFile(f, 'question', () => setSlow(true))
       setUpStatus('Reading…')
       const rd = await readUpload(upload_id, () => setSlow(true))
-      if (!rd.text.trim()) { setError("Couldn't read that photo. Retake it in good light, or type the question."); return }
+      // demo mode never reads files: say so instead of blaming the photo
+      if (!rd.text.trim()) { setError(demo ? "Demo mode doesn't read photos or PDFs yet. Type the question instead." : "Couldn't read that photo. Retake it in good light, or type the question."); return }
       setRead(rd)
       setFile({ name: f.name, id: upload_id })
     } catch (e) {
