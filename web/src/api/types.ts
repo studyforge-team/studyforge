@@ -31,3 +31,7 @@ export type NumericalItem = ItemBase & { type: 'numerical'; key_code: string; un
 export type SubjectiveItem = ItemBase & { type: 'subjective'; rubric: string[] }
 export type QuizItem = MCQItem | NumericalItem | SubjectiveItem
 export type Quiz = { id?: string; title: string; items: QuizItem[] }
+
+// Notices (D1), docs/api-contract.md section 4: pasted or shared text, stored as given.
+export type NoticeIn = { text: string; source: 'paste' | 'share'; title?: string; url?: string }
+export type Notice = { id: string; text: string; source: 'paste' | 'share'; title: string | null; url: string | null; created_at: string }

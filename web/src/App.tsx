@@ -7,6 +7,7 @@ import InterviewBank from './pages/InterviewBank'
 import OA from './pages/OA'
 import PYQPredictor from './pages/PYQPredictor'
 import TimeToFinish from './pages/TimeToFinish'
+import Notices from './pages/Notices'
 
 // ponytail: one boundary around the page; shows a fixed message, never the error
 class Boundary extends Component<{ children: ReactNode }, { bad: boolean }> {
@@ -54,6 +55,8 @@ export default function App() {
         <PYQPredictor />
       ) : hash === '#time-to-finish' ? (
         <TimeToFinish />
+      ) : hash === '#notices' ? (
+        <Notices />
       ) : hash.startsWith('#chemlab') ? (
         <Suspense
           fallback={

@@ -11,7 +11,7 @@ from alembic.config import Config
 from fastapi.testclient import TestClient
 from sqlalchemy import text
 
-from app import main
+from app import db
 from app.db import make_engine
 from app.main import app
 from app.reminders import IST, drain, schedule, schedule_reminder_tool
@@ -64,6 +64,6 @@ def test_fake_clock_and_keepalive() -> None:
         with TestClient(app) as client:
             r = client.get("/keepalive?source=gha")
             assert r.status_code == 200 and isinstance(r.json()["sent"], int)
-        main._engine = None  # bound to that loop
+        db._engine = None  # bound to that loop
     finally:
         command.downgrade(CFG, "base")

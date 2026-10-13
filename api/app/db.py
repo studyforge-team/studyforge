@@ -15,11 +15,13 @@ from sqlalchemy import (
     DateTime,
     Double,
     Identity,
+    Index,
     Integer,
     MetaData,
     Table,
     Text,
     func,
+    select,
     text,
 )
 from sqlalchemy.dialects.postgresql import JSONB, insert
@@ -79,6 +81,17 @@ jobs = Table(
     Column("sent_at", DateTime(timezone=True)),
     Column("payload", JSONB, nullable=False, server_default=text("'{}'::jsonb")),
 )
+notices = Table(
+    "notices", metadata,
+    Column("id", Text, primary_key=True),
+    Column("user_id", Text, nullable=False),
+    Column("text", Text, nullable=False),
+    Column("source", Text, nullable=False),  # "paste" | "share"
+    Column("title", Text),
+    Column("url", Text),
+    Column("created_at", DateTime(timezone=True), nullable=False, server_default=_now),
+    Index("ix_notices_user_created", "user_id", "created_at"),
+)
 
 
 def db_url() -> str:
@@ -94,6 +107,17 @@ def make_engine() -> AsyncEngine:
     # pooler (6543) would need connect_args={"statement_cache_size": 0}.
     # pre_ping: Render sleeps and the pooler drops idle connections
     return create_async_engine(db_url(), pool_pre_ping=True)
+
+
+_engine: AsyncEngine | None = None
+
+
+def shared_engine() -> AsyncEngine:
+    # One pooled engine (max 15 connections) so a flood of public pings can't exhaust the
+    # Supabase pooler; created lazily on uvicorn's loop (tests reset db._engine per event loop).
+    global _engine
+    _engine = _engine or make_engine()
+    return _engine
 
 
 class PgStateStore:
@@ -173,6 +197,44 @@ class PgCostRecorder:
         values = asdict(row) | {"user_id": w.user_id, "ip": w.ip}
         async with self._engine.begin() as conn:
             await conn.execute(llm_calls.insert().values(**values))
+
+
+class PgNoticeStore:
+    def __init__(self, engine: AsyncEngine) -> None:
+        self._engine = engine
+
+    async def add(self, user_id: str, notice: dict[str, Any], limit: int) -> dict[str, Any] | None:
+        """Insert unless the user already has `limit` notices. None = at the cap."""
+        sql = text(
+            "insert into app.notices (id, user_id, text, source, title, url) "
+            "select :id, :user_id, :text, :source, :title, :url "
+            "where (select count(*) from app.notices where user_id = :user_id) < :limit "
+            "returning id, text, source, title, url, created_at"
+        )
+        row = {
+            "id": uuid.uuid4().hex, "user_id": user_id, "text": notice["text"], "source": notice["source"],
+            "title": notice.get("title"), "url": notice.get("url"), "limit": limit,
+        }
+        async with self._engine.begin() as conn:
+            # serialise one user's inserts so concurrent posts cannot all pass the count check
+            await conn.execute(text("select pg_advisory_xact_lock(hashtext('notices:' || :u))"), {"u": user_id})
+            got = (await conn.execute(sql, row)).mappings().first()
+        return dict(got) if got else None
+
+    async def delete(self, user_id: str, notice_id: str) -> bool:
+        q = notices.delete().where(notices.c.id == notice_id, notices.c.user_id == user_id)
+        async with self._engine.begin() as conn:
+            return (await conn.execute(q)).rowcount == 1
+
+    async def list(self, user_id: str, limit: int) -> list[dict[str, Any]]:
+        q = (
+            select(notices.c.id, notices.c.text, notices.c.source, notices.c.title, notices.c.url, notices.c.created_at)
+            .where(notices.c.user_id == user_id)
+            .order_by(notices.c.created_at.desc(), notices.c.id.desc())
+            .limit(limit)
+        )
+        async with self._engine.connect() as conn:
+            return [dict(r) for r in (await conn.execute(q)).mappings()]
 
 
 async def beat(engine: AsyncEngine, source: str) -> bool:
