@@ -13,7 +13,7 @@ No open PRs in the repo at all; no branch touches P5 areas, so no risk of two pe
 
 | ID | Ticket | h | Due | Status | Evidence | What's left | Blockers |
 |---|---|---|---|---|---|---|---|
-| D1 | In-app intake: Web Share Target + paste box -> notice | 2 | 14 Oct | backend merged (#68); app half in review | `api/app/routers/notices.py`, migration 0004, contract §4; web: manifest share_target + Notices page (branch d1-share-inbox) | app PR; D10 export/delete must include notices (follow-up after #62) | D6 #66 also uses migration 0004 -> must renumber to 0005 |
+| D1 | In-app intake: Web Share Target + paste box -> notice | 2 | 14 Oct | merged (done): API #68, app #69 | notices API + migration 0004 + contract §4; manifest share_target + Notices page | follow-up: add notices to D10 export/delete after #62 merges | D6 #66 must renumber its migration to 0005 |
 | D1b | Web push: SW, "Turn on reminders", VAPID in env, pywebpush sender for D6 | 3 | 16 Oct | not started | no service worker / push code; `Reminder.channel: 'push'` type + mock only (P3, E1) | everything | A4 for subscriptions table; D6 (P2) calls the sender |
 | D5 | Prep pack, built when opened (5 questions each linked) | 5 | 18 Oct | not started | Q1 quiz engine merged (`api/app/agent/quiz*.py`); "Open prep pack" only a mock label | everything | NR notes search (P2) not on main; `api/app/search/` empty |
 | V2Da | 2D CSTR drawings: plan/front/side/section, IS SP 46 | 3 | 19 Oct | merged (done) | #13 + #35 + #63 (half section A-A added, review fixes), `web/tests/check-v2da.mjs` | hand-drawn check not recorded | none |
@@ -66,3 +66,4 @@ Checks run on main (12 Oct): web `oxlint` 0 errors (2 warnings, not P5), `tsc -b
   committed or pushed; no worktrees left. Verification of the plan recorded under Decisions. Waiting for go-ahead.
 - 13 Oct: V2Da section merged (#63). V2Db column (#64) and exchanger (#65) merged after 3 review rounds each; main = tested tree. Next: D1 (notices); D10 #62 (Samarth) still open, its export/delete must include notices.
 - 13 Oct: D1 backend merged (#68, POST/GET/DELETE /api/v1/notices, 2 review rounds, real-Postgres tests incl. concurrent cap). Page renamed "Notices" (D6/D7 use "inbox" for reminders). Told Supreeth: D6 migration must become 0005.
+- 13 Oct: D1 app half merged (#69, 3 review rounds). D1 done.
