@@ -10,8 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 
 from app import auth
 from app.db import beat, make_engine
-from app.reminders import drain
-from app.routers import solve
+from app.reminders import drain, sweep
+from app.routers import checkins, solve
 
 
 class JsonFormatter(logging.Formatter):
@@ -71,9 +71,22 @@ async def keepalive(response: Response, source: str = "") -> dict[str, str | boo
     except Exception:
         logging.getLogger(__name__).exception("keepalive drain failed")
         sent = None  # never hide the heartbeat result
-    return {"status": "ok", "db": "ok", "wrote": wrote, "sent": sent}
+    try:  # ignored check-ins -> next round (the next ping delivers it if drain already ran)
+        followups: int | None = await sweep(_engine, datetime.now(UTC))
+    except Exception:
+        logging.getLogger(__name__).exception("keepalive sweep failed")
+        followups = None
+    return {"status": "ok", "db": "ok", "wrote": wrote, "sent": sent, "followups": followups}
+
+
+def _get_engine() -> AsyncEngine:
+    global _engine
+    _engine = _engine or make_engine()
+    return _engine
 
 
 app.dependency_overrides[solve.current_user] = auth.current_user
+app.dependency_overrides[checkins.get_engine] = _get_engine
+app.include_router(checkins.router)
 # solve.router is NOT included yet: it also needs get_deps (LLM/store wiring, a P1/P2 decision).
 app.include_router(api_router, prefix="/api/v1")

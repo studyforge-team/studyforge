@@ -32,7 +32,7 @@ async def _slots(engine, now: datetime) -> list[str]:  # type: ignore[no-untyped
 
 async def _exercise() -> None:
     engine = make_engine()
-    assert await schedule(engine, "u1", "OS exam", DEADLINE, at(20)) == 3
+    assert await schedule(engine, "u1", "OS exam", DEADLINE, at(20)) == 4  # + D7 check-in
     assert await schedule(engine, "u1", " os  EXAM ", DEADLINE, at(20)) == 0  # dedupe
     assert await schedule(engine, "u1", "OS exam", DEADLINE.astimezone(IST), at(20)) == 0  # same instant, +05:30
     assert await _slots(engine, at(26)) == []
@@ -40,6 +40,8 @@ async def _exercise() -> None:
     assert await _slots(engine, at(27, 17, 1)) == []  # fires once
     assert await _slots(engine, at(29, 17, 1)) == ["t-1d"]
     assert await _slots(engine, at(30, 2, 31)) == ["morning"]
+    assert await _slots(engine, at(30, 17, 59)) == []
+    assert await _slots(engine, at(30, 18, 1)) == ["checkin-1"]  # D7: deadline + 1 h
     assert await _slots(engine, at(31)) == []
 
     # concurrent pingers: one due job is delivered exactly once
