@@ -17,7 +17,8 @@ from sqlalchemy import text
 from app.agent.quiz import MCQItem, Quiz
 from app.db import PgQuizStore, make_engine
 from app.reminders import drain, schedule
-from app.routers import checkins, dashboard, me, quizzes
+from app.routers import checkins, dashboard, me, quizzes, uploads
+from tests.unit.conftest import MemoryStorage
 
 pytestmark = pytest.mark.skipif(not os.environ.get("DATABASE_URL"), reason="needs DATABASE_URL")
 
@@ -46,11 +47,13 @@ async def _exercise(sent: list[str]) -> None:
         async with httpx.AsyncClient(transport=httpx.MockTransport(ok)) as c:
             yield c
 
+    files = MemoryStorage()
     for mod in (dashboard, checkins, quizzes, me):
         if hasattr(mod, "current_user"):
             app.dependency_overrides[mod.current_user] = lambda: who["u"]
     app.dependency_overrides |= {checkins.get_engine: lambda: engine, me.get_engine: lambda: engine,
-                                 me.get_http: http, checkins.now: lambda: CHECKIN}
+                                 me.get_http: http, checkins.now: lambda: CHECKIN,
+                                 uploads.get_storage_opt: lambda: files}  # C1: export/delete touch storage
 
     async def call(method: str, url: str, user: str = "A", **kw):  # type: ignore[no-untyped-def]
         who["u"] = user
