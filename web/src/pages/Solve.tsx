@@ -4,13 +4,14 @@ import type { Step, UploadRead } from '@/api/types'
 import { Check, Cross } from '@/components/icons'
 import { FilePick } from '@/components/FilePick'
 import { Button } from '@/components/ui/button'
+import { friendly, PlainError } from '@/lib/errors'
 import { run, warm } from '@/sandbox/client'
 
 // Keeps react-markdown and KaTeX out of the main chunk; download starts when Solve is pressed.
 const loadCard = () => import('../components/AnswerCard')
 const AnswerCard = lazy(loadCard)
 
-type Row = { code: string; stdout: string; status: 'running' | 'ok' | 'fail'; ms?: number }
+type Row = { code: string; stdout: string; status: 'running' | 'ok' | 'fail'; ms?: number; timeout?: boolean }
 const demo = !import.meta.env.VITE_API_URL // same switch as api/client.ts
 const MAX_STEPS = 8
 const disclose = 'inline-flex min-h-11 items-center rounded-lg px-3 text-sm text-muted-foreground hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground'
@@ -30,6 +31,7 @@ function StepRow({ r }: { r: Row }) {
         <p className="font-medium">{label} <span className="font-normal text-muted-foreground">· network blocked</span></p>
         {r.status === 'ok' && <span className="shrink-0 tabular-nums text-muted-foreground">{r.ms} ms</span>}
       </div>
+      {r.timeout && <p className="text-sm text-destructive">Stopped: the calculation ran longer than 10 s.</p>}
       <div className="flex flex-wrap gap-1">
         <button type="button" className={disclose} aria-expanded={open === 'code'} onClick={() => toggle('code')}>Show code</button>
         {r.stdout && <button type="button" className={disclose} aria-expanded={open === 'out'} onClick={() => toggle('out')}>Output</button>}
@@ -60,10 +62,13 @@ export default function Solve() {
     try {
       const { upload_id } = await uploadFile(f, 'question', () => setSlow(true))
       setUpStatus('Reading…')
-      setRead(await readUpload(upload_id, () => setSlow(true)))
+      const rd = await readUpload(upload_id, () => setSlow(true))
+      // demo mode never reads files: say so instead of blaming the photo
+      if (!rd.text.trim()) { setError(demo ? "Demo mode doesn't read photos or PDFs yet. Type the question instead." : "Couldn't read that photo. Retake it in good light, or type the question."); return }
+      setRead(rd)
       setFile({ name: f.name, id: upload_id })
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Upload failed')
+      setError(friendly(e))
     } finally {
       setUpStatus(''); setSlow(false)
     }
@@ -78,19 +83,19 @@ export default function Solve() {
       const first = await startSolve(question, onSlow, file?.id)
       let step = first.step
       for (let n = 0; step.type === 'run_python'; n++) {
-        if (n >= MAX_STEPS) throw new Error('Too many steps, stopping.')
+        if (n >= MAX_STEPS) throw new PlainError('Too many steps, stopping.')
         const { code } = step
         setRows((r) => [...r, { code, stdout: '', status: 'running' }])
         const res = await run(code, { mode: 'solve' })
         const body = res.ok
           ? { stdout: res.stdout, result: res.result, figures: res.figures, error: null, ms: res.ms }
           : { stdout: '', result: null, figures: [], error: res.error, ms: 0 }
-        patch(n, { status: res.ok ? 'ok' : 'fail', ms: body.ms, stdout: body.stdout })
+        patch(n, { status: res.ok ? 'ok' : 'fail', ms: body.ms, stdout: body.stdout, timeout: !res.ok && res.error === 'timeout' })
         step = await postResult(first.solve_id, body, onSlow)
       }
       setEnd(step)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Something went wrong')
+      setError(friendly(e))
     } finally {
       setBusy(false); setSlow(false)
     }
@@ -128,15 +133,9 @@ export default function Solve() {
         {file && read && (
           <div className="mt-3 rounded-lg border-2 border-warn-line bg-warn-bg p-4 text-sm">
             <p className="font-medium">{file.name}</p>
-            {read.text ? (
-              <>
-                <pre className="mt-2 whitespace-pre-wrap break-words">{read.text}</pre>
-                {read.confidence === 'low' && <p className="mt-2 text-warn">Check this carefully — the reading may be wrong.</p>}
-                <Button className="mt-3" onClick={() => setQuestion(read.text)}>Use this text</Button>
-              </>
-            ) : (
-              <p className="mt-2 text-warn">{demo ? "Demo mode — your file wasn't read. Reading photos and PDFs needs the live backend." : 'No text could be read from this file.'} Type the question above instead; the file stays attached.</p>
-            )}
+            <pre className="mt-2 whitespace-pre-wrap break-words">{read.text}</pre>
+            {read.confidence === 'low' && <p className="mt-2 text-warn">Check this carefully — the reading may be wrong.</p>}
+            <Button className="mt-3" onClick={() => setQuestion(read.text)}>Use this text</Button>
           </div>
         )}
         {slow && <p className="mt-2 text-sm text-muted-foreground">Waking up the server…</p>}

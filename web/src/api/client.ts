@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import { HttpError } from '@/lib/errors'
 import * as mock from './mock'
 import type { Dashboard, Quiz, ResultBody, SolveStart, Step, UploadKind, UploadRead } from './types'
 
@@ -16,10 +17,11 @@ async function post<T>(path: string, body: unknown | FormData, onSlow?: () => vo
   try {
     const r = await fetch(`${BASE}/api/v1${path}`, {
       method: 'POST',
+      signal: AbortSignal.timeout(90_000), // model timeout; friendly() words it
       // FormData: the browser sets the multipart Content-Type (with boundary) itself
       ...(body instanceof FormData ? { body, headers: await auth() } : { headers: { 'Content-Type': 'application/json', ...(await auth()) }, body: JSON.stringify(body) }),
     })
-    if (!r.ok) throw new Error(`Server error (HTTP ${r.status})`)
+    if (!r.ok) throw new HttpError(r.status)
     return (await r.json()) as T
   } finally {
     clearTimeout(t)
@@ -44,8 +46,8 @@ export const postResult = async (id: string, body: ResultBody, onSlow?: () => vo
 
 export async function getDashboard(): Promise<Dashboard> {
   if (!BASE) return mock.getDashboard()
-  const r = await fetch(`${BASE}/api/v1/dashboard`, { headers: await auth() })
-  if (!r.ok) throw new Error(`Server error (HTTP ${r.status})`)
+  const r = await fetch(`${BASE}/api/v1/dashboard`, { headers: await auth(), signal: AbortSignal.timeout(90_000) })
+  if (!r.ok) throw new HttpError(r.status)
   return (await r.json()) as Dashboard
 }
 
