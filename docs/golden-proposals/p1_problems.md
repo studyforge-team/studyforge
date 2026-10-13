@@ -74,18 +74,24 @@ Inputs are in the templates' canonical units. Tolerance 1% on every output (inte
 - **HX-2** inputs `{"mh": 0.5, "cph": 2000.0, "Th_in": 400.0, "Th_out": 320.0, "mc": 1.2, "cpc": 4180.0, "Tc_in": 290.0, "U": 250.0}`
   - expected: Q = 80000 W, Tc_out = 305.949 K, A_counter = 5.70865 m^2, A_co = 6.86293 m^2, A_shell12 = 6.18665 m^2, F = 0.922736 -
   - independent calculation: Oil cooler, hot stream is Cmin. Same e-NTU method; reference values also matched the ht library (MIT) to 1e-9.
+- **HX-3** inputs `{"mh": 3.0, "cph": 4180.0, "Th_in": 363.15, "Th_out": 353.15, "mc": 1.0, "cpc": 4180.0, "Tc_in": 288.15, "U": 800.0}`
+  - expected: Q = 125400 W, Tc_out = 318.15 K, A_counter = 2.88204 m^2, A_co = 2.98664 m^2, A_shell12 = 2.93265 m^2, F = 0.982743 -
+  - independent calculation: Cold stream is Cmin (Cr = 1/3): 3 kg/s hot water 90 -> 80 C heats 1 kg/s water 15 -> 45 C. Same e-NTU method.
+- **HX-4** inputs `{"mh": 1.0, "cph": 4180.0, "Th_in": 363.15, "Th_out": 333.15, "mc": 1.0, "cpc": 4180.0, "Tc_in": 293.15, "U": 500.0}`
+  - expected: Q = 125400 W, Tc_out = 323.15 K, A_counter = 6.27 m^2, A_co = 8.1339 m^2, A_shell12 = 6.98261 m^2, F = 0.897945 -
+  - independent calculation: Equal capacity rates (Cr = 1): counter-flow NTU = eps/(1-eps), so A_counter = Q/(U x 40 K) = 6.27 m^2 by hand.
 - **FLASH-1** inputs `{"c1": 14.0, "c2": 15.0, "c3": 0.0, "n1": 0.5, "n2": 0.5, "n3": 0.0, "T": 368.15, "P": 101325.0}`
   - expected: x1 = 0.402648 -, y1 = 0.624804 -, V_frac = 0.438216 -, T_bubble = 365.196 K, P_bubble = 110436 Pa
-  - independent calculation: Benzene-toluene 50/50 at 1 atm, 95 C (Raoult, Poling Antoine). Binary closed form x1 = (P - P2)/(P1 - P2), y1 = x1 P1/P, V = (z1 - x1)/(y1 - x1); bubble T by brentq on the bubble-pressure sum (textbook: about 92 C).
+  - independent calculation: Benzene-toluene 50/50 at 1 atm, 95 C (Raoult, Poling Antoine). Binary closed form x1 = (P - P2)/(P1 - P2), y1 = x1 P1/P, V = (z1 - x1)/(y1 - x1); bubble T by bisection on the bubble-pressure sum (textbook: about 92 C). Antoine constants are shared data from the compound table (checked separately against CRC boiling points in chemlab/tests/test_compounds.py).
 - **FLASH-2** inputs `{"c1": 14.0, "c2": 15.0, "c3": 25.0, "n1": 0.5, "n2": 0.5, "n3": 0.3, "T": 360.0, "P": 101325.0}`
   - expected: V_frac = 0.224834 -, x1 = 0.365819 -, x3 = 0.199028 -, y3 = 0.340203 -
-  - independent calculation: Benzene/toluene/n-hexane at 360 K, 1 atm. Rachford-Rice multiplied out to a quadratic in V and solved with numpy roots (the template uses brentq on the sum).
+  - independent calculation: Benzene/toluene/n-hexane at 360 K, 1 atm. Rachford-Rice multiplied out to a quadratic in V and solved with numpy roots (the template uses brentq on the sum). T_dew is not proposed: it lies above n-hexane's Antoine range and the template warns it is extrapolated.
 - **PIPE-1** inputs `{"Q": 0.01, "D": 0.1, "L": 100.0, "eps": 4.5e-05, "rho": 997.0, "mu": 0.00089, "K_fittings": 5.0, "dz": 10.0, "dP": 0.0, "eta": 0.7}`
   - expected: Re = 142631 -, f_darcy = 0.01924 -, head = 12.0036 m, P_shaft = 1676.59 W
   - independent calculation: Water 10 L/s in 100 m of 100 mm commercial steel, K = 5, 10 m lift. Colebrook by fixed-point iteration on 1/sqrt(f); matches fluids.friction_factor (Clamond) to 1e-9.
 - **PIPE-2** inputs `{"Q": 1e-05, "D": 0.05, "L": 50.0, "eps": 4.5e-05, "rho": 997.0, "mu": 0.00089, "K_fittings": 2.0, "dz": 3.0, "dP": 0.0, "eta": 0.6}`
   - expected: Re = 285.263 -, f_darcy = 0.224354 -, head = 3.0003 m, P_shaft = 0.48891 W
-  - independent calculation: Laminar (Re = 285): f = 64/Re by hand.
+  - independent calculation: Laminar (Re = 285): f = 64/Re, the same textbook formula the template uses (not an independent method; checkable by hand).
 - **RECYCLE-1** inputs `{"F0": 100.0, "yI0": 0.01, "Xsp": 0.3, "sA": 0.95, "sI": 1.0, "p": 0.05}`
   - expected: R_A = 169.839 kmol/h, R_I = 19 kmol/h, X_overall = 0.814664 -, P_total = 9.9389 kmol/h
   - independent calculation: Iterate the loop (mixer, reactor, separator, splitter) by successive substitution until the recycle stops changing.

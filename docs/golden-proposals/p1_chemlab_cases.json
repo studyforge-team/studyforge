@@ -375,6 +375,88 @@
   "independent": "Oil cooler, hot stream is Cmin. Same e-NTU method; reference values also matched the ht library (MIT) to 1e-9."
  },
  {
+  "id": "HX-3",
+  "template": "hx",
+  "inputs": {
+   "mh": 3.0,
+   "cph": 4180.0,
+   "Th_in": 363.15,
+   "Th_out": 353.15,
+   "mc": 1.0,
+   "cpc": 4180.0,
+   "Tc_in": 288.15,
+   "U": 800.0
+  },
+  "expected": {
+   "Q": [
+    125400.0,
+    "W"
+   ],
+   "Tc_out": [
+    318.15,
+    "K"
+   ],
+   "A_counter": [
+    2.8820429642321757,
+    "m^2"
+   ],
+   "A_co": [
+    2.9866363289587765,
+    "m^2"
+   ],
+   "A_shell12": [
+    2.9326512418107624,
+    "m^2"
+   ],
+   "F": [
+    0.9827431653457236,
+    "-"
+   ]
+  },
+  "independent": "Cold stream is Cmin (Cr = 1/3): 3 kg/s hot water 90 -> 80 C heats 1 kg/s water 15 -> 45 C. Same e-NTU method."
+ },
+ {
+  "id": "HX-4",
+  "template": "hx",
+  "inputs": {
+   "mh": 1.0,
+   "cph": 4180.0,
+   "Th_in": 363.15,
+   "Th_out": 333.15,
+   "mc": 1.0,
+   "cpc": 4180.0,
+   "Tc_in": 293.15,
+   "U": 500.0
+  },
+  "expected": {
+   "Q": [
+    125400.0,
+    "W"
+   ],
+   "Tc_out": [
+    323.15,
+    "K"
+   ],
+   "A_counter": [
+    6.27,
+    "m^2"
+   ],
+   "A_co": [
+    8.133904423051208,
+    "m^2"
+   ],
+   "A_shell12": [
+    6.982611484572041,
+    "m^2"
+   ],
+   "F": [
+    0.8979448468317988,
+    "-"
+   ]
+  },
+  "independent": "Equal capacity rates (Cr = 1): counter-flow NTU = eps/(1-eps), so A_counter = Q/(U x 40 K) = 6.27 m^2 by hand."
+ },
+ {
   "id": "FLASH-1",
   "template": "flash",
   "inputs": {
@@ -401,7 +483,7 @@
     "-"
    ],
    "T_bubble": [
-    365.1964508725166,
+    365.1964508725164,
     "K"
    ],
    "P_bubble": [
@@ -409,7 +491,7 @@
     "Pa"
    ]
   },
-  "independent": "Benzene-toluene 50/50 at 1 atm, 95 C (Raoult, Poling Antoine). Binary closed form x1 = (P - P2)/(P1 - P2), y1 = x1 P1/P, V = (z1 - x1)/(y1 - x1); bubble T by brentq on the bubble-pressure sum (textbook: about 92 C)."
+  "independent": "Benzene-toluene 50/50 at 1 atm, 95 C (Raoult, Poling Antoine). Binary closed form x1 = (P - P2)/(P1 - P2), y1 = x1 P1/P, V = (z1 - x1)/(y1 - x1); bubble T by bisection on the bubble-pressure sum (textbook: about 92 C). Antoine constants are shared data from the compound table (checked separately against CRC boiling points in chemlab/tests/test_compounds.py)."
  },
  {
   "id": "FLASH-2",
@@ -442,7 +524,7 @@
     "-"
    ]
   },
-  "independent": "Benzene/toluene/n-hexane at 360 K, 1 atm. Rachford-Rice multiplied out to a quadratic in V and solved with numpy roots (the template uses brentq on the sum)."
+  "independent": "Benzene/toluene/n-hexane at 360 K, 1 atm. Rachford-Rice multiplied out to a quadratic in V and solved with numpy roots (the template uses brentq on the sum). T_dew is not proposed: it lies above n-hexane's Antoine range and the template warns it is extrapolated."
  },
  {
   "id": "PIPE-1",
@@ -512,7 +594,7 @@
     "W"
    ]
   },
-  "independent": "Laminar (Re = 285): f = 64/Re by hand."
+  "independent": "Laminar (Re = 285): f = 64/Re, the same textbook formula the template uses (not an independent method; checkable by hand)."
  },
  {
   "id": "RECYCLE-1",

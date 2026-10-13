@@ -331,8 +331,8 @@ def chemlab_cases():
 
 
 def new_template_cases():
-    """CH2/CH5 templates (hx, flash, pipe, recycle), each by a method the template does
-    not use for its primary result."""
+    """CH2/CH5 templates (hx, flash, pipe, recycle), by a method the template does not use
+    for its primary result, except where a case text says otherwise (laminar f = 64/Re)."""
     out = []
 
     # heat exchanger: areas from e-NTU only (the template's primary result is LMTD/F)
@@ -343,7 +343,10 @@ def new_template_cases():
         cmin, cmax = min(ch, cc), max(ch, cc)
         cr = cmin / cmax
         eps = q / (cmin * (thi - tci))
-        ntu_ct = math.log((1 - eps * cr) / (1 - eps)) / (1 - cr)
+        if cmax == cmin:  # Cr = 1: the general counter-flow form is 0/0
+            ntu_ct = eps / (1 - eps)
+        else:
+            ntu_ct = math.log((1 - eps * cr) / (1 - eps)) / (1 - cr)
         ntu_co = -math.log(1 - eps * (1 + cr)) / (1 + cr)
         sq = math.sqrt(1 + cr * cr)
         e = (2 / eps - (1 + cr)) / sq
@@ -359,6 +362,10 @@ def new_template_cases():
         "Golden problem P1-05 as a ChemLab case. Areas by e-NTU (counter, co-current, 1-2 shell) from the energy balance; F = A_counter / A_shell12. The template's primary result is LMTD x F."))
     out.append(hx_case("HX-2", 0.5, 2000.0, 400.0, 320.0, 1.2, 4180.0, 290.0, 250.0,
         "Oil cooler, hot stream is Cmin. Same e-NTU method; reference values also matched the ht library (MIT) to 1e-9."))
+    out.append(hx_case("HX-3", 3.0, 4180.0, 363.15, 353.15, 1.0, 4180.0, 288.15, 800.0,
+        "Cold stream is Cmin (Cr = 1/3): 3 kg/s hot water 90 -> 80 C heats 1 kg/s water 15 -> 45 C. Same e-NTU method."))
+    out.append(hx_case("HX-4", 1.0, 4180.0, 363.15, 333.15, 1.0, 4180.0, 293.15, 500.0,
+        "Equal capacity rates (Cr = 1): counter-flow NTU = eps/(1-eps), so A_counter = Q/(U x 40 K) = 6.27 m^2 by hand."))
 
     # flash: Antoine data from the compound table, solved by closed form / polynomial roots
     sys.path.insert(0, str(HERE.parents[1] / "chemlab" / "templates"))
@@ -372,12 +379,16 @@ def new_template_cases():
     p1, p2 = ps(14, t), ps(15, t)
     x1 = (p_ - p2) / (p1 - p2)
     y1 = x1 * p1 / p_
-    tb = brentq(lambda tt: 0.5 * (ps(14, tt) + ps(15, tt)) - p_, 300.0, 450.0, xtol=1e-12)
+    lo, hi = 300.0, 450.0  # plain bisection (the template uses brentq)
+    for _ in range(200):
+        mid = (lo + hi) / 2
+        lo, hi = (lo, mid) if 0.5 * (ps(14, mid) + ps(15, mid)) > p_ else (mid, hi)
+    tb = (lo + hi) / 2
     out.append(dict(id="FLASH-1", template="flash",
         inputs=dict(c1=14.0, c2=15.0, c3=0.0, n1=0.5, n2=0.5, n3=0.0, T=t, P=p_),
         expected={"x1": [x1, "-"], "y1": [y1, "-"], "V_frac": [(0.5 - x1) / (y1 - x1), "-"],
                   "T_bubble": [tb, "K"], "P_bubble": [0.5 * (p1 + p2), "Pa"]},
-        independent="Benzene-toluene 50/50 at 1 atm, 95 C (Raoult, Poling Antoine). Binary closed form x1 = (P - P2)/(P1 - P2), y1 = x1 P1/P, V = (z1 - x1)/(y1 - x1); bubble T by brentq on the bubble-pressure sum (textbook: about 92 C)."))
+        independent="Benzene-toluene 50/50 at 1 atm, 95 C (Raoult, Poling Antoine). Binary closed form x1 = (P - P2)/(P1 - P2), y1 = x1 P1/P, V = (z1 - x1)/(y1 - x1); bubble T by bisection on the bubble-pressure sum (textbook: about 92 C). Antoine constants are shared data from the compound table (checked separately against CRC boiling points in chemlab/tests/test_compounds.py)."))
     t3 = 360.0
     z = [0.5 / 1.3, 0.5 / 1.3, 0.3 / 1.3]
     k = [ps(n, t3) / p_ for n in (14, 15, 25)]
@@ -394,7 +405,7 @@ def new_template_cases():
         inputs=dict(c1=14.0, c2=15.0, c3=25.0, n1=0.5, n2=0.5, n3=0.3, T=t3, P=p_),
         expected={"V_frac": [v, "-"], "x1": [xs[0], "-"], "x3": [xs[2], "-"],
                   "y3": [k[2] * xs[2], "-"]},
-        independent="Benzene/toluene/n-hexane at 360 K, 1 atm. Rachford-Rice multiplied out to a quadratic in V and solved with numpy roots (the template uses brentq on the sum)."))
+        independent="Benzene/toluene/n-hexane at 360 K, 1 atm. Rachford-Rice multiplied out to a quadratic in V and solved with numpy roots (the template uses brentq on the sum). T_dew is not proposed: it lies above n-hexane's Antoine range and the template warns it is extrapolated."))
 
     # pipe: Colebrook by fixed-point iteration (the template uses brentq)
     def pipe_case(cid, q, d, l, eps, rho, mu, kf, dz, eta, text):
@@ -416,7 +427,7 @@ def new_template_cases():
     out.append(pipe_case("PIPE-1", 0.01, 0.1, 100.0, 4.5e-5, 997.0, 8.9e-4, 5.0, 10.0, 0.7,
         "Water 10 L/s in 100 m of 100 mm commercial steel, K = 5, 10 m lift. Colebrook by fixed-point iteration on 1/sqrt(f); matches fluids.friction_factor (Clamond) to 1e-9."))
     out.append(pipe_case("PIPE-2", 1e-5, 0.05, 50.0, 4.5e-5, 997.0, 8.9e-4, 2.0, 3.0, 0.6,
-        "Laminar (Re = 285): f = 64/Re by hand."))
+        "Laminar (Re = 285): f = 64/Re, the same textbook formula the template uses (not an independent method; checkable by hand)."))
 
     # recycle: brute-force successive substitution around the loop (template: fsolve)
     def recycle_case(cid, f0, yi0, xsp, sa, si, pp, text):
@@ -441,6 +452,8 @@ def new_template_cases():
         "Iterate the loop (mixer, reactor, separator, splitter) by successive substitution until the recycle stops changing."))
     out.append(recycle_case("RECYCLE-2", 100.0, 0.1, 0.5, 1.0, 1.0, 0.1,
         "Hand case: R_A = 810/11, R_I = 90, X_overall = 10/11; also by successive substitution."))
+    hx4 = next(c for c in out if c["id"] == "HX-4")["expected"]["A_counter"][0]
+    assert rel(hx4, 125400 / (500 * 40)) < 1e-12
     assert rel(out[-1]["expected"]["R_A"][0], 810 / 11) < 1e-9
     assert rel(out[-1]["expected"]["X_overall"][0], 10 / 11) < 1e-9
     return out
