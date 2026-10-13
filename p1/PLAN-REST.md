@@ -8,7 +8,7 @@ merged") is met and the SHOULD tickets start now.
 
 ## Status (13 Oct)
 Done and merged: #48 HX, #51 compounds, #52 flash (CH2 complete), #49 recycle, #50 pipe/pump
-(CH5 complete). CH3 follow-up #53 in CI. Nothing else in P1 can be built without Nebius or
+(CH5 complete), #53 CH3 follow-up (new templates pickable). Nothing else in P1 can be built without Nebius or
 another teammate (tables below).
 
 ## Build now (no Nebius, no other teammate needed)
