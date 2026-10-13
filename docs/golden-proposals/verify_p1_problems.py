@@ -326,7 +326,137 @@ def chemlab_cases():
             expected={kk: [vv, units[kk]] for kk, vv in exp.items()},
             exact=["N_theoretical", "feed_stage"],
             independent=f"Constant alpha, CMO, total condenser, reboiler counted as a stage. Rmin from Underwood (theta root of sum alpha z/(alpha-theta) = 1-q); D, B, V, V' from balances (V' = V-(1-q)F); stages stepped top-down with the inverse equilibrium curve and the two operating lines (own code). Last liquid x = {xl:.4f} vs xB = {xB_}."))
+    cases += new_template_cases()
     return cases
+
+
+def new_template_cases():
+    """CH2/CH5 templates (hx, flash, pipe, recycle), by a method the template does not use
+    for its primary result, except where a case text says otherwise (laminar f = 64/Re)."""
+    out = []
+
+    # heat exchanger: areas from e-NTU only (the template's primary result is LMTD/F)
+    def hx_case(cid, mh, cph, thi, tho, mc, cpc, tci, u, text):
+        ch, cc = mh * cph, mc * cpc
+        q = ch * (thi - tho)
+        tco = tci + q / cc
+        cmin, cmax = min(ch, cc), max(ch, cc)
+        cr = cmin / cmax
+        eps = q / (cmin * (thi - tci))
+        if cmax == cmin:  # Cr = 1: the general counter-flow form is 0/0
+            ntu_ct = eps / (1 - eps)
+        else:
+            ntu_ct = math.log((1 - eps * cr) / (1 - eps)) / (1 - cr)
+        ntu_co = -math.log(1 - eps * (1 + cr)) / (1 + cr)
+        sq = math.sqrt(1 + cr * cr)
+        e = (2 / eps - (1 + cr)) / sq
+        ntu_12 = -math.log((e - 1) / (e + 1)) / sq
+        a_ct, a_co, a_12 = (n * cmin / u for n in (ntu_ct, ntu_co, ntu_12))
+        p = dict(mh=mh, cph=cph, Th_in=thi, Th_out=tho, mc=mc, cpc=cpc, Tc_in=tci, U=u)
+        return dict(id=cid, template="hx", inputs=p,
+            expected={"Q": [q, "W"], "Tc_out": [tco, "K"], "A_counter": [a_ct, "m^2"],
+                      "A_co": [a_co, "m^2"], "A_shell12": [a_12, "m^2"],
+                      "F": [a_ct / a_12, "-"]},
+            independent=text)
+    out.append(hx_case("HX-1", 2.0, 2100.0, 433.15, 373.15, 2.5, 4180.0, 293.15, 350.0,
+        "Golden problem P1-05 as a ChemLab case. Areas by e-NTU (counter, co-current, 1-2 shell) from the energy balance; F = A_counter / A_shell12. The template's primary result is LMTD x F."))
+    out.append(hx_case("HX-2", 0.5, 2000.0, 400.0, 320.0, 1.2, 4180.0, 290.0, 250.0,
+        "Oil cooler, hot stream is Cmin. Same e-NTU method; reference values also matched the ht library (MIT) to 1e-9."))
+    out.append(hx_case("HX-3", 3.0, 4180.0, 363.15, 353.15, 1.0, 4180.0, 288.15, 800.0,
+        "Cold stream is Cmin (Cr = 1/3): 3 kg/s hot water 90 -> 80 C heats 1 kg/s water 15 -> 45 C. Same e-NTU method."))
+    out.append(hx_case("HX-4", 1.0, 4180.0, 363.15, 333.15, 1.0, 4180.0, 293.15, 500.0,
+        "Equal capacity rates (Cr = 1): counter-flow NTU = eps/(1-eps), so A_counter = Q/(U x 40 K) = 6.27 m^2 by hand."))
+
+    # flash: Antoine data from the compound table, solved by closed form / polynomial roots
+    sys.path.insert(0, str(HERE.parents[1] / "chemlab" / "templates"))
+    from _compounds import COMPOUNDS  # data only
+
+    def ps(num, t):
+        c = COMPOUNDS[num - 1]
+        return 10 ** (c["A"] - c["B"] / (t + c["C"]))
+
+    t, p_ = 368.15, 101325.0
+    p1, p2 = ps(14, t), ps(15, t)
+    x1 = (p_ - p2) / (p1 - p2)
+    y1 = x1 * p1 / p_
+    lo, hi = 300.0, 450.0  # plain bisection (the template uses brentq)
+    for _ in range(200):
+        mid = (lo + hi) / 2
+        lo, hi = (lo, mid) if 0.5 * (ps(14, mid) + ps(15, mid)) > p_ else (mid, hi)
+    tb = (lo + hi) / 2
+    out.append(dict(id="FLASH-1", template="flash",
+        inputs=dict(c1=14.0, c2=15.0, c3=0.0, n1=0.5, n2=0.5, n3=0.0, T=t, P=p_),
+        expected={"x1": [x1, "-"], "y1": [y1, "-"], "V_frac": [(0.5 - x1) / (y1 - x1), "-"],
+                  "T_bubble": [tb, "K"], "P_bubble": [0.5 * (p1 + p2), "Pa"]},
+        independent="Benzene-toluene 50/50 at 1 atm, 95 C (Raoult, Poling Antoine). Binary closed form x1 = (P - P2)/(P1 - P2), y1 = x1 P1/P, V = (z1 - x1)/(y1 - x1); bubble T by bisection on the bubble-pressure sum (textbook: about 92 C). Antoine constants are shared data from the compound table (checked separately against CRC boiling points in chemlab/tests/test_compounds.py)."))
+    t3 = 360.0
+    z = [0.5 / 1.3, 0.5 / 1.3, 0.3 / 1.3]
+    k = [ps(n, t3) / p_ for n in (14, 15, 25)]
+    poly = np.poly1d([0.0])
+    for i in range(3):
+        term = np.poly1d([z[i] * (k[i] - 1)])
+        for j in range(3):
+            if j != i:
+                term = term * np.poly1d([k[j] - 1, 1.0])
+        poly = poly + term
+    v = [r.real for r in poly.roots if abs(r.imag) < 1e-12 and 0 < r.real < 1][0]
+    xs = [zi / (1 + v * (ki - 1)) for zi, ki in zip(z, k)]
+    out.append(dict(id="FLASH-2", template="flash",
+        inputs=dict(c1=14.0, c2=15.0, c3=25.0, n1=0.5, n2=0.5, n3=0.3, T=t3, P=p_),
+        expected={"V_frac": [v, "-"], "x1": [xs[0], "-"], "x3": [xs[2], "-"],
+                  "y3": [k[2] * xs[2], "-"]},
+        independent="Benzene/toluene/n-hexane at 360 K, 1 atm. Rachford-Rice multiplied out to a quadratic in V and solved with numpy roots (the template uses brentq on the sum). T_dew is not proposed: it lies above n-hexane's Antoine range and the template warns it is extrapolated."))
+
+    # pipe: Colebrook by fixed-point iteration (the template uses brentq)
+    def pipe_case(cid, q, d, l, eps, rho, mu, kf, dz, eta, text):
+        g = 9.80665
+        uu = 4 * q / (math.pi * d * d)
+        re = rho * uu * d / mu
+        if re < 2300:
+            f = 64 / re
+        else:
+            x = 8.0
+            for _ in range(200):
+                x = -2 * math.log10(eps / d / 3.7 + 2.51 * x / re)
+            f = 1 / (x * x)
+        head = f * l / d * uu * uu / (2 * g) + kf * uu * uu / (2 * g) + dz
+        p = dict(Q=q, D=d, L=l, eps=eps, rho=rho, mu=mu, K_fittings=kf, dz=dz, dP=0.0, eta=eta)
+        return dict(id=cid, template="pipe", inputs=p,
+            expected={"Re": [re, "-"], "f_darcy": [f, "-"], "head": [head, "m"],
+                      "P_shaft": [rho * g * q * head / eta, "W"]}, independent=text)
+    out.append(pipe_case("PIPE-1", 0.01, 0.1, 100.0, 4.5e-5, 997.0, 8.9e-4, 5.0, 10.0, 0.7,
+        "Water 10 L/s in 100 m of 100 mm commercial steel, K = 5, 10 m lift. Colebrook by fixed-point iteration on 1/sqrt(f); matches fluids.friction_factor (Clamond) to 1e-9."))
+    out.append(pipe_case("PIPE-2", 1e-5, 0.05, 50.0, 4.5e-5, 997.0, 8.9e-4, 2.0, 3.0, 0.6,
+        "Laminar (Re = 285): f = 64/Re, the same textbook formula the template uses (not an independent method; checkable by hand)."))
+
+    # recycle: brute-force successive substitution around the loop (template: fsolve)
+    def recycle_case(cid, f0, yi0, xsp, sa, si, pp, text):
+        f0a, f0i = f0 * (1 - yi0), f0 * yi0
+        ra = ri = 0.0
+        for _ in range(100000):
+            na = (1 - pp) * sa * (1 - xsp) * (f0a + ra)
+            ni = (1 - pp) * si * (f0i + ri)
+            if abs(na - ra) < 1e-13 * max(1.0, na) and abs(ni - ri) < 1e-13 * max(1.0, ni):
+                ra, ri = na, ni
+                break
+            ra, ri = na, ni
+        pa = pp * sa * (1 - xsp) * (f0a + ra)
+        prod_a = (1 - sa) * (1 - xsp) * (f0a + ra)
+        p = dict(F0=f0, yI0=yi0, Xsp=xsp, sA=sa, sI=si, p=pp)
+        return dict(id=cid, template="recycle", inputs=p,
+            expected={"R_A": [ra, "kmol/h"], "R_I": [ri, "kmol/h"],
+                      "X_overall": [(f0a - pa - prod_a) / f0a, "-"],
+                      "P_total": [pp * (sa * (1 - xsp) * (f0a + ra) + si * (f0i + ri)), "kmol/h"]},
+            independent=text)
+    out.append(recycle_case("RECYCLE-1", 100.0, 0.01, 0.3, 0.95, 1.0, 0.05,
+        "Iterate the loop (mixer, reactor, separator, splitter) by successive substitution until the recycle stops changing."))
+    out.append(recycle_case("RECYCLE-2", 100.0, 0.1, 0.5, 1.0, 1.0, 0.1,
+        "Hand case: R_A = 810/11, R_I = 90, X_overall = 10/11; also by successive substitution."))
+    hx4 = next(c for c in out if c["id"] == "HX-4")["expected"]["A_counter"][0]
+    assert rel(hx4, 125400 / (500 * 40)) < 1e-12
+    assert rel(out[-1]["expected"]["R_A"][0], 810 / 11) < 1e-9
+    assert rel(out[-1]["expected"]["X_overall"][0], 10 / 11) < 1e-9
+    return out
 
 
 def check_template(cases):
