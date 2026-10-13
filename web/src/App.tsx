@@ -5,6 +5,7 @@ import Quiz from './pages/Quiz'
 import Solve from './pages/Solve'
 import InterviewBank from './pages/InterviewBank'
 import OA from './pages/OA'
+import PYQPredictor from './pages/PYQPredictor'
 import TimeToFinish from './pages/TimeToFinish'
 
 const SelfTest = lazy(() => import('./SelfTest'))
@@ -37,13 +38,15 @@ export default function App() {
         <OA />
       ) : hash === '#interview-bank' ? (
         <InterviewBank />
+      ) : hash === '#pyq-predictor' ? (
+        <PYQPredictor />
       ) : hash === '#time-to-finish' ? (
         <TimeToFinish />
       ) : hash.startsWith('#chemlab') ? (
         <Suspense
           fallback={
             <p role="status" className="mx-auto max-w-3xl px-4 py-6 text-sm text-muted-foreground">
-              Loading ChemLabâ€¦
+              Loading ChemLab…
             </p>
           }
         >
