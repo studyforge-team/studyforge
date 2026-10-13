@@ -128,8 +128,8 @@ def test_balance_closes_across_random_sweep() -> None:
         }
         r = run(inp, series=False)
         assert r["ok"], inp
-        assert out(r, "balance_error") < 5e-3
-        assert out(r, "balance_error") < 1e-6
+        assert out(r, "balance_error") < 1e-6  # plan: within 0.5%
+        assert not any("fsolve" in w for w in r["warnings"]), inp
         n += 1
 
 
@@ -172,3 +172,33 @@ def test_envelope_json_safe_and_fast() -> None:
     }
     assert set(SPEC) == {"F0", "yI0", "Xsp", "sA", "sI", "p"}
     assert r["n_steady_states"] == 0
+
+
+@pytest.mark.parametrize(
+    "inp",
+    [
+        {"p": 1e-17},  # 1 - sI*(1 - p) rounds to 0 if computed naively
+        {"p": 0, "sI": 1 - 1e-16, "yI0": 0.01},
+        {"p": 1e-12, "sI": 1, "yI0": 0.5},
+    ],
+)
+def test_vanishing_purge_with_inert_is_an_error(inp: dict) -> None:
+    r = run(inp)
+    assert not r["ok"]
+    assert r["errors"][0]["code"] == "inert_accumulates"
+
+
+@pytest.mark.parametrize(
+    "inp",
+    [
+        {"p": 1e-8},
+        {"sI": 1, "p": 1e-4, "yI0": 0.5},
+        {"p": 0, "sI": 1, "yI0": 0},
+        {"Xsp": 1e-4, "sA": 1, "p": 0, "yI0": 0},
+    ],
+)
+def test_fsolve_agrees_near_total_recycle(inp: dict) -> None:
+    r = run(inp, series=False)
+    assert r["ok"]
+    assert not any("fsolve" in w for w in r["warnings"]), r["warnings"]
+    assert out(r, "balance_error") < 1e-6

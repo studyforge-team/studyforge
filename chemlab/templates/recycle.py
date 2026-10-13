@@ -9,7 +9,8 @@ the inert go overhead, the rest leave with the product. Splitter: purge = p*over
 recycle = (1 - p)*overhead.
 
 Tear-stream equations (unknowns R_A, R_I), solved with scipy.optimize.fsolve from
-zero recycle (flows scaled by F0):
+zero recycle (flows scaled by F0, residuals written as (1-a) R_A - a F0A so they stay
+well scaled near total recycle, analytic Jacobian):
     R_A = a*(F0A + R_A),  a = (1 - Xsp)*sA*(1 - p)
     R_I = b*(F0I + R_I),  b = sI*(1 - p)
 The balances are linear, so the closed form is a check (warning if > 1e-6 relative):
@@ -17,7 +18,8 @@ The balances are linear, so the closed form is a check (warning if > 1e-6 relati
 Degenerate cases: 1 - a = 0 needs Xsp = 0, which the input range excludes (A always
 reacts), so A never accumulates. 1 - b = 0 needs sI = 1 and p = 0: inert then has no
 exit, and with yI0 > 0 the recycle grows without bound -> error "inert_accumulates"
-(field "p"). With yI0 = 0 there is no inert, so R_I = 0 and the case is fine.
+(field "p"); the guard is numeric (1 - b < 1e-9, computed without cancellation), so
+a purge of 1e-17 or sI = 1 - 1e-16 is caught too. With yI0 = 0 there is no inert, so R_I = 0 and the case is fine.
 Assumptions: isothermal, constant flows in kmol/h, no volume or pressure effects,
 perfect separator splits, no reactor kinetics (conversion is given).
 """
@@ -44,6 +46,7 @@ VERSION = "1.0"
 N_SERIES = 60
 RATIO_WARN = 1000.0
 CLOSURE_TOL = 1e-6
+MIN_MARGIN = 1e-9  # 1 - b below this: recycle ratio above ~1e9, treated as unbounded
 
 SPEC: dict[str, InputSpec] = {
     "F0": spec("kmol/h", 100.0, 1e-3, 1e6, "fresh feed molar flow"),
@@ -65,25 +68,32 @@ def _run(inputs: dict[str, Any], series: bool) -> dict[str, Any]:
     if errors:
         return failed(TEMPLATE, VERSION, errors)
     v = values
-    if v["p"] == 0.0 and v["sI"] == 1.0 and v["yI0"] > 0.0:
-        msg = "no purge and all inert goes overhead: inert accumulates without bound"
-        return failed(TEMPLATE, VERSION, [_err("inert_accumulates", msg, "p")])
-    out = envelope(TEMPLATE, VERSION, values, SPEC)
     f0a, f0i = v["F0"] * (1.0 - v["yI0"]), v["F0"] * v["yI0"]
     a, b = _loop_gains(v["Xsp"], v["sA"], v["sI"], v["p"])
+    ma, mb = _margins(v["Xsp"], v["sA"], v["sI"], v["p"])
+    if f0i > 0.0 and mb < MIN_MARGIN:
+        msg = "purge too small and almost all inert goes overhead: inert accumulates without bound"
+        return failed(TEMPLATE, VERSION, [_err("inert_accumulates", msg, "p")])
+    out = envelope(TEMPLATE, VERSION, values, SPEC)
 
-    def tear(r: np.ndarray) -> list[float]:  # r = (R_A, R_I) / F0
-        return [
-            r[0] - a * (f0a / v["F0"] + r[0]),
-            r[1] - b * (f0i / v["F0"] + r[1]),
-        ]
+    def tear(
+        r: np.ndarray,
+    ) -> list[float]:  # r = (R_A, R_I) / F0, written as (1-a) r - a f
+        return [ma * r[0] - a * f0a / v["F0"], mb * r[1] - b * f0i / v["F0"]]
 
-    sol, _info, ier, _msg = fsolve(tear, [0.0, 0.0], xtol=1e-13, full_output=True)
+    def jac(_r: np.ndarray) -> list[list[float]]:
+        return [[ma, 0.0], [0.0, mb]]
+
+    # judged by agreement with the closed form, not fsolve status: MINPACK reports
+    # "not making good progress" (ier 5) when its first steps already land on the answer
+    sol, _info, _ier, _msg = fsolve(
+        tear, [0.0, 0.0], fprime=jac, xtol=1e-13, full_output=True
+    )
     ra, ri = float(sol[0] * v["F0"]), float(sol[1] * v["F0"])
-    ra_cf = a * f0a / (1.0 - a)
-    ri_cf = b * f0i / (1.0 - b) if f0i > 0.0 else 0.0  # b = 1 only if no inert
+    ra_cf = a * f0a / ma
+    ri_cf = b * f0i / mb if f0i > 0.0 else 0.0  # mb can be 0 only without inert
     scale = max(abs(ra_cf), abs(ri_cf), 1e-300)
-    if ier != 1 or max(abs(ra - ra_cf), abs(ri - ri_cf)) > CLOSURE_TOL * scale:
+    if max(abs(ra - ra_cf), abs(ri - ri_cf)) > CLOSURE_TOL * scale:
         out["warnings"].append("fsolve differs from closed form; closed form used")
         ra, ri = ra_cf, ri_cf
     rin_a, rin_i = f0a + ra, f0i + ri
@@ -129,13 +139,18 @@ def _loop_gains(xsp: float, sa: float, si: float, p: Any) -> tuple[Any, Any]:
     return (1.0 - xsp) * sa * (1.0 - p), si * (1.0 - p)
 
 
+def _margins(xsp: float, sa: float, si: float, p: Any) -> tuple[Any, Any]:
+    """1 - a and 1 - b without cancellation (p = 1e-17 must not round 1 - b to 0)."""
+    return 1.0 - sa + sa * xsp + sa * (1.0 - xsp) * p, 1.0 - si + si * p
+
+
 def _series(v: Values) -> dict[str, Any]:
     """Closed-form sweeps over the purge fraction (fast, no fsolve)."""
     p = np.geomspace(1e-3, 1.0, N_SERIES)
-    a, b = _loop_gains(v["Xsp"], v["sA"], v["sI"], p)
     f0a, f0i = 1.0 - v["yI0"], v["yI0"]  # per unit fresh feed
-    rin_a = f0a / (1.0 - a)
-    rin_i = f0i / (1.0 - b)
+    ma, mb = _margins(v["Xsp"], v["sA"], v["sI"], p)
+    rin_a = f0a / ma
+    rin_i = f0i / mb
     x_overall = v["Xsp"] * rin_a / f0a
     y_i = rin_i / (rin_a + rin_i)
     return {
