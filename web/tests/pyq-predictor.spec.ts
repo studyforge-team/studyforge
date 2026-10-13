@@ -88,3 +88,16 @@ test('PYQ predictor: add and remove papers, labels, results cleared on edit, dra
   await expect(page.getByRole('link', { name: 'PYQ Predictor' })).toHaveAttribute('aria-current', 'page')
   await expect(page.getByRole('link', { name: 'Today' })).not.toHaveAttribute('aria-current', 'page')
 })
+
+test('PYQ predictor ignores paper headers and section labels, reads "marks: N", and does not call heat exchanger fluid fluid mechanics', async ({ page }) => {
+  await page.goto('/#pyq-predictor')
+  await fill(page, [
+    'Time: 3 hours        Max marks: 100\nAnswer any FIVE questions\nSECTION A\nQ1. Hot fluid enters a heat exchanger; find the LMTD. marks: 10\nQ2. Derive the CSTR design equation. marks: 10',
+    'Q1. Size a heat exchanger for a hot fluid stream (10 marks)\nPart II\nQ2. Find the PFR volume for 90% conversion (10 marks)',
+  ])
+  await page.getByRole('button', { name: 'Predict topics' }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Read 2 papers' })).toContainText('Read 2 papers and 4 questions. Weighted by marks.')
+  await expect(row(page, 'Heat transfer')).toContainText('50%')
+  await expect(row(page, 'Fluid mechanics')).toHaveCount(0)
+  await expect(page.getByText(/matched no topic/)).toHaveCount(0)
+})

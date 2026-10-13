@@ -17,7 +17,7 @@ export const TOPICS: readonly Topic[] = [
   },
   {
     name: 'Fluid mechanics',
-    pattern: /\bfluids?\b|\bbernoulli\b|\breynolds\b|\bpressure drop\b|\bviscosit|\bviscomet|\bfriction factor\b|\blaminar\b|\bturbulent\b|\bpumps?\b|\bcompressors?\b|\borifice\b|\bventuri\b|\bnpsh\b|\bpipe flow\b/i,
+    pattern: /\bfluid (?:mechanics|flow|statics|dynamics)\b|\bbernoulli\b|\breynolds\b|\bpressure drop\b|\bviscosit|\bviscomet|\bfriction factor\b|\blaminar\b|\bturbulent\b|\bpumps?\b|\bcompressors?\b|\borifice\b|\bventuri\b|\bnpsh\b|\bpipe flow\b/i,
     question: 'Find the pressure drop and pump power for flow through a pipe using the friction factor.',
   },
   {
@@ -77,22 +77,30 @@ export type Question = { text: string; marks: number | null }
 // A new question starts with "Q1", "Q.1", "Question 1", "1.", "1)" followed by a space.
 // "2.5 kg" is not a question number (no space after the dot).
 const START = /^\s*(?:Q(?:uestion)?\s*\.?\s*\d{1,3}\s*[.):-]?|\(?\d{1,3}\s*[.)])\s+\S/i
-const MARKS = /(\d{1,3})\s*marks?\b|[[(]\s*(\d{1,3})\s*(?:m|marks?)?\s*[\])]\s*$/i
+const MARKS = /(\d{1,3})\s*marks?\b|\bmarks?\s*[:=]\s*(\d{1,3})\b|[[(]\s*(\d{1,3})\s*(?:m|marks?)?\s*[\])]\s*$/i
 
 function marksOf(text: string): number | null {
   const m = MARKS.exec(text)
   if (!m) return null
-  const n = Number(m[1] ?? m[2])
+  const n = Number(m[1] ?? m[2] ?? m[3])
   return n > 0 && n <= 200 ? n : null
 }
 
+// Section headings ("SECTION B", "Part II", "Unit 3") are not questions and not part of one.
+const HEADING = /^(?:section|part|unit|module)\s*[-:]?\s*(?:[a-z]|[ivx]+|\d{1,2})\s*[-:.)]?\s*$/i
+
 export function splitQuestions(paper: string): Question[] {
-  const lines = paper.replace(/\r\n?/g, '\n').split('\n').map((l) => l.trim()).filter(Boolean)
+  const lines = paper
+    .replace(/\r\n?/g, '\n')
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l && !HEADING.test(l))
   const numbered = lines.some((l) => START.test(l))
   const blocks: string[] = []
   for (const line of lines) {
-    if (!numbered || START.test(line) || blocks.length === 0) blocks.push(line)
-    else blocks[blocks.length - 1] += ' ' + line // continuation of the current question
+    if (!numbered || START.test(line)) blocks.push(line)
+    else if (blocks.length > 0) blocks[blocks.length - 1] += ' ' + line // continuation of the current question
+    // else: header text before the first numbered question (time, max marks, instructions): skipped
   }
   return blocks.map((text) => ({ text, marks: marksOf(text) }))
 }
