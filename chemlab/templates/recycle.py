@@ -27,7 +27,17 @@ from typing import Any
 import numpy as np
 from scipy.optimize import fsolve
 
-from ._common import InputSpec, Values, envelope, failed, finish, series, spec, validate
+from ._common import (
+    InputSpec,
+    Values,
+    _err,
+    envelope,
+    failed,
+    finish,
+    series,
+    spec,
+    validate,
+)
 
 TEMPLATE = "recycle"
 VERSION = "1.0"
@@ -48,10 +58,6 @@ SPEC: dict[str, InputSpec] = {
 def run(inputs: dict[str, Any] | None = None, series: bool = True) -> dict[str, Any]:
     with np.errstate(all="ignore"):
         return _run(inputs or {}, series)
-
-
-def _err(code: str, message: str, field: str) -> dict[str, str]:
-    return {"code": code, "message": message, "field": field}
 
 
 def _run(inputs: dict[str, Any], series: bool) -> dict[str, Any]:
