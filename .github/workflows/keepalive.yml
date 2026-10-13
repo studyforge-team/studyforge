@@ -1,0 +1,17 @@
+name: Keepalive
+# Pings Render so the free backend never sleeps. GitHub may delay or skip scheduled runs, only
+# runs schedules from the default branch, and disables them after 60 days of repo inactivity
+# — that is why UptimeRobot (every 5 min) is the second pinger.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - run: curl -fsS --retry 3 --retry-delay 20 --max-time 60 "https://studyforge-api-s7r7.onrender.com/keepalive?source=gha"
