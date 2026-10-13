@@ -25,8 +25,9 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import JSONB, insert
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_engine
 
+from app import spend
 from app.agent.quiz import Quiz
-from app.agent.state import SolveState
+from app.agent.state import SolveState, norm
 from app.llm.cost import CallRecord
 
 metadata = MetaData(schema="app")
@@ -58,7 +59,9 @@ llm_calls = Table(
     Column("completion_tokens", Integer, nullable=False),
     Column("cost_usd", Double),  # NULL while the model has no price in the registry
     Column("latency_ms", Integer, nullable=False),
-    Column("created_at", DateTime(timezone=True), server_default=_now),
+    Column("created_at", DateTime(timezone=True), server_default=_now, index=True),
+    Column("user_id", Text),  # T7: who made the call
+    Column("ip", Text),
 )
 heartbeats = Table(
     "heartbeats", metadata,
@@ -113,6 +116,19 @@ class PgStateStore:
             row = (await conn.execute(solves.select().where(solves.c.id == solve_id))).first()
         return SolveState.model_validate(row.state) if row else None
 
+    async def cached(self, question: str) -> dict[str, Any] | None:
+        # ponytail: unindexed scan of solves — add an expression index on the normalised
+        # question if the table grows past a few thousand rows
+        sql = text(
+            "select state->'last_step' from app.solves "
+            "where state->>'status'='done' and state->'last_step' is not null "
+            "and not (state->'flags' ?| array['limit_reached','cached','spend_cap']) "
+            "and lower(btrim(regexp_replace(state->>'question', '\\s+', ' ', 'g'))) = :q "
+            "order by updated_at desc limit 1"
+        )
+        async with self._use() as conn:
+            return (await conn.execute(sql, {"q": norm(question)})).scalar()
+
     async def save(self, state: SolveState) -> None:
         values: dict[str, Any] = {
             "id": state.id, "user_id": state.user_id, "state": state.model_dump(mode="json"),
@@ -143,7 +159,8 @@ class PgCostRecorder:
         self._engine = engine
 
     async def record(self, row: CallRecord) -> None:
-        values = asdict(row)
+        w = spend.who.get()
+        values = asdict(row) | {"user_id": w.user_id, "ip": w.ip}
         async with self._engine.begin() as conn:
             await conn.execute(llm_calls.insert().values(**values))
 

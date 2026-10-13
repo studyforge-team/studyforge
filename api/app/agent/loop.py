@@ -44,7 +44,7 @@ from app.agent.tools import (
 )
 from app.agent.verify import clean, flat_numbers, verify
 from app.llm.client import LLMResult, Message
-from app.llm.errors import LLMError
+from app.llm.errors import BudgetExceeded, LLMError
 
 MAX_STEPS = 4
 BUDGET_S = 90.0
@@ -124,7 +124,7 @@ async def start(
     try:
         step = await _begin(state, deps)
     except LLMError as err:
-        step = _failed(state, err)
+        step = await _capped(state, deps) if isinstance(err, BudgetExceeded) else _failed(state, err)
     return state.id, await _issue(state, step, deps)
 
 
@@ -147,7 +147,7 @@ async def on_result(
         try:
             step = await _after_run(state, body, deps)
         except LLMError as err:
-            step = _failed(state, err)
+            step = await _capped(state, deps) if isinstance(err, BudgetExceeded) else _failed(state, err)
         return await _issue(state, step, deps)
 
 
@@ -421,6 +421,26 @@ async def _out_of_budget(state: SolveState, deps: Deps) -> Step:
         "Try rephrasing the question, or split it into smaller parts."
     )
     return _final(state, text, "low", with_numbers=False)
+
+
+async def _capped(state: SolveState, deps: Deps) -> Step:
+    """Spend cap hit (T7): serve a saved answer to the same question, else say so. Never a number."""
+    saved = await deps.store.cached(state.question)
+    if saved is None:
+        state.flags.append("spend_cap")
+        return _final(
+            state,
+            "Today's AI limit is reached, so I can't solve a new question right now. "
+            "Try again tomorrow.",
+            "low",
+            with_numbers=False,
+        )
+    state.flags.append("cached")
+    saved["answer_md"] = (
+        "Today's AI limit is reached, so here is a saved answer to the same question:\n\n"
+        + saved["answer_md"]
+    )
+    return Final.model_validate(saved)
 
 
 def _failed(state: SolveState, err: LLMError) -> Step:

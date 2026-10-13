@@ -37,6 +37,10 @@ class SolveState(BaseModel):
     cost_usd: float = 0.0
 
 
+def norm(question: str) -> str:
+    return " ".join(question.lower().split())
+
+
 class SolveNotFound(LookupError):
     """Unknown solve id, or a solve that belongs to another user."""
 
@@ -45,6 +49,7 @@ class StateStore(Protocol):
     def lock(self, solve_id: str) -> Any: ...  # async context manager
     async def get(self, solve_id: str) -> SolveState | None: ...
     async def save(self, state: SolveState) -> None: ...
+    async def cached(self, question: str) -> dict[str, Any] | None: ...  # last_step of a clean done solve
 
 
 class InMemoryStore:
@@ -63,3 +68,12 @@ class InMemoryStore:
 
     async def save(self, state: SolveState) -> None:
         self.states[state.id] = state.model_copy(deep=True)
+
+    async def cached(self, question: str) -> dict[str, Any] | None:
+        for s in reversed(list(self.states.values())):  # newest saved last
+            if (
+                s.status == "done" and s.last_step and norm(s.question) == norm(question)
+                and not {"limit_reached", "cached", "spend_cap"} & set(s.flags)
+            ):
+                return dict(s.last_step)
+        return None

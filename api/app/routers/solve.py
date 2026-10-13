@@ -13,6 +13,7 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field, ValidationError
 
+from app import spend
 from app.agent import loop
 from app.agent.loop import Deps
 from app.agent.state import SolveNotFound
@@ -46,7 +47,17 @@ DepsDep = Annotated[Deps, Depends(get_deps)]
 UserDep = Annotated[str, Depends(current_user)]
 
 
-@router.post("/solve")
+async def spend_context(request: Request, user: UserDep) -> None:
+    """Async on purpose: a ContextVar set in a sync dependency (threadpool) would not reach the route."""
+    peer = request.client.host if request.client else None
+    spend.who.set(spend.Who(
+        user,
+        bool(getattr(request.state, "anon", False)),
+        spend.client_ip(request.headers.get("x-forwarded-for"), peer),
+    ))
+
+
+@router.post("/solve", dependencies=[Depends(spend_context)])
 async def start_solve(
     req: SolveRequest, deps: DepsDep, user: UserDep
 ) -> dict[str, Any]:
@@ -60,7 +71,7 @@ async def start_solve(
     return {"solve_id": solve_id, "step": step}
 
 
-@router.post("/solve/{solve_id}/result")
+@router.post("/solve/{solve_id}/result", dependencies=[Depends(spend_context)])
 async def post_result(
     solve_id: str, request: Request, deps: DepsDep, user: UserDep
 ) -> dict[str, Any]:

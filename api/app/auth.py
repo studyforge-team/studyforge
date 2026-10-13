@@ -8,7 +8,7 @@ import time
 
 import httpx
 import jwt
-from fastapi import Header, HTTPException
+from fastapi import Header, HTTPException, Request
 
 _keys: dict[str, jwt.PyJWK] = {}  # ponytail: process-wide cache, no TTL — rotation handled by refetch-on-unknown-kid
 _fetched_at: float | None = None  # None = never fetched (monotonic() can be < cooldown right after boot)
@@ -33,7 +33,7 @@ def _key(kid: str) -> jwt.PyJWK:
     return _keys[kid]
 
 
-def current_user(authorization: str | None = Header(default=None)) -> str:
+def current_user(request: Request, authorization: str | None = Header(default=None)) -> str:
     try:
         scheme, _, token = (authorization or "").partition(" ")
         if scheme.lower() != "bearer" or not token:
@@ -47,6 +47,7 @@ def current_user(authorization: str | None = Header(default=None)) -> str:
             issuer=_base(),
             options={"require": ["exp", "sub", "aud", "iss"]},
         )
+        request.state.anon = bool(claims.get("is_anonymous"))  # Supabase anonymous-user claim
         return str(claims["sub"])
     except Exception as err:  # any failure, incl. JWKS outage: generic 401, never leak why
         raise HTTPException(
