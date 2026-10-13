@@ -10,6 +10,7 @@ from alembic.config import Config
 from fastapi.testclient import TestClient
 from sqlalchemy import text
 
+from app import main
 from app.agent.quiz import MCQItem, Quiz
 from app.agent.state import SolveState
 from app.db import PgCostRecorder, PgQuizStore, PgStateStore, beat, make_engine
@@ -88,7 +89,10 @@ async def _exercise() -> None:
     async with engine.connect() as conn:
         assert (await conn.execute(text("select count(*) from app.heartbeats"))).scalar() == 1
     await engine.dispose()
-    # TestClient runs its own loop; /keepalive builds its own engine, so nothing is shared
-    r = TestClient(app).get("/keepalive?source=gha")
-    assert r.status_code == 200
-    assert r.json()["db"] == "ok" and r.json()["wrote"] is False  # beat() above is < 60 s old
+    # one TestClient = one loop, so the lazily created main._engine is reused across both calls
+    with TestClient(app) as client:
+        for _ in range(2):
+            r = client.get("/keepalive?source=gha")
+            assert r.status_code == 200
+            assert r.json()["db"] == "ok" and r.json()["wrote"] is False  # beat() above is < 60 s
+    main._engine = None  # bound to that loop

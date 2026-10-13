@@ -5,6 +5,7 @@ import re
 
 from fastapi import APIRouter, FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.ext.asyncio import AsyncEngine
 
 from app import auth
 from app.db import beat, make_engine
@@ -45,22 +46,24 @@ def health_check() -> dict[str, str]:
     return {"status": "ok"}
 
 
+_engine: AsyncEngine | None = None
+
+
 @app.api_route("/keepalive", methods=["GET", "HEAD"])  # UptimeRobot free tier may use HEAD
 async def keepalive(response: Response, source: str = "") -> dict[str, str | bool]:
     if not os.environ.get("DATABASE_URL"):
         return {"status": "ok", "db": "off"}  # still wakes Render
     src = source if re.fullmatch(r"[a-z0-9-]{1,20}", source) else "unknown"
-    # ponytail: engine per call (+dispose) — a module-level one would be bound to the first event
-    # loop; at one ping per 5 min the connect cost is irrelevant. Share one if traffic grows.
-    engine = make_engine()
+    global _engine
+    # One pooled engine (max 15 connections) so a flood of public pings can't exhaust the
+    # Supabase pooler; created lazily on uvicorn's loop (tests reset it per event loop).
+    _engine = _engine or make_engine()
     try:
-        return {"status": "ok", "db": "ok", "wrote": await beat(engine, src)}
+        return {"status": "ok", "db": "ok", "wrote": await beat(_engine, src)}
     except Exception:
         logging.getLogger(__name__).exception("keepalive db check failed")
         response.status_code = 503
         return {"status": "error", "db": "down"}
-    finally:
-        await engine.dispose()
 
 
 app.dependency_overrides[solve.current_user] = auth.current_user
