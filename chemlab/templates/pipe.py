@@ -12,7 +12,8 @@ Darcy friction factor f:
     Re < 2300:        f = 64/Re (laminar, independent of roughness)
     Re >= 2300:       Colebrook-White, 1/sqrt(f) = -2 log10(eps/(3.7 D) + 2.51/(Re sqrt(f))),
                       solved for x = 1/sqrt(f) with scipy brentq.
-    2300 <= Re < 4000 uses Colebrook too, with a warning (value is uncertain).
+    2000 <= Re < 4000 gets a warning: f is uncertain there and steps at Re = 2300.
+    The system curve (0..2Q) warns too when it crosses Re = 2300.
 Power: P_hydraulic = rho g Q head, P_shaft = P_hydraulic / eta, dP_friction = rho g h_major.
 If head < 0 gravity/pressure alone drives the flow: head is reported (negative), both
 powers are set to 0 and a "no pump needed" warning is added (no turbine recovery).
@@ -35,7 +36,8 @@ VERSION = "1.0"
 G = 9.80665  # m/s^2
 RE_LAMINAR = 2300.0
 RE_TURBULENT = 4000.0
-N_SERIES = 60
+RE_WARN = 2000.0  # warn from here: f jumps at 2300 (64/Re -> Colebrook)
+N_SERIES = 61  # odd, so the input Q is a grid point of the system curve
 
 SPEC: dict[str, InputSpec] = {
     "Q": spec("m^3/s", 0.01, 1e-7, 10.0, "volumetric flow"),
@@ -90,9 +92,10 @@ def _run(inputs: dict[str, Any], series: bool) -> dict[str, Any]:
     u, re, f, h_major, h_minor = _heads(p, p["Q"])
     h_static = _static(p)
     head = h_major + h_minor + h_static
-    if RE_LAMINAR <= re < RE_TURBULENT:
+    if RE_WARN <= re < RE_TURBULENT:
         out["warnings"].append(
             f"transitional flow (Re = {re:.0f}): friction factor is uncertain"
+            " and jumps at Re = 2300 (64/Re below, Colebrook above)"
         )
     p_hyd = p["rho"] * G * p["Q"] * head
     if head < 0.0:
@@ -125,6 +128,12 @@ def _run(inputs: dict[str, Any], series: bool) -> dict[str, Any]:
             for q in qs
         ]
         out["series"] = {"head_curve": series_(qs, heads)}
+        re_max = 2.0 * re  # Re is proportional to flow
+        if re < RE_LAMINAR <= re_max or re_max < RE_LAMINAR <= re:
+            out["warnings"].append(
+                "the system curve crosses Re = 2300: its step there is the switch from"
+                " laminar to turbulent friction, not a real jump"
+            )
     return finish(out)
 
 

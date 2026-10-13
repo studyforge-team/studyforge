@@ -85,7 +85,7 @@ def test_energy_balance_identity() -> None:
 def test_system_curve() -> None:
     r = run()
     c = r["series"]["head_curve"]
-    assert len(c["x"]) == 60 and c["x_unit"] == "m^3/s" and c["y_unit"] == "m"
+    assert len(c["x"]) == 61 and c["x_unit"] == "m^3/s" and c["y_unit"] == "m"
     assert c["x"][0] == 0.0 and c["x"][-1] == pytest.approx(0.02)
     assert c["y"][0] == pytest.approx(10.0)
     assert all(b > a for a, b in zip(c["y"], c["y"][1:], strict=False))
@@ -100,12 +100,49 @@ def test_system_curve() -> None:
 def test_curve_matches_direct_runs_and_input_flow() -> None:
     full = run()
     xs, ys = full["series"]["head_curve"]["x"], full["series"]["head_curve"]["y"]
-    for i in (1, 17, 59):
+    for i in (1, 17, 60):
         assert ys[i] == pytest.approx(
             out(run({"Q": xs[i]}, series=False), "head"), rel=1e-12
         )
-    # Q sits midway between grid points 29 and 30
-    assert (ys[29] + ys[30]) / 2 == pytest.approx(out(full, "head"), rel=2e-3)
+    # 61 points over [0, 2Q]: point 30 is the input flow itself
+    assert xs[30] == pytest.approx(0.01, rel=1e-12)
+    assert ys[30] == pytest.approx(out(full, "head"), rel=1e-12)
+
+
+def test_curve_crossing_transition_warns() -> None:
+    r = run({**TRANS, "Q": 6e-5})  # Re about 1712 at Q, 3424 at 2Q
+    assert any("crosses Re = 2300" in w for w in r["warnings"])
+    assert not any("crosses" in w for w in run()["warnings"])
+
+
+def test_near_transition_laminar_warns() -> None:
+    r = run({**TRANS, "Q": 7.5e-5})  # Re about 2140: laminar but near the step
+    assert out(r, "f_darcy") == pytest.approx(64 / out(r, "Re"), rel=1e-12)
+    assert any("transitional" in w for w in r["warnings"])
+
+
+# fluids.friction.friction_factor(Re=re, eD=e_d) (Clamond's exact Colebrook solution)
+FLUIDS_TABLE = {
+    (2400, 0): 0.04665001114627791,
+    (5000, 0.001): 0.0384953590005396,
+    (10000, 0): 0.030882950353487693,
+    (100000, 0): 0.01798977308427384,
+    (100000, 0.0001): 0.01851386607747165,
+    (100000, 0.001): 0.022174535944515086,
+    (1e6, 0.0001): 0.013441437692508496,
+    (1e6, 0.001): 0.01994346584047687,
+    (1e6, 0.01): 0.037964741876160085,
+    (1e7, 1e-05): 0.008995711744834442,
+    (3e7, 0.05): 0.07155144277652403,
+    (1e8, 1e-06): 0.00643255651969228,
+}
+
+
+@pytest.mark.parametrize("key", list(FLUIDS_TABLE))
+def test_friction_factor_matches_fluids(key: tuple[float, float]) -> None:
+    from chemlab.pipe import friction_factor
+
+    assert friction_factor(*key) == pytest.approx(FLUIDS_TABLE[key], rel=1e-9)
 
 
 # fluids.friction.friction_factor(Re=re, eD=e_d), keyed (re, e_d)
