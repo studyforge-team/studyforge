@@ -128,11 +128,12 @@ def _run(inputs: dict[str, Any], series: bool) -> dict[str, Any]:
             for q in qs
         ]
         out["series"] = {"head_curve": series_(qs, heads)}
-        re_max = 2.0 * re  # Re is proportional to flow
-        if re < RE_LAMINAR <= re_max or re_max < RE_LAMINAR <= re:
+        # Re is proportional to flow; the sampled curve has laminar and turbulent points
+        # when its first nonzero point is below 2300 and its last at or above it
+        if 2.0 * re / (N_SERIES - 1) < RE_LAMINAR <= 2.0 * re:
             out["warnings"].append(
                 "the system curve crosses Re = 2300: its step there is the switch from"
-                " laminar to turbulent friction, not a real jump"
+                " laminar to turbulent friction (64/Re to Colebrook)"
             )
     return finish(out)
 

@@ -112,6 +112,11 @@ def test_curve_matches_direct_runs_and_input_flow() -> None:
 def test_curve_crossing_transition_warns() -> None:
     r = run({**TRANS, "Q": 6e-5})  # Re about 1712 at Q, 3424 at 2Q
     assert any("crosses Re = 2300" in w for w in r["warnings"])
+    # turbulent design point, but the curve's low-flow end is laminar (Re 238 .. 14263)
+    r2 = run({"Q": 2.5e-4, "D": 0.05, "L": 50})
+    assert out(r2, "Re") > 4000
+    assert any("crosses Re = 2300" in w for w in r2["warnings"])
+    # default: first nonzero curve point has Re = 142631 * 2 / 60 = 4754, all turbulent
     assert not any("crosses" in w for w in run()["warnings"])
 
 
