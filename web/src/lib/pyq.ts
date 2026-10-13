@@ -141,17 +141,23 @@ export function splitQuestions(paper: string): Question[] {
     .replace(/\r\n?/g, '\n')
     .split('\n')
     .map((l) => l.trim())
-    .filter((l) => l && !HEADING.test(l) && !TOTAL.test(l) && !(INSTRUCTION.test(l) && marksOf(l) === null))
+    .filter((l) => l && !TOTAL.test(l) && !(INSTRUCTION.test(l) && marksOf(l) === null))
   const numbered = lines.some(isStart)
+  const explicitQ = /^\s*Q(?:uestion)?\b|^\s*Q\.?\s*\d/i
   const blocks: { text: string; marks: number | null }[] = []
   let last: number | null = null
   for (const line of lines) {
+    if (HEADING.test(line)) {
+      last = null // "SECTION B": numbering may restart at 1
+      continue
+    }
     const m = marksOf(line)
     const n = numbered ? numberOf(line) : null
-    // A numbered line starts a question only if its number follows on (same number for
-    // "1(a)", "1(b)"; up to 3 ahead for skipped or OR-alternative questions), so a stray
-    // "5 (a) points" or "V. Large tank" inside a question stays part of it.
-    if (!numbered || (n !== null && (last === null || (n >= last && n <= last + 3)))) {
+    // A numbered line starts a question if it says "Q…", carries its own marks, restarts at 1,
+    // or its number follows on (same number for "1(a)", "1(b)"; up to 3 ahead for OR-alternatives).
+    // So a stray "5 (a) points" or "V. Large tank" inside a question stays part of it.
+    const follows = n !== null && (last === null || n === 1 || (n >= last && n <= last + 3))
+    if (!numbered || (n !== null && (follows || explicitQ.test(line) || m !== null))) {
       blocks.push({ text: line, marks: m })
       if (n !== null) last = n
     } else if (blocks.length > 0) {

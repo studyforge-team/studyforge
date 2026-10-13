@@ -144,3 +144,15 @@ test('PYQ predictor: totals and equation numbers are not marks, "Note:" question
   await expect(row(page, 'Reaction engineering')).toContainText('50%')
   await expect(row(page, 'Fluid mechanics')).toContainText('new in the latest paper')
 })
+
+test('PYQ predictor: numbering that restarts per section, and gaps in numbering', async ({ page }) => {
+  await page.goto('/#pyq-predictor')
+  await fill(page, [
+    'SECTION A\n1. Derive the CSTR design equation (5 marks)\n2. Find the LMTD of a heat exchanger (5 marks)\nSECTION B\n1. Explain entropy and the second law (10 marks)',
+    'Q1. Find the PFR volume (10 marks)\nQ10. Find the minimum reflux ratio (10 marks)',
+  ])
+  await page.getByRole('button', { name: 'Predict topics' }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Read 2 papers' })).toContainText('Read 2 papers and 5 questions. Weighted by marks.')
+  await expect(row(page, 'Thermodynamics')).toBeVisible()
+  await expect(row(page, 'Distillation')).toContainText('new in the latest paper')
+})
