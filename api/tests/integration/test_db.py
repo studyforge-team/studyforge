@@ -142,35 +142,55 @@ async def _spend(engine: AsyncEngine) -> None:
 
 
 def test_x1_anon_and_authenticated_cannot_read() -> None:
-    # mimic Supabase's PostgREST roles BEFORE migrating; roles may stay (re-run safe)
-    async def roles() -> None:
+    """Two independent layers, each proven on its own (a test that can't fail proves nothing):
+    1. hostile pre-grants (schema usage + default table privileges, like a careless Supabase
+       setup) must be undone by 0001's REVOKE -> permission denied;
+    2. even with explicit grants, RLS with no policies returns 0 of a seeded row."""
+    roles = ("anon", "authenticated")
+
+    async def sql(*stmts: str) -> None:
         engine = make_engine()
         async with engine.begin() as conn:
-            for r in ("anon", "authenticated"):
-                await conn.execute(text(
-                    f"DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='{r}') "
-                    f"THEN CREATE ROLE {r} NOLOGIN; END IF; END $$"))
+            for st in stmts:
+                await conn.execute(text(st))
         await engine.dispose()
 
-    async def probe() -> list[str]:
+    async def probe(t: str) -> str:  # "denied" | "<n> rows"
         engine = make_engine()
-        bad: list[str] = []
-        for role in ("anon", "authenticated"):
-            for t in TABLES:
-                async with engine.connect() as conn:
-                    await conn.execute(text(f"SET ROLE {role}"))
-                    try:
-                        rows = (await conn.execute(text(f"select * from app.{t}"))).all()
-                        bad += [f"{role}.{t} returned {len(rows)} rows"] if rows else []
-                    except ProgrammingError as err:  # permission denied is the pass
-                        assert "permission denied" in str(err)
-        public = (await _scalar("select count(*) from pg_tables where schemaname='public'"))
+        out = []
+        for role in roles:
+            async with engine.connect() as conn:
+                await conn.execute(text(f"SET ROLE {role}"))
+                try:
+                    out.append(f"{len((await conn.execute(text(f'select * from app.{t}'))).all())} rows")
+                except ProgrammingError as err:
+                    assert "permission denied" in str(err)
+                    out.append("denied")
         await engine.dispose()
-        return bad + ([f"{public} tables in public"] if public else [])
+        assert len(set(out)) == 1, out
+        return out[0]
 
-    asyncio.run(roles())
+    for r in roles:
+        asyncio.run(sql(f"DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='{r}') "
+                        f"THEN CREATE ROLE {r} NOLOGIN; END IF; END $$"))
+    asyncio.run(sql(
+        "CREATE SCHEMA IF NOT EXISTS app",
+        "GRANT USAGE ON SCHEMA app TO anon, authenticated",
+        "ALTER DEFAULT PRIVILEGES IN SCHEMA app GRANT SELECT ON TABLES TO anon, authenticated",
+    ))
     command.upgrade(CFG, "head")
     try:
-        assert asyncio.run(probe()) == []  # ponytail: seeded rows would need a superuser insert; denial is the proof
+        for t in TABLES:
+            assert asyncio.run(probe(t)) == "denied", t  # layer 1: REVOKE beat the pre-grants
+        assert asyncio.run(_scalar("select count(*) from pg_tables where schemaname='public'")) == 0
+        asyncio.run(sql(
+            "GRANT USAGE ON SCHEMA app TO anon, authenticated",
+            "insert into app.heartbeats (source) values ('x1')",
+        ))
+        assert asyncio.run(probe("heartbeats")) == "0 rows"  # layer 2: RLS hides the seeded row
     finally:
+        asyncio.run(sql(
+            "ALTER DEFAULT PRIVILEGES IN SCHEMA app REVOKE SELECT ON TABLES FROM anon, authenticated",
+            "REVOKE ALL ON SCHEMA app FROM anon, authenticated",
+        ))
         command.downgrade(CFG, "base")
