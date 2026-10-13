@@ -27,7 +27,8 @@ from app.db import (
 from app.llm.cost import CallRecord
 from app.llm.errors import BudgetExceeded
 from app.main import app
-from app.routers import me
+from app.routers import me, uploads
+from tests.unit.conftest import MemoryStorage
 
 pytestmark = pytest.mark.skipif(not os.environ.get("DATABASE_URL"), reason="needs DATABASE_URL")
 
@@ -186,18 +187,25 @@ async def _me() -> None:
         async with httpx.AsyncClient(transport=httpx.MockTransport(ok)) as c:
             yield c
 
-    app.dependency_overrides |= {me.current_user: lambda: "A", me.get_http: http}
+    mem = MemoryStorage()
+    fa, fb = "A/question-" + "a" * 32, "B/question-" + "b" * 32
+    await mem.put(fa, b"x", "image/png")
+    await mem.put(fb, b"y", "image/png")
+    app.dependency_overrides |= {me.current_user: lambda: "A", me.get_http: http, uploads.get_storage_opt: lambda: mem}
     try:
         with TestClient(app) as client:  # one TestClient = one loop for the shared engine
             j = client.get("/api/v1/me/export").json()
             assert [len(j[t]) for t in ("solves", "quizzes", "llm_calls", "notices")] == [2, 2, 2, 2]
             assert {r["user_id"] for r in j["solves"] + j["quizzes"] + j["llm_calls"] + j["notices"]} == {"A"}
+            assert [f["name"] for f in j["files"]] == [fa[2:]]
             total = await _scalar("select sum(cost_usd) from app.llm_calls")
             assert client.delete("/api/v1/me").status_code == 204
         assert sent == ["https://proj.supabase.co/auth/v1/admin/users/A"]
     finally:
         app.dependency_overrides[me.current_user] = auth.current_user
         app.dependency_overrides.pop(me.get_http, None)
+        app.dependency_overrides.pop(uploads.get_storage_opt, None)
+    assert list(mem.objs) == [fb]  # A's files gone, B's kept
     assert await counts("A") == [0, 0, 0, 0] and await counts("B") == [1, 1, 1, 1]
     assert await _scalar("select count(*) from app.llm_calls where user_id is null and ip is null") == 2
     assert await _scalar("select sum(cost_usd) from app.llm_calls") == total  # spend accounting intact
