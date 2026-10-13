@@ -7,6 +7,7 @@ import InterviewBank from './pages/InterviewBank'
 import OA from './pages/OA'
 import PYQPredictor from './pages/PYQPredictor'
 import TimeToFinish from './pages/TimeToFinish'
+import Privacy from './pages/Privacy'
 import Notices from './pages/Notices'
 
 // ponytail: one boundary around the page; shows a fixed message, never the error
@@ -53,6 +54,8 @@ export default function App() {
         <InterviewBank />
       ) : hash === '#pyq-predictor' ? (
         <PYQPredictor />
+      ) : hash === '#privacy' ? (
+        <Privacy />
       ) : hash === '#time-to-finish' ? (
         <TimeToFinish />
       ) : hash === '#notices' ? (

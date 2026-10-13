@@ -45,6 +45,7 @@ export default function Shell({ hash, children }: { hash: string; children: Reac
       {children}
       <footer className="mx-auto max-w-3xl px-4 pb-4 print:hidden">
         <a href="/privacy.html" className="inline-flex min-h-11 items-center text-xs text-muted-foreground hover:text-foreground">Privacy</a>
+        <a href="#privacy" className="ml-4 inline-flex min-h-11 items-center text-xs text-muted-foreground hover:text-foreground">Your data</a>
       </footer>
     </>
   )

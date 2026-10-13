@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app import auth, db
 from app.db import beat
-from app.routers import notices, solve
+from app.routers import me, notices, solve
 
 
 class JsonFormatter(logging.Formatter):
@@ -60,6 +60,8 @@ async def keepalive(response: Response, source: str = "") -> dict[str, str | boo
 
 app.dependency_overrides[solve.current_user] = auth.current_user
 # solve.router is NOT included yet: it also needs get_deps (LLM/store wiring, a P1/P2 decision).
+app.dependency_overrides[me.current_user] = auth.current_user
+app.include_router(me.router)  # carries its own /api/v1 prefix, like solve.router
 app.dependency_overrides[notices.current_user] = auth.current_user
 app.include_router(notices.router)  # carries its own /api/v1 prefix, like solve.router
 app.include_router(api_router, prefix="/api/v1")
