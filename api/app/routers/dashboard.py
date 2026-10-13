@@ -14,11 +14,11 @@ from app.routers.solve import current_user
 
 router = APIRouter(prefix="/api/v1")
 
-# one row per task (checkin rows carry payload.task); done if any round was answered right
+# one row per task: every job's dedupe_key is "<task key>:<slot>"; done if any round was right
 _TASKS = text(
-    "SELECT payload->>'task' AS id, max(payload->>'title') AS title, "
+    "SELECT split_part(dedupe_key, chr(58), 1) AS id, max(payload->>'title') AS title, "
     "max((payload->>'deadline_utc')::timestamptz) AS due, bool_or(payload->>'done' = 'true') AS done "
-    "FROM app.jobs WHERE user_id = :u AND payload->>'task' IS NOT NULL GROUP BY 1 "
+    "FROM app.jobs WHERE user_id = :u GROUP BY 1 "
     "HAVING max((payload->>'deadline_utc')::timestamptz) >= "
     "CASE WHEN bool_or(payload->>'done' = 'true') THEN CAST(:done_from AS timestamptz) "
     "ELSE CAST(:open_from AS timestamptz) END ORDER BY due LIMIT 20"
