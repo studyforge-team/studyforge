@@ -42,6 +42,7 @@ async def schedule(
     engine: AsyncEngine, user_id: str, title: str, deadline_utc: datetime, now_utc: datetime
 ) -> int:
     """Insert one job per remaining slot; re-scheduling the same task inserts nothing."""
+    deadline_utc = deadline_utc.astimezone(UTC)  # same instant, any offset -> same dedupe key
     key = _key(user_id, title, deadline_utc)
     inserted = 0
     async with engine.begin() as conn:

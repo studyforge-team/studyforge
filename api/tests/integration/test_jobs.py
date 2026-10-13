@@ -14,7 +14,7 @@ from sqlalchemy import text
 from app import main
 from app.db import make_engine
 from app.main import app
-from app.reminders import drain, schedule, schedule_reminder_tool
+from app.reminders import IST, drain, schedule, schedule_reminder_tool
 
 pytestmark = pytest.mark.skipif(not os.environ.get("DATABASE_URL"), reason="needs DATABASE_URL")
 
@@ -34,6 +34,7 @@ async def _exercise() -> None:
     engine = make_engine()
     assert await schedule(engine, "u1", "OS exam", DEADLINE, at(20)) == 3
     assert await schedule(engine, "u1", " os  EXAM ", DEADLINE, at(20)) == 0  # dedupe
+    assert await schedule(engine, "u1", "OS exam", DEADLINE.astimezone(IST), at(20)) == 0  # same instant, +05:30
     assert await _slots(engine, at(26)) == []
     assert await _slots(engine, at(27, 17, 1)) == ["t-3d"]
     assert await _slots(engine, at(27, 17, 1)) == []  # fires once
