@@ -50,7 +50,8 @@ async def _exercise(sent: list[str]) -> None:
         if hasattr(mod, "current_user"):
             app.dependency_overrides[mod.current_user] = lambda: who["u"]
     app.dependency_overrides |= {checkins.get_engine: lambda: engine, me.get_engine: lambda: engine,
-                                 me.get_http: http, checkins.now: lambda: CHECKIN}
+                                 me.get_http: http, checkins.now: lambda: CHECKIN,
+                                 uploads.get_storage_opt: lambda: MemoryStorage()}
 
     async def call(method: str, url: str, user: str = "A", **kw):  # type: ignore[no-untyped-def]
         who["u"] = user
