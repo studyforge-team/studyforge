@@ -73,7 +73,8 @@ def db_url() -> str:
 def make_engine() -> AsyncEngine:
     # Session pooler (port 5432) keeps prepared statements working; only the transaction
     # pooler (6543) would need connect_args={"statement_cache_size": 0}.
-    return create_async_engine(db_url())
+    # pre_ping: Render sleeps and the pooler drops idle connections
+    return create_async_engine(db_url(), pool_pre_ping=True)
 
 
 class PgStateStore:
