@@ -97,12 +97,14 @@ export function cstrViews(g: { diameter_m: number; height_m: number }, inputs: I
     rect(xs - r, yL, 2 * r, yB - yL, 'liq')
     rect(xs + c * (r - w), yL, c * w, yB - yL, 'baf') // baffle at 45 deg, behind the cutting plane
     rect(xs - ri, yImp - 3, 2 * ri, 6, 'imp')
+    rect(xs - 2, yT, 4, yImp - yT, 'sh') // shaft inside the shell: seen only where the shell is cut
     circ(xs, yOut, nr, 'noz') // product nozzle opening in the far wall
     rect(xs + r - t, yT, t, h, 'cut'); rect(xs - r, yT, 2 * r, t, 'cut'); rect(xs - r, yB - t, 2 * r, t, 'cut')
-    if (jacket) { rect(xs + rj - t, ly(0.8 * H), t, 0.8 * h, 'cut'); rect(xs + r, ly(0.8 * H), rj - r, t, 'cut') }
+    // jacket: wall, top closure and bottom closure, hatched the other way (adjacent cut parts)
+    if (jacket) { rect(xs + rj - t, ly(0.8 * H), t, 0.8 * h, 'cut2'); rect(xs + r, ly(0.8 * H), rj - r, t, 'cut2'); rect(xs + r, yB - t, rj - r, t, 'cut2') }
   })
   rect(xs - r, yT, 2 * r, h, 'o2')
-  rect(xs - 2, yT - 0.1 * h, 4, 0.1 * h + (yImp - yT), 'sh')
+  rect(xs - 2, yT - 0.1 * h, 4, 0.1 * h, 'sh') // shaft between motor and lid: outside, both halves
   rect(xs - 0.12 * D * s, yT - 0.2 * h, 0.24 * D * s, 0.1 * h, 'mot')
   line(xs, yT - 0.22 * h, xs, yB + 12, 'cl') // axis: the boundary between the two halves
   const xr = xs + 0.56 * D * s + 25
@@ -149,10 +151,11 @@ export function cstrViews(g: { diameter_m: number; height_m: number }, inputs: I
   rect(bx, by, 340, bh, 'tb')
   line(bx, by + 26, bx + 340, by + 26, 'e')
   text(bx + 8, by + 17, 'CSTR — general arrangement (schematic, not to scale)')
-  const k = 1000 / s // drawn 1 px = 1 mm; k < 1 is an enlargement (a tiny vessel), written n:1
-  const scale = k >= 1 ? `1:${Math.round(k)}` : `${Math.round(1 / k)}:1`
-  text(bx + 8, by + 42, `Vessel drawn at approx. ${scale}; fittings schematic. Liquid level 0.8 H.`)
-  text(bx + 8, by + 56, `Dimensions in mm. Dashed = hidden, hatched = cut.`)
+  const ratio = 1000 / s // drawn 1 px = 1 mm; ratio < 1 is an enlargement (a tiny vessel), written n:1
+  const up = 1 / ratio
+  const scale = ratio >= 1 ? `1:${Math.round(ratio)}` : `${up < 2 ? up.toFixed(1) : Math.round(up)}:1`
+  text(bx + 8, by + 42, `Approx. ${scale}; fittings and wall thickness schematic.`)
+  text(bx + 8, by + 56, `Liquid 0.8 H. Dimensions in mm. Dashed = hidden, hatched = cut.`)
   text(bx + 8, by + 70, 'Template inputs:')
   rows.forEach(([k, v], i) => text(bx + 8, by + 86 + i * 14, `${k} = ${sig(v.value)} ${v.unit}`))
 
@@ -161,10 +164,10 @@ export function cstrViews(g: { diameter_m: number; height_m: number }, inputs: I
   const b = `#${id}b`
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 700" role="img" aria-labelledby="${id}t ${id}d">
 <title id="${id}t">${esc(title)}</title><desc id="${id}d">${esc(desc)}</desc>
-<defs><pattern id="${id}h" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" stroke="#111" stroke-width="1"/></pattern>
+<defs><pattern id="${id}h" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" stroke="#111" stroke-width="1"/></pattern><pattern id="${id}j" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)"><line x1="0" y1="0" x2="0" y2="5" stroke="#111" stroke-width="1"/></pattern>
 <clipPath id="${id}L"><rect x="0" y="0" width="${n(xs)}" height="700"/></clipPath><clipPath id="${id}R"><rect x="${n(xs)}" y="0" width="${n(1000 - xs)}" height="700"/></clipPath>
 <marker id="${id}a" viewBox="0 0 8 6" refX="8" refY="3" markerWidth="8" markerHeight="6" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L8 3L0 6Z" fill="#111"/></marker>
-<style>${b} .o,${b} .o2,${b} .noz,${b} .mot,${b} .tb,${b} .sym *,${b} .sym{fill:none;stroke:#111;stroke-width:1}${b} .o2{stroke-width:2}${b} .noz{fill:#fff;stroke-width:1.5}${b} .mot,${b} .imp{fill:#cbd5e1}${b} .imp,${b} .sh{fill:#555;stroke:#111}${b} .liq{fill:#dbeafe;stroke:none}${b} .baf{fill:#94a3b8;stroke:#111;stroke-width:.8}${b} .hid{fill:none;stroke:#111;stroke-dasharray:5 3}${b} .l,${b} .e{stroke:#111;stroke-width:.7;fill:none}${b} text{font:11px Arial,sans-serif;fill:#111;paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round}${b} .cap{font-weight:700;font-size:12px}${b} .cut{fill:url(#${id}h);stroke:#111;stroke-width:.6}${b} .cl{stroke:#111;stroke-width:.7;stroke-dasharray:14 3 2 3;fill:none}</style></defs>
+<style>${b} .o,${b} .o2,${b} .noz,${b} .mot,${b} .tb,${b} .sym *,${b} .sym{fill:none;stroke:#111;stroke-width:1}${b} .o2{stroke-width:2}${b} .noz{fill:#fff;stroke-width:1.5}${b} .mot,${b} .imp{fill:#cbd5e1}${b} .imp,${b} .sh{fill:#555;stroke:#111}${b} .liq{fill:#dbeafe;stroke:none}${b} .baf{fill:#94a3b8;stroke:#111;stroke-width:.8}${b} .hid{fill:none;stroke:#111;stroke-dasharray:5 3}${b} .l,${b} .e{stroke:#111;stroke-width:.7;fill:none}${b} text{font:11px Arial,sans-serif;fill:#111;paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round}${b} .cap{font-weight:700;font-size:12px}${b} .cut{fill:url(#${id}h);stroke:none}${b} .cut2{fill:url(#${id}j);stroke:#111;stroke-width:.6}${b} .cl{stroke:#111;stroke-width:.7;stroke-dasharray:14 3 2 3;fill:none}</style></defs>
 <g id="${id}b"><rect width="1000" height="700" fill="#fff"/><rect class="o2" x="10" y="10" width="980" height="680" fill="none"/>
 ${o.join('\n')}
 </g></svg>
