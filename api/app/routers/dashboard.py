@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
+from app import topics
 from app.reminders import checkin_text, reminder_text
 from app.routers.checkins import get_engine, now
 from app.routers.solve import current_user
@@ -50,11 +51,12 @@ async def dashboard(
                                           "done_from": at - timedelta(days=2)})).mappings().all()
         solves = (await c.execute(_SOLVES, args)).mappings().all()
         inbox = (await c.execute(_INBOX, args)).mappings().all()
+        weak = await topics.weak_topics(c, user)
     return {
         "tasks": [{"id": t["id"], "title": t["title"], "action": "Open prep pack",
                    "due_at_utc": t["due"].isoformat(), "source": "reminder",
                    "status": "done" if t["done"] else "open"} for t in tasks],
-        "weak_topics": [],  # D8 (topic stats) is not built yet
+        "weak_topics": weak,
         "recent_solves": [{"id": s["id"], "question": s["question"] or "", "status": s["status"] or "",
                            "created_at": s["updated_at"].isoformat()}  # no created_at column: last update
                           for s in solves],

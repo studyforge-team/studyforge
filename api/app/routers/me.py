@@ -12,7 +12,15 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from app.db import jobs, llm_calls, notices, quizzes, shared_engine, solves
+from app.db import (
+    jobs,
+    llm_calls,
+    notices,
+    quizzes,
+    shared_engine,
+    solves,
+    topic_results,
+)
 
 router = APIRouter(prefix="/api/v1")
 
@@ -41,7 +49,7 @@ HttpDep = Annotated[httpx.AsyncClient, Depends(get_http)]
 async def export_me(user: UserDep, engine: EngineDep) -> JSONResponse:
     out: dict[str, Any] = {"user_id": user, "exported_at": datetime.now(UTC)}
     async with engine.connect() as conn:
-        for t in (solves, quizzes, llm_calls, notices, jobs):  # heartbeats has no user_id
+        for t in (solves, quizzes, llm_calls, notices, jobs, topic_results):  # heartbeats has no user_id
             rows = (await conn.execute(select(t).where(t.c.user_id == user))).mappings().all()
             out[t.name] = [dict(r) for r in rows]
     return JSONResponse(
@@ -60,6 +68,7 @@ async def delete_me(user: UserDep, engine: EngineDep, http: HttpDep) -> Response
         await conn.execute(quizzes.delete().where(quizzes.c.user_id == user))
         await conn.execute(notices.delete().where(notices.c.user_id == user))
         await conn.execute(jobs.delete().where(jobs.c.user_id == user))  # reminders, check-ins
+        await conn.execute(topic_results.delete().where(topic_results.c.user_id == user))
         # Anonymise, don't delete: the T7 spend caps sum llm_calls.cost_usd, deleting would
         # let spend accounting drop.
         await conn.execute(update(llm_calls).where(llm_calls.c.user_id == user).values(user_id=None, ip=None))
