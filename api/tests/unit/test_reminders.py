@@ -32,3 +32,10 @@ def test_tool_refuses_bad_times() -> None:
     assert "timezone" in run("2026-10-30T17:00:00")
     assert "past" in run((NOW - timedelta(days=1)).isoformat())
     assert "ISO" in run("tomorrow")
+
+
+def test_checkin_text() -> None:
+    from app.reminders import checkin_text
+    p = {"title": "OS exam", "prep": "/#prep/abc"}
+    assert checkin_text(p, 7) == ("Did you finish OS exam? Answer one quick question to check: "
+                                  "/#prep/abc?checkin=7")

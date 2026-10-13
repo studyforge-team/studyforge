@@ -9,8 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app import auth, db
 from app.db import beat
-from app.reminders import drain
-from app.routers import notices, solve
+from app.reminders import drain, sweep
+from app.routers import checkins, notices, solve
 
 
 class JsonFormatter(logging.Formatter):
@@ -63,10 +63,17 @@ async def keepalive(response: Response, source: str = "") -> dict[str, str | boo
     except Exception:
         logging.getLogger(__name__).exception("keepalive drain failed")
         sent = None  # never hide the heartbeat result
-    return {"status": "ok", "db": "ok", "wrote": wrote, "sent": sent}
+    try:  # ignored check-ins -> next round (the next ping delivers it if drain already ran)
+        followups: int | None = await sweep(db.shared_engine(), datetime.now(UTC))
+    except Exception:
+        logging.getLogger(__name__).exception("keepalive sweep failed")
+        followups = None
+    return {"status": "ok", "db": "ok", "wrote": wrote, "sent": sent, "followups": followups}
 
 
 app.dependency_overrides[solve.current_user] = auth.current_user
+app.dependency_overrides[checkins.get_engine] = db.shared_engine
+app.include_router(checkins.router)
 # solve.router is NOT included yet: it also needs get_deps (LLM/store wiring, a P1/P2 decision).
 app.dependency_overrides[notices.current_user] = auth.current_user
 app.include_router(notices.router)  # carries its own /api/v1 prefix, like solve.router
