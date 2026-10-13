@@ -10,10 +10,11 @@ simulations.
 
 **Status: work in progress, hackathon build** (Nebius x NVIDIA Global AI Hackathon, Track 2).
 `main` holds the web app and the engine: the Nemotron client, the agent loop, the number
-guardrail, photo reading, the quiz engine and the ChemLab templates. The FastAPI app (A2)
-and the database are not merged yet, so the API does not run end to end. The Nemotron
-models have **not been called yet**, so this README makes no claims about accuracy,
-latency or cost. <!-- TODO(F4): update status after A2 and G10 merge -->
+guardrail, photo reading, the quiz engine and eight ChemLab templates. The FastAPI app
+(A2: `/health`, sign-in checks, CORS) and CI are merged, but the solve route is not mounted
+yet (it needs the `get_deps` wiring) and there is no database yet (A4), so the API does not
+solve end to end. The Nemotron models have **not been called yet**, so this README makes
+no claims about accuracy, latency or cost. <!-- TODO(F4): update status after get_deps wiring, A4 and G10 -->
 
 ## How a solve works
 
@@ -96,9 +97,26 @@ Plain numpy/scipy in `chemlab/templates/`, pytest-tested, and written to also ru
 - `mccabe.py`: McCabe-Thiele binary distillation (constant relative volatility, constant
   molar overflow): minimum reflux, stage stepping, feed stage, tray counts, an illustrative
   column diameter.
+- `hx.py`: heat exchanger sizing for a given duty: area by LMTD for counter-flow,
+  co-current and 1-2 shell-and-tube (F-correction), checked again by e-NTU; temperature
+  profile; tube count and shell size for the drawing.
+- `flash.py`: isothermal flash of 2 or 3 compounds (Raoult's law): bubble and dew points,
+  Rachford-Rice vapour fraction and compositions, T-x-y diagram.
+- `pipe.py`: pipe and pump: Reynolds number, Colebrook friction factor, Darcy-Weisbach and
+  fitting losses, pump head and power, system curve.
+- `recycle.py`: reactor with recycle and purge, solved with `fsolve` and checked against
+  the closed form; overall conversion and inert build-up.
+- `_compounds.py`: 40 compounds (critical constants, acentric factor, Antoine constants),
+  exported once from the `chemicals` library with the source of every value
+  (`chemlab/tools/export_compounds.py`).
 
-The 3D models and SVG drawings (`web/src/chemlab/`) are not built yet.
-<!-- TODO(F4): describe ChemLab screens after CH4+ merge -->
+Every template's inputs are also exported to `api/app/agent/chemlab_specs.json`
+(`chemlab/tools/export_specs.py`), which the agent uses to pick a template; a test fails
+if the file is out of date.
+
+The ChemLab page (`#chemlab`) has tabs for the CSTR, batch, PFR and McCabe-Thiele
+templates, with charts, a 2D CSTR drawing sheet and a 3D CSTR model; the newer templates
+are not on the page yet. <!-- TODO(F4): list the new template tabs once they are on the page -->
 
 ## Setup
 
@@ -122,8 +140,8 @@ connected. <!-- TODO(F4): hosted demo URL and any wider demo mode after A2/S4 --
 
 | Suite | Command | Notes |
 | --- | --- | --- |
-| api | `cd api && pytest` | after A2; lint: `ruff check . && mypy app` (after T1) |
-| chemlab | `cd chemlab && pytest` | after CH1a |
+| api | `cd api && pytest` | lint: `ruff check . && mypy app`; needs `pip install -e ./chemlab` |
+| chemlab | `cd chemlab && pytest` | |
 | web e2e | `cd web && npm run test:e2e` | Playwright; builds, then serves a preview |
 | web lint | `cd web && npm run lint && npx tsc --noEmit` | oxlint on `main` today |
 | runner | `node runner/node-pyodide.mjs` | after S1b; in docker with `--network none` |
