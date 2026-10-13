@@ -16,12 +16,12 @@ No open PRs in the repo at all; no branch touches P5 areas, so no risk of two pe
 | D1 | In-app intake: Web Share Target + paste box -> notice | 2 | 14 Oct | not started | no manifest, no share_target, no notices table/route on main | everything | DB (A4, P2) not on main; front end can go on mocks |
 | D1b | Web push: SW, "Turn on reminders", VAPID in env, pywebpush sender for D6 | 3 | 16 Oct | not started | no service worker / push code; `Reminder.channel: 'push'` type + mock only (P3, E1) | everything | A4 for subscriptions table; D6 (P2) calls the sender |
 | D5 | Prep pack, built when opened (5 questions each linked) | 5 | 18 Oct | not started | Q1 quiz engine merged (`api/app/agent/quiz*.py`); "Open prep pack" only a mock label | everything | NR notes search (P2) not on main; `api/app/search/` empty |
-| V2Da | 2D CSTR drawings: plan/front/side/section, IS SP 46 | 3 | 19 Oct | merged, done-when NOT met | #13 + #35, `web/src/chemlab/drawings/cstr.ts`, `web/tests/check-v2da.mjs` passes (re-run 12 Oct) | **section view missing** (sheet has front, LH side, plan); hand-drawn check not recorded | none |
+| V2Da | 2D CSTR drawings: plan/front/side/section, IS SP 46 | 3 | 19 Oct | merged (done) | #13 + #35 + #63 (half section A-A added, review fixes), `web/tests/check-v2da.mjs` | hand-drawn check not recorded | none |
 | OA | OA prep lite: aptitude MCQs + 3 Python problems, hidden tests | 4 | 21 Oct | not started | - | everything | MCQ half needs Q1 (merged: OK). Hidden tests must run in the browser sandbox (rule 1) |
 | IB | Interview bank lite, filtered by company | 3 | 21 Oct | not started | - | everything | rule 13: the real bank must never go into an assistant -> code + synthetic sample only |
 | PY | PYQ predictor lite: 3 papers -> frequency table + likely paper | 3 | 22 Oct | not started | - | everything | C1 uploads (P2) not on main; A3 merged |
 | TE | Time-to-finish lite: range for a 30-page PDF | 3 | 22 Oct | not started | - | everything | C1 uploads (P2) |
-| V2Db | 2D column + exchanger drawings (4 equipment types) | 5 | 22 Oct | not started | `drawings/McCabe.tsx` is the McCabe chart, not a drawing | everything | none |
+| V2Db | 2D column + exchanger drawings (4 equipment types) | 5 | 22 Oct | merged: column #64, exchanger #65 | `web/src/chemlab/drawings/{sheet,column,hx}.ts`, McCabe + new Heat exchanger tab, `web/tests/{chemlab,hx}-drawing.spec.ts` | "4 equipment types": CSTR + column + exchanger exist; 4th type not named anywhere -> asked Supreeth | none |
 | F1 | Real users: 3-5 classmates on a real deadline | 6 | 22 Oct | not started | - | human activity; I can prepare the plan + log template | needs a deployed working build |
 | F7 | Film 26 Oct (frozen build) + edit 27 Oct | 8 | 27 Oct | not started | - | human activity; I can prepare shot list/checklist | frozen build, F6 script (P4) |
 | PFD | SHOULD: process flow diagrams (12 units) | 4 | after MUST | not started | - | only after every P5 MUST is merged | - |
@@ -64,3 +64,4 @@ Checks run on main (12 Oct): web `oxlint` 0 errors (2 warnings, not P5), `tsc -b
 - 12 Oct: audit done (this file). Nothing built yet; waiting for Supreeth's go-ahead before code.
 - 12 Oct: started D1/D1b/D5 helpers, then stopped them at Supreeth's request ("verify first"). Nothing was
   committed or pushed; no worktrees left. Verification of the plan recorded under Decisions. Waiting for go-ahead.
+- 13 Oct: V2Da section merged (#63). V2Db column (#64) and exchanger (#65) merged after 3 review rounds each; main = tested tree. Next: D1 (notices); D10 #62 (Samarth) still open, its export/delete must include notices.
