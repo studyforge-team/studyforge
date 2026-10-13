@@ -82,16 +82,35 @@ export function cstrViews(g: { diameter_m: number; height_m: number }, inputs: I
   lead(xl, yOut, xTip, yOut, 'Product out')
   lead(xc - r - stub / 2, yIn + 2 * nr + 22, xc - r - stub / 2, yIn + nr, 'Feed in', 'middle', yIn + 2 * nr + 34)
 
-  // ---- left-hand side view, to the right of the front elevation (first angle)
-  cap(xs - 0.56 * D * s, 28, 'LEFT-HAND SIDE VIEW')
-  body(xs)
-  circ(xs, yIn, 1.6 * nr, 'noz'); circ(xs, yIn, nr, 'noz') // feed nozzle seen end-on
-  circ(xs, yOut, nr, 'hid') // product nozzle is behind the shell: hidden
+  // ---- left-hand side view as a half section A-A (IS SP 46), to the right of the front elevation (first angle).
+  // Cutting plane: the vessel's centre plane x = 0, seen from -x. Left half: outside view. Right half: cut, so the
+  // shell, lid, bottom and jacket walls are hatched (wall thickness schematic: the template gives no thickness);
+  // shaft and impeller lie on the axis and are not hatched (convention); the far wall's product nozzle shows.
+  cap(xs - 0.56 * D * s, 28, 'LEFT-HAND SIDE VIEW — HALF SECTION A–A')
+  const half = (side: 'L' | 'R', draw: () => void) => { o.push(`<g clip-path="url(#${id}${side})">`); draw(); o.push('</g>') }
+  const t = 4 // drawn wall thickness, px
+  half('L', () => {
+    if (jacket) rect(xs - rj, ly(0.8 * H), 2 * rj, 0.8 * h, 'o')
+    circ(xs, yIn, 1.6 * nr, 'noz'); circ(xs, yIn, nr, 'noz') // feed nozzle seen end-on
+  })
+  half('R', () => {
+    rect(xs - r, yL, 2 * r, yB - yL, 'liq')
+    rect(xs + c * (r - w), yL, c * w, yB - yL, 'baf') // baffle at 45 deg, behind the cutting plane
+    rect(xs - ri, yImp - 3, 2 * ri, 6, 'imp')
+    circ(xs, yOut, nr, 'noz') // product nozzle opening in the far wall
+    rect(xs + r - t, yT, t, h, 'cut'); rect(xs - r, yT, 2 * r, t, 'cut'); rect(xs - r, yB - t, 2 * r, t, 'cut')
+    if (jacket) { rect(xs + rj - t, ly(0.8 * H), t, 0.8 * h, 'cut'); rect(xs + r, ly(0.8 * H), rj - r, t, 'cut') }
+  })
+  rect(xs - r, yT, 2 * r, h, 'o2')
+  rect(xs - 2, yT - 0.1 * h, 4, 0.1 * h + (yImp - yT), 'sh')
+  rect(xs - 0.12 * D * s, yT - 0.2 * h, 0.24 * D * s, 0.1 * h, 'mot')
+  line(xs, yT - 0.22 * h, xs, yB + 12, 'cl') // axis: the boundary between the two halves
   const xr = xs + 0.56 * D * s + 25
-  if (jacket) lead(xr, ly(0.65 * H), xs + rj, ly(0.65 * H), 'Jacket')
-  lead(xr, yIn, xs + 1.6 * nr, yIn, 'Feed in')
+  if (jacket) lead(xr, ly(0.65 * H), xs + rj, ly(0.65 * H), 'Jacket (cut)')
+  lead(xs - r - 10, yIn - 1.6 * nr - 14, xs - 1.13 * nr, yIn - 1.13 * nr, 'Feed in', 'end') // label outside the shell
   lead(xr, ly(0.45 * H), xs + c * (r - w / 2), ly(0.45 * H), 'Baffle (4 off)')
   lead(xr, yImp, xs + ri, yImp, 'Impeller')
+  lead(xr, ly(0.225 * H), xs + r - t / 2, ly(0.225 * H), 'Shell wall (cut)')
   lead(xr, yOut, xs + nr, yOut, 'Product out')
 
   // ---- plan, below the front elevation on the same axis
@@ -109,6 +128,12 @@ export function cstrViews(g: { diameter_m: number; height_m: number }, inputs: I
   const ia = (-80 * Math.PI) / 180
   lead(xc + 18, yp - rj - 12, xc + ri * Math.cos(ia), yp + ri * Math.sin(ia), 'Impeller / shaft (hidden)', 'start', yp - rj - 15, xc + 22)
   if (jacket) lead(xc - 0.8 * rj - 70, yp + 0.6 * rj + 30, xc - 0.8 * rj, yp + 0.6 * rj, 'Jacket', 'end')
+  // cutting plane A-A for the side view: chain line along x = 0, arrows show the viewing direction (+x)
+  line(xc, yp - rj - 8, xc, yp + rj + 8, 'cl')
+  for (const ye of [yp - rj - 8, yp + rj + 8]) {
+    o.push(`<line class="l" x1="${n(xc)}" y1="${n(ye)}" x2="${n(xc + 16)}" y2="${n(ye)}" marker-end="${A}"/>`)
+    text(xc - 6, ye + 4, 'A', 'end')
+  }
 
   const rows = Object.entries(inputs)
   // ---- first-angle projection symbol (IS SP 46): truncated cone, elevation left, left-hand view right
@@ -124,18 +149,22 @@ export function cstrViews(g: { diameter_m: number; height_m: number }, inputs: I
   rect(bx, by, 340, bh, 'tb')
   line(bx, by + 26, bx + 340, by + 26, 'e')
   text(bx + 8, by + 17, 'CSTR — general arrangement (schematic, not to scale)')
-  text(bx + 8, by + 42, `Vessel drawn at approx. 1:${Math.round(1000 / s)}; fittings schematic. Liquid level 0.8 H.`)
-  text(bx + 8, by + 56, `Dimensions in mm. D = ${mm(D)}, H = ${mm(H)}; dashed = hidden.`)
+  const k = 1000 / s // drawn 1 px = 1 mm; k < 1 is an enlargement (a tiny vessel), written n:1
+  const scale = k >= 1 ? `1:${Math.round(k)}` : `${Math.round(1 / k)}:1`
+  text(bx + 8, by + 42, `Vessel drawn at approx. ${scale}; fittings schematic. Liquid level 0.8 H.`)
+  text(bx + 8, by + 56, `Dimensions in mm. Dashed = hidden, hatched = cut.`)
   text(bx + 8, by + 70, 'Template inputs:')
   rows.forEach(([k, v], i) => text(bx + 8, by + 86 + i * 14, `${k} = ${sig(v.value)} ${v.unit}`))
 
   const title = `CSTR general arrangement, D ${mm(D)}, H ${mm(H)}`
-  const desc = 'Schematic first-angle projection of a stirred tank reactor: front elevation, plan below it and left-hand side view to its right, with a title block listing the template inputs.'
+  const desc = 'Schematic first-angle projection of a stirred tank reactor: front elevation, plan below it with cutting plane A-A, and the left-hand side view to its right drawn as a half section A-A (outside on the left, cut on the right), with a title block listing the template inputs.'
   const b = `#${id}b`
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 700" role="img" aria-labelledby="${id}t ${id}d">
 <title id="${id}t">${esc(title)}</title><desc id="${id}d">${esc(desc)}</desc>
-<defs><marker id="${id}a" viewBox="0 0 8 6" refX="8" refY="3" markerWidth="8" markerHeight="6" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L8 3L0 6Z" fill="#111"/></marker>
-<style>${b} .o,${b} .o2,${b} .noz,${b} .mot,${b} .tb,${b} .sym *,${b} .sym{fill:none;stroke:#111;stroke-width:1}${b} .o2{stroke-width:2}${b} .noz{fill:#fff;stroke-width:1.5}${b} .mot,${b} .imp{fill:#cbd5e1}${b} .imp,${b} .sh{fill:#555;stroke:#111}${b} .liq{fill:#dbeafe;stroke:none}${b} .baf{fill:#94a3b8;stroke:#111;stroke-width:.8}${b} .hid{fill:none;stroke:#111;stroke-dasharray:5 3}${b} .l,${b} .e{stroke:#111;stroke-width:.7;fill:none}${b} text{font:11px Arial,sans-serif;fill:#111;paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round}${b} .cap{font-weight:700;font-size:12px}</style></defs>
+<defs><pattern id="${id}h" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" stroke="#111" stroke-width="1"/></pattern>
+<clipPath id="${id}L"><rect x="0" y="0" width="${n(xs)}" height="700"/></clipPath><clipPath id="${id}R"><rect x="${n(xs)}" y="0" width="${n(1000 - xs)}" height="700"/></clipPath>
+<marker id="${id}a" viewBox="0 0 8 6" refX="8" refY="3" markerWidth="8" markerHeight="6" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L8 3L0 6Z" fill="#111"/></marker>
+<style>${b} .o,${b} .o2,${b} .noz,${b} .mot,${b} .tb,${b} .sym *,${b} .sym{fill:none;stroke:#111;stroke-width:1}${b} .o2{stroke-width:2}${b} .noz{fill:#fff;stroke-width:1.5}${b} .mot,${b} .imp{fill:#cbd5e1}${b} .imp,${b} .sh{fill:#555;stroke:#111}${b} .liq{fill:#dbeafe;stroke:none}${b} .baf{fill:#94a3b8;stroke:#111;stroke-width:.8}${b} .hid{fill:none;stroke:#111;stroke-dasharray:5 3}${b} .l,${b} .e{stroke:#111;stroke-width:.7;fill:none}${b} text{font:11px Arial,sans-serif;fill:#111;paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round}${b} .cap{font-weight:700;font-size:12px}${b} .cut{fill:url(#${id}h);stroke:#111;stroke-width:.6}${b} .cl{stroke:#111;stroke-width:.7;stroke-dasharray:14 3 2 3;fill:none}</style></defs>
 <g id="${id}b"><rect width="1000" height="700" fill="#fff"/><rect class="o2" x="10" y="10" width="980" height="680" fill="none"/>
 ${o.join('\n')}
 </g></svg>
