@@ -86,6 +86,17 @@ def make_engine() -> AsyncEngine:
     return create_async_engine(db_url(), pool_pre_ping=True)
 
 
+_engine: AsyncEngine | None = None
+
+
+def shared_engine() -> AsyncEngine:
+    # One pooled engine (max 15 connections) so a flood of public pings can't exhaust the
+    # Supabase pooler; created lazily on uvicorn's loop (tests reset db._engine per event loop).
+    global _engine
+    _engine = _engine or make_engine()
+    return _engine
+
+
 class PgStateStore:
     def __init__(self, engine: AsyncEngine) -> None:
         self._engine = engine

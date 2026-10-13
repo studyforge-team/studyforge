@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase'
-import { HttpError } from '@/lib/errors'
+import { HttpError, PlainError } from '@/lib/errors'
 import * as mock from './mock'
 import type { Dashboard, Quiz, ResultBody, SolveStart, Step, UploadKind, UploadRead } from './types'
 
@@ -67,3 +67,13 @@ export const reportItem = (quizId: string | undefined, index: number, reason: st
 export const saveAnswers = (quizId: string | undefined, answers: string[], score: number) => {
   if (BASE && quizId) quiet(`/quizzes/${quizId}/answers`, { answers, score })
 }
+
+// D10 privacy panel. No demo fallback: there is no account to export or delete.
+async function me<T>(method: 'GET' | 'DELETE', read: (r: Response) => Promise<T>): Promise<T> {
+  if (!BASE) throw new PlainError('Account tools need the live backend.')
+  const r = await fetch(`${BASE}/api/v1/me${method === 'GET' ? '/export' : ''}`, { method, headers: await auth(), signal: AbortSignal.timeout(90_000) })
+  if (!r.ok) throw new HttpError(r.status)
+  return read(r)
+}
+export const exportMyData = (): Promise<Blob> => me('GET', (r) => r.blob())
+export const deleteAccount = (): Promise<void> => me('DELETE', async () => {})
