@@ -7,17 +7,20 @@ from pathlib import Path
 import pytest
 from alembic import command
 from alembic.config import Config
+from fastapi.testclient import TestClient
 from sqlalchemy import text
 
+from app import main
 from app.agent.quiz import MCQItem, Quiz
 from app.agent.state import SolveState
-from app.db import PgCostRecorder, PgQuizStore, PgStateStore, make_engine
+from app.db import PgCostRecorder, PgQuizStore, PgStateStore, beat, make_engine
 from app.llm.cost import CallRecord
+from app.main import app
 
 pytestmark = pytest.mark.skipif(not os.environ.get("DATABASE_URL"), reason="needs DATABASE_URL")
 
 CFG = Config(str(Path(__file__).parents[2] / "alembic.ini"))
-TABLES = ["solves", "quizzes", "llm_calls"]
+TABLES = ["solves", "quizzes", "llm_calls", "heartbeats"]
 QUIZ = Quiz(
     title="t",
     items=[
@@ -81,4 +84,15 @@ async def _exercise() -> None:
             "where n.nspname='app' and c.relkind='r' and c.relrowsecurity"
         ))).scalar()
         assert rls == len(TABLES)
+    assert await beat(engine, "t") is True
+    assert await beat(engine, "t") is False  # rate-limited to one per 60 s
+    async with engine.connect() as conn:
+        assert (await conn.execute(text("select count(*) from app.heartbeats"))).scalar() == 1
     await engine.dispose()
+    # one TestClient = one loop, so the lazily created main._engine is reused across both calls
+    with TestClient(app) as client:
+        for _ in range(2):
+            r = client.get("/keepalive?source=gha")
+            assert r.status_code == 200
+            assert r.json()["db"] == "ok" and r.json()["wrote"] is False  # beat() above is < 60 s
+    main._engine = None  # bound to that loop

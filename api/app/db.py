@@ -60,6 +60,12 @@ llm_calls = Table(
     Column("latency_ms", Integer, nullable=False),
     Column("created_at", DateTime(timezone=True), server_default=_now),
 )
+heartbeats = Table(
+    "heartbeats", metadata,
+    Column("id", BigInteger, Identity(), primary_key=True),
+    Column("at", DateTime(timezone=True), nullable=False, server_default=_now),
+    Column("source", Text, nullable=False),
+)
 
 
 def db_url() -> str:
@@ -140,3 +146,14 @@ class PgCostRecorder:
         values = asdict(row)
         async with self._engine.begin() as conn:
             await conn.execute(llm_calls.insert().values(**values))
+
+
+async def beat(engine: AsyncEngine, source: str) -> bool:
+    """Keep-alive: insert a heartbeat unless one is under 60 s old (a public endpoint must not
+    be able to spam the table). Returns whether a row was written; also serves as the SELECT."""
+    stmt = text(
+        "insert into app.heartbeats (source) select :s "
+        "where not exists (select 1 from app.heartbeats where at > now() - interval '60 seconds')"
+    )
+    async with engine.begin() as conn:
+        return (await conn.execute(stmt, {"s": source})).rowcount == 1
