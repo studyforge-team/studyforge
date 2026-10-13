@@ -13,6 +13,7 @@ export default function Shell({ hash, children }: { hash: string; children: Reac
   const interviewBank = hash === '#interview-bank'
   const pyqPredictor = hash === '#pyq-predictor'
   const timeToFinish = hash === '#time-to-finish'
+  const notices = hash === '#notices'
   useEffect(() => {
     // On narrow phones the nav scrolls; keep the current page's link in view.
     document.querySelector('nav[aria-label="Main"] [aria-current="page"]')?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' })
@@ -23,7 +24,8 @@ export default function Shell({ hash, children }: { hash: string; children: Reac
         <div className="mx-auto flex h-14 max-w-3xl items-center justify-between px-4">
           <span className="flex shrink-0 items-center gap-2 font-semibold tracking-tight text-primary"><Mark />StudyForge</span>
           <nav aria-label="Main" className="flex min-w-0 overflow-x-auto">{/* scrolls inside the header on narrow phones instead of widening the page */}
-            <a href="#" className={link} aria-current={ask || lab || quiz || oa || interviewBank || pyqPredictor || timeToFinish ? undefined : 'page'}>Today</a>
+            <a href="#" className={link} aria-current={ask || lab || quiz || oa || interviewBank || pyqPredictor || timeToFinish || notices ? undefined : 'page'}>Today</a>
+            <a href="#notices" className={link} aria-current={notices ? 'page' : undefined}>Notices</a>
             <a href="#solve" className={link} aria-current={ask ? 'page' : undefined}>Ask</a>
             <a href="#quiz" className={link} aria-current={quiz ? 'page' : undefined}>Quiz</a>
             <a href="#interview-bank" className={link} aria-current={interviewBank ? 'page' : undefined}>Interview Bank</a>

@@ -75,14 +75,14 @@ def test_export(setup: Any) -> None:
     j = r.json()
     assert j["user_id"] == "A" and j["exported_at"]
     row = {"id": "x", "updated_at": "2026-01-02T00:00:00+00:00"}
-    assert j["solves"] == j["quizzes"] == j["llm_calls"] == [row]
+    assert j["solves"] == j["quizzes"] == j["llm_calls"] == j["notices"] == [row]
 
 
 def test_delete_ok_and_auth_404_is_success(setup: Any) -> None:
     eng, status = setup
     c = TestClient(app)
     assert c.delete("/api/v1/me").status_code == 204
-    assert len(eng.conn.stmts) == 3
+    assert len(eng.conn.stmts) == 4  # solves, quizzes, notices deleted; llm_calls anonymised
     req = calls[0]
     assert req.method == "DELETE" and str(req.url) == f"{URL}/auth/v1/admin/users/A"
     assert req.headers["apikey"] == "svc" and req.headers["authorization"] == "Bearer svc"

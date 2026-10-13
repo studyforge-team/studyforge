@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase'
 import { HttpError, PlainError } from '@/lib/errors'
 import * as mock from './mock'
-import type { Dashboard, Quiz, ResultBody, SolveStart, Step, UploadKind, UploadRead } from './types'
+import type { Dashboard, Notice, NoticeIn, Quiz, ResultBody, SolveStart, Step, UploadKind, UploadRead } from './types'
 
 const BASE = import.meta.env.VITE_API_URL as string | undefined
 
@@ -77,3 +77,19 @@ async function me<T>(method: 'GET' | 'DELETE', read: (r: Response) => Promise<T>
 }
 export const exportMyData = (): Promise<Blob> => me('GET', (r) => r.blob())
 export const deleteAccount = (): Promise<void> => me('DELETE', async () => {})
+
+// Notices (D1). Demo mode keeps them in this browser (mock.ts).
+export const addNotice = (n: NoticeIn): Promise<Notice> => (BASE ? post('/notices', n) : mock.addNotice(n)) // 201
+
+export async function listNotices(): Promise<Notice[]> {
+  if (!BASE) return mock.listNotices()
+  const r = await fetch(`${BASE}/api/v1/notices`, { headers: await auth(), signal: AbortSignal.timeout(90_000) })
+  if (!r.ok) throw new HttpError(r.status)
+  return ((await r.json()) as { notices: Notice[] }).notices
+}
+
+export async function deleteNotice(id: string): Promise<void> {
+  if (!BASE) return mock.deleteNotice(id)
+  const r = await fetch(`${BASE}/api/v1/notices/${encodeURIComponent(id)}`, { method: 'DELETE', headers: await auth(), signal: AbortSignal.timeout(90_000) })
+  if (!r.ok && r.status !== 404) throw new HttpError(r.status) // 404: already gone
+}
