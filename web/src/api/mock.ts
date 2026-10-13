@@ -1,5 +1,5 @@
 // Scripted stand-in for the backend, used when VITE_API_URL is unset. Same two functions as client.ts.
-import type { Dashboard, Quiz, ResultBody, SolveStart, Step, UploadRead } from './types'
+import type { Dashboard, Notice, NoticeIn, Quiz, ResultBody, SolveStart, Step, UploadRead } from './types'
 import quizMock from './quizMock.json'
 
 const wait = () => new Promise((r) => setTimeout(r, 300))
@@ -109,4 +109,42 @@ export async function getDashboard(): Promise<Dashboard> {
 export async function getQuiz(): Promise<Quiz> {
   await wait()
   return quizMock as unknown as Quiz // JSON widens the `type` literals
+}
+
+// Demo notices live in this browser only; storage can be blocked (private mode), then they last until reload.
+const NOTICES = 'studyforge.notices.v1'
+let memory: Notice[] = []
+const readNotices = (): Notice[] => {
+  try {
+    const v: unknown = JSON.parse(localStorage.getItem(NOTICES) ?? 'null')
+    if (!Array.isArray(v)) return memory
+    // anything else in storage (an older shape, hand edits) is skipped, never rendered
+    return v.filter((n): n is Notice => !!n && typeof n === 'object' && typeof n.id === 'string' && typeof n.text === 'string'
+      && typeof n.created_at === 'string' && (n.source === 'paste' || n.source === 'share')
+      && (n.title === null || typeof n.title === 'string') && (n.url === null || typeof n.url === 'string'))
+  } catch {
+    return memory
+  }
+}
+const writeNotices = (n: Notice[]) => {
+  memory = n
+  try { localStorage.setItem(NOTICES, JSON.stringify(n)) } catch { /* memory copy only */ }
+}
+
+export async function listNotices(): Promise<Notice[]> {
+  await wait()
+  return readNotices().slice(0, 50)
+}
+
+export async function addNotice(n: NoticeIn): Promise<Notice> {
+  await wait()
+  const id = crypto.randomUUID?.() ?? `${Date.now()}-${Math.random()}` // randomUUID needs https or localhost
+  const notice: Notice = { id, text: n.text, source: n.source, title: n.title ?? null, url: n.url ?? null, created_at: new Date().toISOString() }
+  writeNotices([notice, ...readNotices()])
+  return notice
+}
+
+export async function deleteNotice(id: string): Promise<void> {
+  await wait()
+  writeNotices(readNotices().filter((n) => n.id !== id))
 }

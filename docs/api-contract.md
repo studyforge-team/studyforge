@@ -59,3 +59,36 @@ adopted as typed. Conventions the backend follows (branch `s2-agent-loop`):
 > upload read; (8) a quiz item report endpoint; (9) the canonical result shape;
 > (10) CSP and bearer token for the deployed build. Details and status in
 > `docs/api-contract.md`. Please reply with objections by the next check-in.
+
+## 4. Notices (D1, 13 Oct): additive, new endpoints only
+
+A notice is text a student pastes into StudyForge or shares to it from another app (a class
+WhatsApp message, an email about a deadline). It is stored as given; nothing reads it yet.
+Turning notices into tasks and reminders is a later ticket and needs a model.
+
+| Endpoint | Body | Reply |
+|---|---|---|
+| `POST /api/v1/notices` | `{text, source?, title?, url?}` | `201 Created` (not 200) + `Notice` |
+| `GET /api/v1/notices` | (none) | `{notices: Notice[]}`, newest first, at most 50 |
+| `DELETE /api/v1/notices/{id}` | (none) | `204`; `404` if missing or not yours |
+
+```ts
+type NoticeIn = { text: string            // up to 5000 characters as sent (trim before posting);
+                                          // must be non-empty after trimming; NUL removed
+                  source?: 'paste' | 'share' // default 'paste'; 'share' = arrived via the Share menu
+                  title?: string           // up to 200; what the sharing app sent as a title
+                  url?: string }           // up to 2000; http(s) with a host, no spaces (shown as a link)
+type Notice = { id: string; text: string; source: 'paste' | 'share';
+                title: string | null; url: string | null; created_at: string } // ISO 8601, UTC
+```
+
+- Signed in only (Bearer token, like `/solve`); each user sees and deletes only their own notices.
+- Errors (`{detail: string}`): 401 not signed in; 413 body over 64 KB; 422 bad body, e.g.
+  `"invalid notice: text"` (the pasted text is never echoed back); 429 at 500 notices per user
+  (`"notice limit reached (500)"`); 503 when the server has no database.
+- Table `app.notices` (migration 0004), RLS on with no policies, like every other table.
+  D10's export (`GET /me/export`) and delete (`DELETE /me`) must include it.
+
+Team note: "D1 adds `POST/GET /api/v1/notices` and `DELETE /api/v1/notices/{id}` (additive,
+nothing existing changes). A notice is pasted or shared text; it is only stored for now. Shape in
+`docs/api-contract.md` section 4. D10 export/delete will include the new table."
