@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { getQuiz, reportItem, saveAnswers } from '@/api/client'
 import type { NumericalItem, QuizItem } from '@/api/types'
 import { Button } from '@/components/ui/button'
+import { friendly, PlainError } from '@/lib/errors'
 import { checkKey, fillSolution, fmt4 } from '@/quiz/key'
 import { run, warm } from '@/sandbox/client'
 
@@ -121,6 +122,7 @@ export default function Quiz() {
     void warm() // boot Python while the quiz loads
     void (async () => {
       try {
+        if (!TOPIC.trim()) throw new PlainError('Pick a topic first.') // ponytail: TOPIC is a constant today; guards the future picker
         const quiz = await getQuiz(TOPIC, () => setProg('Waking up the server…'))
         const nums = quiz.items.filter((x) => x.type === 'numerical').length
         const out: Prepared[] = []
@@ -137,10 +139,10 @@ export default function Quiz() {
           else { skip++; reportItem(quiz.id, idx, !res.ok ? `sandbox: ${res.error}` : chk && !chk.ok ? chk.reason : 'missing_placeholder') }
         }
         if (!live) return
-        if (!out.length) throw new Error('No usable questions in this quiz.')
+        if (!out.length) throw new PlainError('No usable questions in this quiz.')
         setId(quiz.id); setSkipped(skip); setItems(out)
       } catch (e) {
-        if (live) setError(e instanceof Error ? e.message : 'Could not load the quiz')
+        if (live) setError(friendly(e))
       }
     })()
     return () => { live = false }

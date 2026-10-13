@@ -2,8 +2,10 @@
 
 import asyncio
 import os
+from collections.abc import AsyncIterator
 from pathlib import Path
 
+import httpx
 import pytest
 from alembic import command
 from alembic.config import Config
@@ -12,18 +14,26 @@ from sqlalchemy import text
 from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from app import main, spend
+from app import auth, db, spend
 from app.agent.quiz import MCQItem, Quiz
 from app.agent.state import SolveState
-from app.db import PgCostRecorder, PgQuizStore, PgStateStore, beat, make_engine
+from app.db import (
+    PgCostRecorder,
+    PgNoticeStore,
+    PgQuizStore,
+    PgStateStore,
+    beat,
+    make_engine,
+)
 from app.llm.cost import CallRecord
 from app.llm.errors import BudgetExceeded
 from app.main import app
+from app.routers import me
 
 pytestmark = pytest.mark.skipif(not os.environ.get("DATABASE_URL"), reason="needs DATABASE_URL")
 
 CFG = Config(str(Path(__file__).parents[2] / "alembic.ini"))
-TABLES = ["solves", "quizzes", "llm_calls", "heartbeats"]
+TABLES = ["solves", "quizzes", "llm_calls", "heartbeats", "notices"]
 QUIZ = Quiz(
     title="t",
     items=[
@@ -93,13 +103,13 @@ async def _exercise() -> None:
         assert (await conn.execute(text("select count(*) from app.heartbeats"))).scalar() == 1
     await _spend(engine)
     await engine.dispose()
-    # one TestClient = one loop, so the lazily created main._engine is reused across both calls
+    # one TestClient = one loop, so the lazily created db._engine is reused across both calls
     with TestClient(app) as client:
         for _ in range(2):
             r = client.get("/keepalive?source=gha")
             assert r.status_code == 200
             assert r.json()["db"] == "ok" and r.json()["wrote"] is False  # beat() above is < 60 s
-    main._engine = None  # bound to that loop
+    db._engine = None  # bound to that loop
 
 
 async def _spend(engine: AsyncEngine) -> None:
@@ -194,3 +204,57 @@ def test_x1_anon_and_authenticated_cannot_read() -> None:
             "REVOKE ALL ON SCHEMA app FROM anon, authenticated",
         ))
         command.downgrade(CFG, "base")
+
+
+def test_me_export_and_delete(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("SUPABASE_URL", "https://proj.supabase.co")
+    monkeypatch.setenv("SUPABASE_SERVICE_ROLE_KEY", "svc")
+    command.upgrade(CFG, "head")
+    try:
+        asyncio.run(_me())
+    finally:
+        db._engine = None
+        command.downgrade(CFG, "base")
+
+
+async def _me() -> None:
+    engine = make_engine()
+    store, quizzes, rec = PgStateStore(engine), PgQuizStore(engine), PgCostRecorder(engine)
+    row = CallRecord("solver", "m", True, None, 1, 1, 0.5, 5, None)
+    for uid, n in (("A", 2), ("B", 1)):
+        for i in range(n):
+            await store.save(SolveState(id=f"{uid}{i}", user_id=uid, question="q"))
+            await quizzes.save(uid, QUIZ)
+            await PgNoticeStore(engine).add(uid, {"text": "lab due Fri", "source": "paste"}, 50)
+            spend.who.set(spend.Who(uid, False, "9.9.9.9"))
+            await rec.record(row)
+    spend.who.set(spend.Who())
+
+    async def counts(uid: str) -> list[object]:
+        return [await _scalar(f"select count(*) from app.{t} where user_id='{uid}'") for t in ("solves", "quizzes", "llm_calls", "notices")]
+
+    sent: list[str] = []
+
+    async def http() -> AsyncIterator[httpx.AsyncClient]:
+        def ok(req: httpx.Request) -> httpx.Response:
+            sent.append(str(req.url))
+            return httpx.Response(200)
+        async with httpx.AsyncClient(transport=httpx.MockTransport(ok)) as c:
+            yield c
+
+    app.dependency_overrides |= {me.current_user: lambda: "A", me.get_http: http}
+    try:
+        with TestClient(app) as client:  # one TestClient = one loop for the shared engine
+            j = client.get("/api/v1/me/export").json()
+            assert [len(j[t]) for t in ("solves", "quizzes", "llm_calls", "notices")] == [2, 2, 2, 2]
+            assert {r["user_id"] for r in j["solves"] + j["quizzes"] + j["llm_calls"] + j["notices"]} == {"A"}
+            total = await _scalar("select sum(cost_usd) from app.llm_calls")
+            assert client.delete("/api/v1/me").status_code == 204
+        assert sent == ["https://proj.supabase.co/auth/v1/admin/users/A"]
+    finally:
+        app.dependency_overrides[me.current_user] = auth.current_user
+        app.dependency_overrides.pop(me.get_http, None)
+    assert await counts("A") == [0, 0, 0, 0] and await counts("B") == [1, 1, 1, 1]
+    assert await _scalar("select count(*) from app.llm_calls where user_id is null and ip is null") == 2
+    assert await _scalar("select sum(cost_usd) from app.llm_calls") == total  # spend accounting intact
+    await engine.dispose()

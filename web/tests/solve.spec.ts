@@ -88,19 +88,6 @@ test('print media shows the answer only; Download PDF on screen', async ({ page 
 
 const PNG = { name: 'q.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgo=', 'base64') }
 
-test('attach: demo mode says the file was not read; chip can be removed', async ({ page }) => {
-  await page.setViewportSize({ width: 375, height: 812 })
-  await page.goto('/#solve')
-  await page.locator('input[type=file]').setInputFiles(PNG)
-  await expect(page.getByText("Demo mode — your file wasn't read.")).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Use this text' })).toHaveCount(0)
-  await expect(page.getByRole('button', { name: 'Solve' })).toBeDisabled()
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
-  await page.getByRole('button', { name: 'Remove attachment' }).click()
-  await expect(page.getByRole('button', { name: 'Remove attachment' })).toHaveCount(0)
-  await expect(page.getByText("Demo mode — your file wasn't read.")).toHaveCount(0)
-})
-
 test('attach: file over 10 MB is rejected with no request', async ({ page }) => {
   const reqs: string[] = []
   page.on('request', (r) => { if (r.method() === 'POST') reqs.push(r.url()) })
@@ -109,4 +96,14 @@ test('attach: file over 10 MB is rejected with no request', async ({ page }) => 
   await expect(page.getByRole('alert')).toHaveText('That file is over 10 MB. Try a smaller PDF or a cropped photo.')
   await expect(page.getByRole('button', { name: 'Remove attachment' })).toHaveCount(0)
   expect(reqs).toEqual([])
+})
+
+test('unreadable photo shows a plain message and is not attached', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 })
+  await page.goto('/#solve')
+  await page.locator('input[type=file]').setInputFiles(PNG) // demo mock reads every upload as empty text
+  await expect(page.getByRole('alert')).toHaveText("Demo mode doesn't read photos or PDFs yet. Type the question instead.")
+  await expect(page.getByRole('button', { name: 'Remove attachment' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Solve' })).toBeDisabled()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
 })
