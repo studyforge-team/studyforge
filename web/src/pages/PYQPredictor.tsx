@@ -47,6 +47,7 @@ export default function PYQPredictor() {
   function edit(index: number, value: string) {
     setPapers((cur) => cur.map((p, i) => (i === index ? value : p)))
     setResult(null) // results always match the papers on screen
+    setError('')
   }
 
   function run() {
@@ -57,6 +58,10 @@ export default function PYQPredictor() {
       return
     }
     const r = predict(filled)
+    if (r.papers < MIN) {
+      setError(`Only ${r.papers} of the pasted papers contain questions. Paste the question text of at least ${MIN} papers.`)
+      return
+    }
     if (r.stats.length === 0) {
       setError('No chemical engineering topics were recognised. Paste the question text itself (one question per line or numbered Q1, Q2, …).')
       return
@@ -93,6 +98,7 @@ export default function PYQPredictor() {
                     onClick={() => {
                       setPapers((cur) => cur.filter((_, i) => i !== index))
                       setResult(null)
+                      setError('')
                     }}
                   >
                     Remove
@@ -118,6 +124,7 @@ export default function PYQPredictor() {
               onClick={() => {
                 setPapers((cur) => [...cur, ''])
                 setResult(null)
+                setError('')
               }}
             >
               Add another paper
@@ -135,7 +142,7 @@ export default function PYQPredictor() {
       {result && (
         <section className="mt-6 space-y-6">
           <p role="status" className="text-sm text-muted-foreground">
-            Read {result.papers} papers and {result.questions} questions. Weighted by{' '}
+            Read {result.papers} papers and {result.questions} question{result.questions === 1 ? '' : 's'}. Weighted by{' '}
             {result.usedMarks ? 'marks' : 'number of questions (not every question showed its marks)'}.
           </p>
 

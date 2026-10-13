@@ -101,3 +101,30 @@ test('PYQ predictor ignores paper headers and section labels, reads "marks: N", 
   await expect(row(page, 'Fluid mechanics')).toHaveCount(0)
   await expect(page.getByText(/matched no topic/)).toHaveCount(0)
 })
+
+test('PYQ predictor reads real paper formats: unnumbered headers, sub-part marks, bare Q1 lines, PDF dashes', async ({ page }) => {
+  await page.goto('/#pyq-predictor')
+  await fill(page, [
+    // unnumbered paper with a header: the header must not count
+    'Max Marks: 100\nDerive the CSTR design equation (10 marks)\nFind the LMTD of a heat exchanger (10 marks)',
+    // bare "Q1" lines, sub-parts whose marks add up, a PDF en dash
+    'Q1\n(a) Vapour–liquid equilibrium: find the bubble point (5 marks)\n(b) State Raoult’s law (5 marks)\nQ2\nFind the PFR volume for 90% conversion [2+8]',
+  ])
+  await page.getByRole('button', { name: 'Predict topics' }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Read 2 papers' })).toContainText('Read 2 papers and 4 questions. Weighted by marks.')
+  // reaction engineering: 10/20 in paper 1, 10/20 in paper 2 -> 50 %; thermodynamics only in the newest -> new
+  await expect(row(page, 'Reaction engineering')).toContainText('50%')
+  await expect(row(page, 'Thermodynamics')).toContainText('new in the latest paper')
+})
+
+test('PYQ predictor: unit conversion is not reaction engineering; papers without questions do not count', async ({ page }) => {
+  await page.goto('/#pyq-predictor')
+  await fill(page, ['SECTION A', 'Q1. Do the unit conversion of 5 psi to Pa and find the pump power (5 marks)'])
+  await page.getByRole('button', { name: 'Predict topics' }).click()
+  await expect(page.getByRole('alert')).toContainText('Only 1 of the pasted papers contain questions')
+  await page.locator('#past-paper-1').fill('Q1. Another unit conversion for a pump head (5 marks)')
+  await expect(page.getByRole('alert')).toHaveCount(0) // editing clears the old error
+  await page.getByRole('button', { name: 'Predict topics' }).click()
+  await expect(row(page, 'Fluid mechanics')).toBeVisible()
+  await expect(row(page, 'Reaction engineering')).toHaveCount(0)
+})

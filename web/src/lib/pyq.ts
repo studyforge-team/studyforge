@@ -7,17 +7,17 @@ export type Topic = { name: string; pattern: RegExp; question: string }
 export const TOPICS: readonly Topic[] = [
   {
     name: 'Process calculations',
-    pattern: /\b(?:material|mass|energy|component)\s+balances?\b|\bstoichiometr|\brecycle\b|\bpurge\b|\bbypass\b|\blimiting reactant\b|\bexcess air\b/i,
+    pattern: /\b(?:material|mass|energy|component)\s+balances?\b|\bdegrees? of freedom\b|\bstoichiometr|\brecycle\b|\bpurge\b|\bbypass\b|\blimiting reactant\b|\bexcess air\b/i,
     question: 'Solve a material balance with recycle and purge for a reacting system.',
   },
   {
     name: 'Thermodynamics',
-    pattern: /\bthermodynamic|\bentropy\b|\benthalpy\b|\bgibbs\b|\bfugacity\b|\bactivity coefficients?\b|\bvapou?r[- ]liquid equilibri|\bvle\b|\braoult|\bequations? of state\b|\bcarnot\b|\b(?:first|second) law\b|\bclausius\b|\bjoule[- ]thomson\b/i,
+    pattern: /\bthermodynamic|\bentropy\b|\benthalpy\b|\bgibbs\b|\bfugacity\b|\bactivity coefficients?\b|\bvapou?r[- ]liquid equilibri|\bvle\b|\braoult|\bequations? of state\b|\bcarnot\b|\b(?:first|second) law\b|\bclausius\b|\bjoule[- ]thomson\b|\bbubble[- ]point\b|\bdew[- ]point\b|\bflash (?:drum|calculation|vapori[sz]ation)\b|\bazeotrop|\bphase rule\b|\bheat of (?:formation|combustion|mixing)\b/i,
     question: "Solve a bubble- or dew-point problem using Raoult's law or activity coefficients.",
   },
   {
     name: 'Fluid mechanics',
-    pattern: /\bfluid (?:mechanics|flow|statics|dynamics)\b|\bbernoulli\b|\breynolds\b|\bpressure drop\b|\bviscosit|\bviscomet|\bfriction factor\b|\blaminar\b|\bturbulent\b|\bpumps?\b|\bcompressors?\b|\borifice\b|\bventuri\b|\bnpsh\b|\bpipe flow\b/i,
+    pattern: /\bfluid (?:mechanics|flow|statics|dynamics)\b|\bbernoulli\b|\breynolds\b|\bpressure drop\b|\bviscosit|\bviscomet|\bfriction factor\b|\blaminar\b|\bturbulent\b|\bpumps?\b|\bcompressors?\b|\borifice\b|\bventuri\b|\bnpsh\b|\bpipe flow\b|\bmanometers?\b|\bboundary layer\b|\bdrag\b|\bnozzles?\b/i,
     question: 'Find the pressure drop and pump power for flow through a pipe using the friction factor.',
   },
   {
@@ -27,27 +27,27 @@ export const TOPICS: readonly Topic[] = [
   },
   {
     name: 'Heat transfer',
-    pattern: /\bheat transfer\b|\bconduction\b|\bconvection\b|\bradiation\b|\bheat exchangers?\b|\blmtd\b|\bnusselt\b|\bfins?\b|\bcondens|\bboiling\b|\bevaporators?\b|\bblack ?body\b/i,
+    pattern: /\bheat transfer\b|\bconduction\b|\bconvection\b|\bradiation\b|\bheat exchangers?\b|\blmtd\b|\bnusselt\b|\bfins?\b|\bcondens|\bboiling\b|\bevaporators?\b|\bblack ?body\b|\bprandtl\b|\bbiot\b|\bgrashof\b|\bstefan|\bemissiv|\beffectiveness[- ]ntu\b/i,
     question: 'Size a heat exchanger using the LMTD and the overall heat transfer coefficient.',
   },
   {
     name: 'Mass transfer',
-    pattern: /\bmass transfer\b|\bdiffusi|\bfick|\babsorption\b|\bstripping\b|\bextraction\b|\bleaching\b|\bdrying\b|\bdryers?\b|\bhumidif|\badsorption\b|\bsherwood\b|\bcrystalli[sz]/i,
+    pattern: /\bmass transfer\b|\bdiffusi|\bfick|\babsorption\b|\bstripping\b|\bextraction\b|\bleaching\b|\bdrying\b|\bdryers?\b|\bhumidif|\badsorption\b|\bsherwood\b|\bcrystalli[sz]|\bpacked (?:column|bed|tower)\b|\bhetp\b|\bhtu\b|\bntu\b|\babsorbers?\b|\bmembranes?\b|\bpsychrometr|\bschmidt\b/i,
     question: 'Find the flux or the number of transfer units in a gas absorption problem.',
   },
   {
     name: 'Distillation',
-    pattern: /\bdistillation\b|\bmccabe|\breflux\b|\brelative volatility\b|\bfenske\b|\bunderwood\b|\btheoretical (?:stages|plates|trays)\b|\bq[- ]line\b|\bponchon\b/i,
+    pattern: /\bdistillation\b|\bmccabe|\breflux\b|\brelative volatility\b|\bfenske\b|\bunderwood\b|\btheoretical (?:stages|plates|trays)\b|\bq[- ]line\b|\bponchon\b|\btray efficiency\b|\bplate efficiency\b|\bazeotropic distillation\b/i,
     question: 'Find the minimum reflux and the number of theoretical stages with McCabe-Thiele.',
   },
   {
     name: 'Reaction engineering',
-    pattern: /\breactors?\b|\bcstr\b|\bpfr\b|\bplug flow\b|\bmixed flow\b|\brate constant\b|\barrhenius\b|\bresidence time\b|\bcatalys|\border of (?:the )?reaction\b|\bkinetics\b|\brtd\b|\bselectivity\b|\bconversion\b/i,
+    pattern: /\breactors?\b|\bcstr\b|\bpfr\b|\bplug flow\b|\bmixed flow\b|\brate constant\b|\barrhenius\b|\bresidence time\b|\bcatalys|\border of (?:the )?reaction\b|\bkinetics\b|\brtd\b|\bselectivity\b(?! of (?:the )?solvent)|(?<!unit )\bconversion\b|\brate of (?:the )?reaction\b|\breaction rate\b|\bspace (?:time|velocity)\b|\bdamk(?:o|ö|oe)hler\b|\benzym|\bmichaelis\b|\bheat of reaction\b|\badiabatic temperature rise\b/i,
     question: 'Compare CSTR and PFR volumes for a given conversion and rate law.',
   },
   {
     name: 'Process control',
-    pattern: /\bprocess control\b|\bcontrollers?\b|\bpid\b|\btransfer functions?\b|\bbode\b|\bnyquist\b|\broot locus\b|\blaplace\b|\bfeedback\b|\bfeedforward\b|\bdamping\b|\bdead time\b|\bcontrol valves?\b|\binstrument|\bthermocouples?\b|\bmanometers?\b/i,
+    pattern: /\bprocess control\b|\bcontrollers?\b|\bpid\b|\btransfer functions?\b|\bbode\b|\bnyquist\b|\broot locus\b|\blaplace\b|\bfeedback\b|\bfeedforward\b|\bdamping\b|\bdead time\b|\bcontrol valves?\b|\binstrument|\bthermocouples?\b|\bp\s*&\s*id\b/i,
     question: 'Find the step response of a first-order process and tune a PI controller.',
   },
   {
@@ -76,33 +76,56 @@ export type Question = { text: string; marks: number | null }
 
 // A new question starts with "Q1", "Q.1", "Question 1", "1.", "1)" followed by a space.
 // "2.5 kg" is not a question number (no space after the dot).
-const START = /^\s*(?:Q(?:uestion)?\s*\.?\s*\d{1,3}\s*[.):-]?|\(?\d{1,3}\s*[.)])\s+\S/i
+const START =
+  /^\s*(?:(?:Q(?:uestion)?(?:\s*\.?\s*No\.?)?\s*\.?\s*\d{1,3}\s*[.):-]?|\(?\d{1,3}\s*[.)]|\d{1,3}\s*\(?[a-z]\)|\d{1,3}\s+[a-z][.)])(?:\s+\S|\s*$)|\d{1,3}\.(?=[A-Za-z]))/i
+const ROMAN = /^\s*[IVX]{1,4}\.\s+\S/ // capitals only: lower-case i., ii. are sub-parts
+const isStart = (line: string) => START.test(line) || ROMAN.test(line)
 const MARKS = /(\d{1,3})\s*marks?\b|\bmarks?\s*[:=]\s*(\d{1,3})\b|[[(]\s*(\d{1,3})\s*(?:m|marks?)?\s*[\])]\s*$/i
 
-function marksOf(text: string): number | null {
-  const m = MARKS.exec(text)
-  if (!m) return null
-  const n = Number(m[1] ?? m[2] ?? m[3])
+const SPLIT_MARKS = /[[(]\s*(\d{1,3}(?:\s*\+\s*\d{1,3})+)\s*(?:m|marks?)?\s*[\])]\s*$/i // [2+3]
+
+function marksOf(line: string): number | null {
+  const split = SPLIT_MARKS.exec(line)
+  const n = split
+    ? split[1].split('+').reduce((a, b) => a + Number(b), 0)
+    : (() => {
+        const m = MARKS.exec(line)
+        return m ? Number(m[1] ?? m[2] ?? m[3]) : 0
+      })()
   return n > 0 && n <= 200 ? n : null
+}
+
+// Paper headers ("Max. Marks: 100", "Time: 3 hours", "Answer any FIVE") are not questions.
+const HEADER = /^(?:max(?:imum)?\.?|total|full)\s+marks?\b|^(?:time|duration)\b\s*[:-]|^(?:answer|attempt)\s+(?:any|all)\b|^(?:instructions?|note)\b\s*[:-]/i
+
+// PDF copies use typographic dashes and non-breaking spaces; the topic patterns use '-' and ' '.
+function normalise(text: string): string {
+  return text.replace(/[\u2010-\u2015\u2212]/g, '-').replace(/[\u00a0\u202f]/g, ' ').replace(/\u00ad/g, '')
 }
 
 // Section headings ("SECTION B", "Part II", "Unit 3") are not questions and not part of one.
 const HEADING = /^(?:section|part|unit|module)\s*[-:]?\s*(?:[a-z]|[ivx]+|\d{1,2})\s*[-:.)]?\s*$/i
 
 export function splitQuestions(paper: string): Question[] {
-  const lines = paper
+  const lines = normalise(paper)
     .replace(/\r\n?/g, '\n')
     .split('\n')
     .map((l) => l.trim())
-    .filter((l) => l && !HEADING.test(l))
-  const numbered = lines.some((l) => START.test(l))
-  const blocks: string[] = []
+    .filter((l) => l && !HEADING.test(l) && !HEADER.test(l))
+  const numbered = lines.some(isStart)
+  const blocks: { text: string; marks: number | null }[] = []
   for (const line of lines) {
-    if (!numbered || START.test(line)) blocks.push(line)
-    else if (blocks.length > 0) blocks[blocks.length - 1] += ' ' + line // continuation of the current question
-    // else: header text before the first numbered question (time, max marks, instructions): skipped
+    const m = marksOf(line)
+    if (!numbered || isStart(line)) blocks.push({ text: line, marks: m })
+    else if (blocks.length > 0) {
+      // continuation or a sub-part of the current question: its marks add up
+      const b = blocks[blocks.length - 1]
+      b.text += ' ' + line
+      if (m !== null) b.marks = (b.marks ?? 0) + m
+    }
+    // else: header text before the first numbered question: skipped
   }
-  return blocks.map((text) => ({ text, marks: marksOf(text) }))
+  return blocks
 }
 
 export type Trend = 'rising' | 'steady' | 'falling' | 'new'
