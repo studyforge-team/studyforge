@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app import auth, db
 from app.db import beat
 from app.reminders import drain, sweep
-from app.routers import checkins, notices, solve
+from app.routers import checkins, me, notices, solve
 
 
 class JsonFormatter(logging.Formatter):
@@ -75,6 +75,8 @@ app.dependency_overrides[solve.current_user] = auth.current_user
 app.dependency_overrides[checkins.get_engine] = db.shared_engine
 app.include_router(checkins.router)
 # solve.router is NOT included yet: it also needs get_deps (LLM/store wiring, a P1/P2 decision).
+app.dependency_overrides[me.current_user] = auth.current_user
+app.include_router(me.router)  # carries its own /api/v1 prefix, like solve.router
 app.dependency_overrides[notices.current_user] = auth.current_user
 app.include_router(notices.router)  # carries its own /api/v1 prefix, like solve.router
 app.include_router(api_router, prefix="/api/v1")
