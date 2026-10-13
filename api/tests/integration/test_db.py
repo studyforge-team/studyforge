@@ -9,6 +9,7 @@ from alembic import command
 from alembic.config import Config
 from fastapi.testclient import TestClient
 from sqlalchemy import text
+from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from app import main, spend
@@ -138,3 +139,38 @@ async def _spend(engine: AsyncEngine) -> None:
     assert await store.cached("find x") == {"type": "final"}
     assert await store.cached("other") is None
     spend.who.set(spend.Who())
+
+
+def test_x1_anon_and_authenticated_cannot_read() -> None:
+    # mimic Supabase's PostgREST roles BEFORE migrating; roles may stay (re-run safe)
+    async def roles() -> None:
+        engine = make_engine()
+        async with engine.begin() as conn:
+            for r in ("anon", "authenticated"):
+                await conn.execute(text(
+                    f"DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='{r}') "
+                    f"THEN CREATE ROLE {r} NOLOGIN; END IF; END $$"))
+        await engine.dispose()
+
+    async def probe() -> list[str]:
+        engine = make_engine()
+        bad: list[str] = []
+        for role in ("anon", "authenticated"):
+            for t in TABLES:
+                async with engine.connect() as conn:
+                    await conn.execute(text(f"SET ROLE {role}"))
+                    try:
+                        rows = (await conn.execute(text(f"select * from app.{t}"))).all()
+                        bad += [f"{role}.{t} returned {len(rows)} rows"] if rows else []
+                    except ProgrammingError as err:  # permission denied is the pass
+                        assert "permission denied" in str(err)
+        public = (await _scalar("select count(*) from pg_tables where schemaname='public'"))
+        await engine.dispose()
+        return bad + ([f"{public} tables in public"] if public else [])
+
+    asyncio.run(roles())
+    command.upgrade(CFG, "head")
+    try:
+        assert asyncio.run(probe()) == []  # ponytail: seeded rows would need a superuser insert; denial is the proof
+    finally:
+        command.downgrade(CFG, "base")
