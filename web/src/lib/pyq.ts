@@ -78,7 +78,7 @@ export type Question = { text: string; marks: number | null }
 // "2.5 kg" is not a question number (no space after the dot).
 const START =
   /^\s*(?:(?:Q(?:uestion)?(?:\s*\.?\s*No\.?)?\s*\.?\s*\d{1,3}\s*[.):-]?|\(?\d{1,3}\s*[.)]|\d{1,3}\s*\(?[a-z]\)|\d{1,3}\s+[a-z][.)])(?:\s+\S|\s*$)|\d{1,3}\.(?=[A-Za-z]))/i
-const ROMAN = /^\s*[IVX]{1,4}\.\s+\S/ // capitals only: lower-case i., ii. are sub-parts
+const ROMAN = /^\s*([IVX]{1,4})\.\s+\S/ // capitals only: lower-case i., ii. are sub-parts
 const isStart = (line: string) => START.test(line) || ROMAN.test(line)
 const MARKS = /(\d{1,3})\s*marks?\b|\bmarks?\s*[:=]\s*(\d{1,3})\b|[[(]\s*(\d{1,3})\s*(?:m|marks?)?\s*[\])]\s*$/i
 
@@ -95,8 +95,38 @@ function marksOf(line: string): number | null {
   return n > 0 && n <= 200 ? n : null
 }
 
-// Paper headers ("Max. Marks: 100", "Time: 3 hours", "Answer any FIVE") are not questions.
-const HEADER = /^(?:max(?:imum)?\.?|total|full)\s+marks?\b|^(?:time|duration)\b\s*[:-]|^(?:answer|attempt)\s+(?:any|all)\b|^(?:instructions?|note)\b\s*[:-]/i
+// Totals ("Max. Marks: 100", "[Total 10 marks]") are never questions or marks of one.
+const TOTAL = /^\W*(?:max(?:imum)?\.?|total|sub-?total|full)\b.*\bmarks?\b/i
+// Instructions ("Time: 3 hours", "Answer any FIVE", "Note: ...") are dropped only when they carry
+// no marks, so a real question that starts with "Note:" is kept.
+const INSTRUCTION = /^(?:time|duration)\b\s*[:-]|^(?:answer|attempt)\s+(?:any|all)\b|^(?:instructions?|note)\b\s*[:-]/i
+// A continuation line adds marks only if it is a sub-part: "(a) ...", "b) ...", "(ii) ...", "iii. ...".
+const SUBPART = /^\(?(?:[a-h]|[ivx]{1,4})[.)]\s/i
+// Marks written out ("5 marks", "(5M)", "marks: 5"), unlike a bare "(2)" that may be an equation number.
+const EXPLICIT_MARKS = /\bmarks?\b|\d\s*m\s*[\])]/i
+// A line that is only a question number ("Q1", "Q.No.2", "3.") with the question on the next line.
+const BARE_NUMBER = /^\s*(?:Q(?:uestion)?(?:\s*\.?\s*No\.?)?\s*\.?\s*\d{1,3}\s*[.):-]?|\(?\d{1,3}\s*[.)]|[IVX]{1,4}\.)\s*$/i
+
+const ROMAN_VALUE: Record<string, number> = { I: 1, V: 5, X: 10 }
+function roman(s: string): number {
+  let n = 0
+  for (let i = 0; i < s.length; i++) {
+    const v = ROMAN_VALUE[s[i]]
+    const next = ROMAN_VALUE[s[i + 1]] ?? 0
+    n += v < next ? -v : v
+  }
+  return n
+}
+
+// The question number a line starts with, or null if it does not start a question.
+function numberOf(line: string): number | null {
+  const r = ROMAN.exec(line)
+  if (r) return roman(r[1])
+  const m = START.exec(line)
+  if (!m) return null
+  const d = /\d{1,3}/.exec(m[0])
+  return d ? Number(d[0]) : null
+}
 
 // PDF copies use typographic dashes and non-breaking spaces; the topic patterns use '-' and ' '.
 function normalise(text: string): string {
@@ -111,17 +141,28 @@ export function splitQuestions(paper: string): Question[] {
     .replace(/\r\n?/g, '\n')
     .split('\n')
     .map((l) => l.trim())
-    .filter((l) => l && !HEADING.test(l) && !HEADER.test(l))
+    .filter((l) => l && !HEADING.test(l) && !TOTAL.test(l) && !(INSTRUCTION.test(l) && marksOf(l) === null))
   const numbered = lines.some(isStart)
   const blocks: { text: string; marks: number | null }[] = []
+  let last: number | null = null
   for (const line of lines) {
     const m = marksOf(line)
-    if (!numbered || isStart(line)) blocks.push({ text: line, marks: m })
-    else if (blocks.length > 0) {
-      // continuation or a sub-part of the current question: its marks add up
+    const n = numbered ? numberOf(line) : null
+    // A numbered line starts a question only if its number follows on (same number for
+    // "1(a)", "1(b)"; up to 3 ahead for skipped or OR-alternative questions), so a stray
+    // "5 (a) points" or "V. Large tank" inside a question stays part of it.
+    if (!numbered || (n !== null && (last === null || (n >= last && n <= last + 3)))) {
+      blocks.push({ text: line, marks: m })
+      if (n !== null) last = n
+    } else if (blocks.length > 0) {
       const b = blocks[blocks.length - 1]
+      const bare = BARE_NUMBER.test(b.text)
       b.text += ' ' + line
-      if (m !== null) b.marks = (b.marks ?? 0) + m
+      // Marks on a following line count for a sub-part (they add up), for a question whose number
+      // stood alone, or when the question has none yet and the line says "marks" (a wrapped line).
+      // A bare "(2)" on a following line is taken as an equation number, not marks.
+      if (m !== null && (SUBPART.test(line) || bare || (b.marks === null && EXPLICIT_MARKS.test(line))))
+        b.marks = (b.marks ?? 0) + m
     }
     // else: header text before the first numbered question: skipped
   }

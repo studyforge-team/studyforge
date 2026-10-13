@@ -128,3 +128,19 @@ test('PYQ predictor: unit conversion is not reaction engineering; papers without
   await expect(row(page, 'Fluid mechanics')).toBeVisible()
   await expect(row(page, 'Reaction engineering')).toHaveCount(0)
 })
+
+test('PYQ predictor: totals and equation numbers are not marks, "Note:" questions stay, stray numbers do not split questions', async ({ page }) => {
+  await page.goto('/#pyq-predictor')
+  await fill(page, [
+    // [Total] line and an equation reference "(2)" on a following line must not add marks;
+    // "5 (a) points" inside question 1 is not a new question
+    'Max Marks: 20\n1. Derive the CSTR design equation (10 marks)\nUse eq. (2) and find the value at\n5 (a) points\n[Total 10 marks]\n2. Find the LMTD of a heat exchanger (10 marks)',
+    // a real question that starts with "Note:" carries marks, so it is kept
+    'Note: find the pressure drop in a pipe using the friction factor (10 marks)\nFind the PFR volume (10 marks)',
+  ])
+  await page.getByRole('button', { name: 'Predict topics' }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Read 2 papers' })).toContainText('Read 2 papers and 4 questions. Weighted by marks.')
+  // reaction engineering: 10/20 in both papers -> 50 %
+  await expect(row(page, 'Reaction engineering')).toContainText('50%')
+  await expect(row(page, 'Fluid mechanics')).toContainText('new in the latest paper')
+})
