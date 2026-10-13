@@ -68,3 +68,27 @@ Inputs are in the templates' canonical units. Tolerance 1% on every output (inte
 - **MCCABE-2** inputs `{"F": 100.0, "zF": 0.4, "xD": 0.9, "xB": 0.05, "q": 0.0, "alpha": 3.0, "R": 3.0}`
   - expected: Rmin = 2.29167 -, D = 41.1765 kmol/h, B = 58.8235 kmol/h, V = 164.706 kmol/h, V_bar = 64.7059 kmol/h, N_theoretical = 8 -, feed_stage = 5 -, N_fractional = 7.77184 -
   - independent calculation: Constant alpha, CMO, total condenser, reboiler counted as a stage. Rmin from Underwood (theta root of sum alpha z/(alpha-theta) = 1-q); D, B, V, V' from balances (V' = V-(1-q)F); stages stepped top-down with the inverse equilibrium curve and the two operating lines (own code). Last liquid x = 0.0404 vs xB = 0.05.
+- **HX-1** inputs `{"mh": 2.0, "cph": 2100.0, "Th_in": 433.15, "Th_out": 373.15, "mc": 2.5, "cpc": 4180.0, "Tc_in": 293.15, "U": 350.0}`
+  - expected: Q = 252000 W, Tc_out = 317.265 K, A_counter = 7.43518 m^2, A_co = 7.86077 m^2, A_shell12 = 7.63723 m^2, F = 0.973544 -
+  - independent calculation: Golden problem P1-05 as a ChemLab case. Areas by e-NTU (counter, co-current, 1-2 shell) from the energy balance; F = A_counter / A_shell12. The template's primary result is LMTD x F.
+- **HX-2** inputs `{"mh": 0.5, "cph": 2000.0, "Th_in": 400.0, "Th_out": 320.0, "mc": 1.2, "cpc": 4180.0, "Tc_in": 290.0, "U": 250.0}`
+  - expected: Q = 80000 W, Tc_out = 305.949 K, A_counter = 5.70865 m^2, A_co = 6.86293 m^2, A_shell12 = 6.18665 m^2, F = 0.922736 -
+  - independent calculation: Oil cooler, hot stream is Cmin. Same e-NTU method; reference values also matched the ht library (MIT) to 1e-9.
+- **FLASH-1** inputs `{"c1": 14.0, "c2": 15.0, "c3": 0.0, "n1": 0.5, "n2": 0.5, "n3": 0.0, "T": 368.15, "P": 101325.0}`
+  - expected: x1 = 0.402648 -, y1 = 0.624804 -, V_frac = 0.438216 -, T_bubble = 365.196 K, P_bubble = 110436 Pa
+  - independent calculation: Benzene-toluene 50/50 at 1 atm, 95 C (Raoult, Poling Antoine). Binary closed form x1 = (P - P2)/(P1 - P2), y1 = x1 P1/P, V = (z1 - x1)/(y1 - x1); bubble T by brentq on the bubble-pressure sum (textbook: about 92 C).
+- **FLASH-2** inputs `{"c1": 14.0, "c2": 15.0, "c3": 25.0, "n1": 0.5, "n2": 0.5, "n3": 0.3, "T": 360.0, "P": 101325.0}`
+  - expected: V_frac = 0.224834 -, x1 = 0.365819 -, x3 = 0.199028 -, y3 = 0.340203 -
+  - independent calculation: Benzene/toluene/n-hexane at 360 K, 1 atm. Rachford-Rice multiplied out to a quadratic in V and solved with numpy roots (the template uses brentq on the sum).
+- **PIPE-1** inputs `{"Q": 0.01, "D": 0.1, "L": 100.0, "eps": 4.5e-05, "rho": 997.0, "mu": 0.00089, "K_fittings": 5.0, "dz": 10.0, "dP": 0.0, "eta": 0.7}`
+  - expected: Re = 142631 -, f_darcy = 0.01924 -, head = 12.0036 m, P_shaft = 1676.59 W
+  - independent calculation: Water 10 L/s in 100 m of 100 mm commercial steel, K = 5, 10 m lift. Colebrook by fixed-point iteration on 1/sqrt(f); matches fluids.friction_factor (Clamond) to 1e-9.
+- **PIPE-2** inputs `{"Q": 1e-05, "D": 0.05, "L": 50.0, "eps": 4.5e-05, "rho": 997.0, "mu": 0.00089, "K_fittings": 2.0, "dz": 3.0, "dP": 0.0, "eta": 0.6}`
+  - expected: Re = 285.263 -, f_darcy = 0.224354 -, head = 3.0003 m, P_shaft = 0.48891 W
+  - independent calculation: Laminar (Re = 285): f = 64/Re by hand.
+- **RECYCLE-1** inputs `{"F0": 100.0, "yI0": 0.01, "Xsp": 0.3, "sA": 0.95, "sI": 1.0, "p": 0.05}`
+  - expected: R_A = 169.839 kmol/h, R_I = 19 kmol/h, X_overall = 0.814664 -, P_total = 9.9389 kmol/h
+  - independent calculation: Iterate the loop (mixer, reactor, separator, splitter) by successive substitution until the recycle stops changing.
+- **RECYCLE-2** inputs `{"F0": 100.0, "yI0": 0.1, "Xsp": 0.5, "sA": 1.0, "sI": 1.0, "p": 0.1}`
+  - expected: R_A = 73.6364 kmol/h, R_I = 90 kmol/h, X_overall = 0.909091 -, P_total = 18.1818 kmol/h
+  - independent calculation: Hand case: R_A = 810/11, R_I = 90, X_overall = 10/11; also by successive substitution.
