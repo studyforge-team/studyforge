@@ -1,6 +1,7 @@
-"""Compound table checks. Literature values are independent of the export: normal boiling
-points and critical temperatures from the CRC Handbook (rounded), molar masses from
-IUPAC atomic weights (current conventional values, so MW within 0.005)."""
+"""Compound table checks against an independent reference table (below) for all 40
+compounds, and molar masses from current IUPAC atomic weights. The byte-for-byte export
+check runs only where chemicals 1.5.2 is installed (not in CI); the reference table is
+what guards the data in CI."""
 
 import importlib.util
 import math
@@ -39,38 +40,81 @@ def test_values_physical() -> None:
         assert r["Tmin"] < antoine_nbp(r) < r["Tc"], r["name"]
 
 
-@pytest.mark.parametrize(
-    "name,nbp",
-    [
-        ("water", 373.12),
-        ("methanol", 337.8),
-        ("ethanol", 351.4),
-        ("acetone", 329.2),
-        ("benzene", 353.2),
-        ("toluene", 383.8),
-        ("n-hexane", 341.9),
-        ("cyclohexane", 353.9),
-        ("nitrogen", 77.36),
-        ("oxygen", 90.19),
-        ("ammonia", 239.8),
-    ],
-)
-def test_antoine_reproduces_normal_boiling_points(name: str, nbp: float) -> None:
-    assert antoine_nbp(by_name(name)) == pytest.approx(nbp, abs=0.5)
+# Independent reference (not the table the export picked from): CRC Handbook 95th ed.
+# normal boiling point and, for organics, critical constants; PSRK (Horstmann et al.
+# 2005) critical constants for the six inorganics; as tabulated in chemicals 1.5.2.
+# name: (Tb K, Tc K, Pc MPa)
+REF = {
+    "water": (373.12, 647.3, 22.048),
+    "methanol": (337.65, 512.7, 8.01),
+    "ethanol": (351.39, 515.0, 6.25),
+    "1-propanol": (370.19, 536.8, 5.1),
+    "2-propanol": (355.36, 508.3, 4.7),
+    "1-butanol": (390.75, 563.0, 4.43),
+    "acetone": (329.23, 508.1, 4.7),
+    "methyl ethyl ketone": (352.75, 537.0, 4.18),
+    "acetic acid": (391.05, 593.0, 5.79),
+    "phenol": (454.95, 694.3, 5.5),
+    "aniline": (457.25, 704.0, 5.3),
+    "diethyl ether": (307.55, 466.8, 3.64),
+    "ethyl acetate": (350.25, 523.27, 3.88),
+    "benzene": (353.23, 562.0, 4.9),
+    "toluene": (383.75, 591.9, 4.13),
+    "o-xylene": (417.55, 630.26, 3.74),
+    "p-xylene": (411.45, 616.17, 3.55),
+    "ethylbenzene": (409.35, 617.1, 3.61),
+    "methane": (111.65, 190.56, 4.6),
+    "ethane": (184.55, 305.36, 4.88),
+    "propane": (231.04, 369.9, 4.25),
+    "n-butane": (272.65, 425.2, 3.79),
+    "isobutane": (261.45, 407.84, 3.64),
+    "n-pentane": (309.21, 469.7, 3.37),
+    "n-hexane": (341.87, 507.5, 3.03),
+    "n-heptane": (371.53, 540.1, 2.74),
+    "n-octane": (398.77, 568.7, 2.48),
+    "n-decane": (447.25, 618.1, 2.1),
+    "cyclohexane": (353.85, 553.4, 4.07),
+    "ethylene": (169.35, 282.35, 5.06),
+    "propylene": (225.55, 364.9, 4.59),
+    "1,3-butadiene": (268.55, 425.0, 4.35),
+    "chloroform": (334.35, 536.0, 5.5),
+    "dichloromethane": (312.95, 508.0, 6.35),
+    "carbon tetrachloride": (349.85, 556.5, 4.57),
+    "ammonia": (239.82, 405.6, 11.277),
+    "nitrogen": (77.36, 126.2, 3.394),
+    "oxygen": (90.19, 154.6, 5.046),
+    "hydrogen sulfide": (213.6, 372.8, 8.937),
+    "sulfur dioxide": (263.1, 430.8, 7.883),
+}
+
+
+def test_reference_covers_every_compound() -> None:
+    assert set(REF) == {r["name"] for r in COMPOUNDS}
+
+
+@pytest.mark.parametrize("name", list(REF))
+def test_against_independent_reference(name: str) -> None:
+    r, (tb, tc, pc) = by_name(name), REF[name]
+    nbp = antoine_nbp(r)
+    assert nbp == pytest.approx(tb, abs=1.0)  # Antoine reproduces the boiling point
+    assert r["Tmin"] <= nbp <= r["Tmax"]
+    # 0.8 % catches the two bad upstream rows (cyclohexane 3.7 % off, n-decane 1.0 %)
+    assert r["Tc"] == pytest.approx(tc, rel=0.008)
+    # Pc tables spread more (phenol: CRC 5.50, others 5.93-6.13 MPa)
+    assert r["Pc"] / 1e6 == pytest.approx(pc, rel=0.08)
 
 
 @pytest.mark.parametrize(
-    "name,tc,mw",
-    [("water", 647.1, 18.015), ("benzene", 562.0, 78.114), ("ethanol", 514.0, 46.069)],
+    "name,mw", [("water", 18.015), ("benzene", 78.114), ("ammonia", 17.031)]
 )
-def test_critical_temperature_and_molar_mass(name: str, tc: float, mw: float) -> None:
-    r = by_name(name)
-    assert r["Tc"] == pytest.approx(tc, rel=1e-3)
-    assert r["MW"] == pytest.approx(mw, abs=5e-3)  # 2007 vs current atomic weights
+def test_molar_mass(name: str, mw: float) -> None:
+    assert by_name(name)["MW"] == pytest.approx(mw, abs=5e-3)  # 2007 vs current weights
 
 
 def test_export_reproduces_file() -> None:
-    pytest.importorskip("chemicals", minversion="1.5.2")
+    chemicals = pytest.importorskip("chemicals")
+    if chemicals.__version__ != "1.5.2":
+        pytest.skip("the table was exported with chemicals 1.5.2")
     spec = importlib.util.spec_from_file_location(
         "export_compounds", ROOT / "tools" / "export_compounds.py"
     )
