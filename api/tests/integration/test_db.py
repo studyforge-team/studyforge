@@ -11,7 +11,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from app import main, spend
+from app import db, spend
 from app.agent.quiz import MCQItem, Quiz
 from app.agent.state import SolveState
 from app.db import PgCostRecorder, PgQuizStore, PgStateStore, beat, make_engine
@@ -22,7 +22,7 @@ from app.main import app
 pytestmark = pytest.mark.skipif(not os.environ.get("DATABASE_URL"), reason="needs DATABASE_URL")
 
 CFG = Config(str(Path(__file__).parents[2] / "alembic.ini"))
-TABLES = ["solves", "quizzes", "llm_calls", "heartbeats", "jobs"]
+TABLES = ["solves", "quizzes", "llm_calls", "heartbeats", "notices", "jobs"]
 QUIZ = Quiz(
     title="t",
     items=[
@@ -92,13 +92,13 @@ async def _exercise() -> None:
         assert (await conn.execute(text("select count(*) from app.heartbeats"))).scalar() == 1
     await _spend(engine)
     await engine.dispose()
-    # one TestClient = one loop, so the lazily created main._engine is reused across both calls
+    # one TestClient = one loop, so the lazily created db._engine is reused across both calls
     with TestClient(app) as client:
         for _ in range(2):
             r = client.get("/keepalive?source=gha")
             assert r.status_code == 200
             assert r.json()["db"] == "ok" and r.json()["wrote"] is False  # beat() above is < 60 s
-    main._engine = None  # bound to that loop
+    db._engine = None  # bound to that loop
 
 
 async def _spend(engine: AsyncEngine) -> None:
