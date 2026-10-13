@@ -28,7 +28,7 @@ export default function Privacy() {
     a.href = URL.createObjectURL(await exportMyData())
     a.download = 'studyforge-export.json'
     a.click()
-    URL.revokeObjectURL(a.href)
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000) // revoking at once can cancel the download (Firefox/Safari)
   })
   const remove = () => run(async () => {
     await deleteAccount()
