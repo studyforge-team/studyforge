@@ -1,5 +1,6 @@
 """Production Deps for the solve routes (the app overrides solve.get_deps with get_deps)."""
 
+import functools
 import os
 import time
 
@@ -7,6 +8,7 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from app import db
+from app.agent.chemlab_pick import load_template_specs
 from app.agent.loop import Deps
 from app.agent.quiz_gen import QuizService
 from app.agent.tools import StubTools
@@ -34,11 +36,13 @@ class DbTools(StubTools):
 # Keyed on the engine object: it holds the engine, and tests swap db._engine per event
 # loop (asyncpg connections are loop-bound), so a new engine means a new Deps.
 _cache: tuple[object, Deps] | None = None
+# parsed once; the env-key check still runs on every request
+_registry = functools.cache(load_registry)
 
 
 def get_deps() -> Deps:
     global _cache
-    registry = load_registry()
+    registry = _registry()
     if not os.environ.get("DATABASE_URL") or not os.environ.get(registry.api_key_env):
         raise HTTPException(status_code=503, detail="solver not available")
     engine = db.shared_engine()
@@ -47,9 +51,9 @@ def get_deps() -> Deps:
             registry, recorder=db.PgCostRecorder(engine),
             budget=SpendGuard(engine, Caps.from_env()),
         )
-        # read_upload=None until C1/C2 merge; templates/guard keep Deps defaults
+        # read_upload=None until C1/C2 merge; guard keeps its Deps default
         _cache = (engine, Deps(
             llm=llm, store=db.PgStateStore(engine), clock=time.monotonic,
-            tools=DbTools(engine, llm),
+            tools=DbTools(engine, llm), templates=load_template_specs(),
         ))
     return _cache[1]
