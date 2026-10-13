@@ -17,7 +17,8 @@ from sqlalchemy import text
 from app.agent.quiz import MCQItem, Quiz
 from app.db import PgQuizStore, make_engine
 from app.reminders import drain, schedule
-from app.routers import checkins, dashboard, me, quizzes
+from app.routers import checkins, dashboard, me, quizzes, uploads
+from tests.unit.conftest import MemoryStorage
 
 pytestmark = pytest.mark.skipif(not os.environ.get("DATABASE_URL"), reason="needs DATABASE_URL")
 
