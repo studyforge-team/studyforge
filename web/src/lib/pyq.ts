@@ -77,9 +77,11 @@ export type Question = { text: string; marks: number | null }
 // A new question starts with "Q1", "Q.1", "Question 1", "1.", "1)" followed by a space.
 // "2.5 kg" is not a question number (no space after the dot).
 const START =
-  /^\s*(?:(?:Q(?:uestion)?(?:\s*\.?\s*No\.?)?\s*\.?\s*\d{1,3}\s*[.):-]?|\(?\d{1,3}\s*[.)]|\d{1,3}\s*\(?[a-z]\)|\d{1,3}\s+[a-z][.)])(?:\s+\S|\s*$)|\d{1,3}\.(?=[A-Za-z]))/i
+  /^\s*(?:(?:Q(?:uestion)?(?:\s*\.?\s*No\.?)?\s*\.?\s*\d{1,3}\s*[.):-]?|\(?\d{1,3}\s*[.)]|\d{1,3}\s*\(?[a-z]\))(?:\s+\S|\s*$)|\d{1,3}\.(?=[A-Za-z]))/i
 const ROMAN = /^\s*([IVX]{1,4})\.\s+\S/ // capitals only: lower-case i., ii. are sub-parts
-const isStart = (line: string) => START.test(line) || ROMAN.test(line)
+// "1 a. ...": lower-case a–h only, so a wrapped "300 K. Given ..." (a temperature) is not question 300
+const LETTERED = /^\s*(\d{1,3})\s+[a-h][.)]\s+\S/
+const isStart = (line: string) => START.test(line) || ROMAN.test(line) || LETTERED.test(line)
 const MARKS = /(\d{1,3})\s*marks?\b|\bmarks?\s*[:=]\s*(\d{1,3})\b|[[(]\s*(\d{1,3})\s*(?:m|marks?)?\s*[\])]\s*$/i
 
 const SPLIT_MARKS = /[[(]\s*(\d{1,3}(?:\s*\+\s*\d{1,3})+)\s*(?:m|marks?)?\s*[\])]\s*$/i // [2+3]
@@ -122,6 +124,8 @@ function roman(s: string): number {
 function numberOf(line: string): number | null {
   const r = ROMAN.exec(line)
   if (r) return roman(r[1])
+  const l = LETTERED.exec(line)
+  if (l) return Number(l[1])
   const m = START.exec(line)
   if (!m) return null
   const d = /\d{1,3}/.exec(m[0])
@@ -154,10 +158,10 @@ export function splitQuestions(paper: string): Question[] {
     const m = marksOf(line)
     const n = numbered ? numberOf(line) : null
     // A numbered line starts a question if it says "Q…", carries its own marks, or its number
-    // does not go backwards (same number for "1(a)", "1(b)"; any gap allowed, since pasted papers
-    // often skip questions). A lower number without "Q" or marks is a step inside the current
+    // does not go backwards and jumps at most 20 (same number for "1(a)", "1(b)"; gaps allowed, since
+    // pasted papers often skip questions). A lower number without "Q" or marks is a step inside the current
     // question ("1) given ..., 2) find ..."); a section heading resets the numbering instead.
-    const follows = n !== null && (last === null || n >= last)
+    const follows = n !== null && (last === null || (n >= last && n <= last + 20)) // a jump past 20 is a value, not a question
     if (!numbered || (n !== null && (follows || explicitQ.test(line) || m !== null))) {
       blocks.push({ text: line, marks: m })
       if (n !== null) last = n

@@ -166,3 +166,14 @@ test('PYQ predictor: plain-numbered gaps and lower stray numbers', async ({ page
   await page.getByRole('button', { name: 'Predict topics' }).click()
   await expect(page.getByRole('status').filter({ hasText: 'Read 2 papers' })).toContainText('Read 2 papers and 4 questions.')
 })
+
+test('PYQ predictor: a wrapped line starting with a value ("300 K. Given") is not a question number', async ({ page }) => {
+  await page.goto('/#pyq-predictor')
+  await fill(page, [
+    '1. Find the outlet temperature of the heat exchanger at\n300 K. Given the LMTD method (10 marks)\n2. Derive the CSTR design equation (10 marks)',
+    '1. Find the PFR volume (10 marks)\n2. Explain entropy (10 marks)',
+  ])
+  await page.getByRole('button', { name: 'Predict topics' }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Read 2 papers' })).toContainText('Read 2 papers and 4 questions. Weighted by marks.')
+  await expect(row(page, 'Reaction engineering')).toContainText('2 / 2')
+})
