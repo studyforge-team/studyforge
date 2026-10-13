@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { Component, lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
 import Shell from './components/Shell'
 import Dashboard from './pages/Dashboard'
 import Quiz from './pages/Quiz'
@@ -7,6 +7,17 @@ import InterviewBank from './pages/InterviewBank'
 import OA from './pages/OA'
 import PYQPredictor from './pages/PYQPredictor'
 import TimeToFinish from './pages/TimeToFinish'
+
+// ponytail: one boundary around the page; shows a fixed message, never the error
+class Boundary extends Component<{ children: ReactNode }, { bad: boolean }> {
+  state = { bad: false }
+  static getDerivedStateFromError() { return { bad: true } }
+  render() {
+    return this.state.bad
+      ? <main className="mx-auto max-w-3xl px-4 py-6"><p role="alert" className="text-sm font-medium text-destructive">This page hit a problem. Reload to try again.</p><button type="button" className="mt-3 min-h-11 rounded-lg border px-4" onClick={() => location.reload()}>Reload</button></main>
+      : this.props.children
+  }
+}
 
 const SelfTest = lazy(() => import('./SelfTest'))
 const ChemLab = lazy(() => import('./pages/ChemLab')) // keeps the sandbox page out of the main chunk
@@ -30,6 +41,7 @@ export default function App() {
 
   return (
     <Shell hash={hash}>
+      <Boundary key={hash}>
       {hash === '#solve' ? (
         <Solve />
       ) : hash === '#quiz' ? (
@@ -55,6 +67,7 @@ export default function App() {
       ) : (
         <Dashboard />
       )}
+      </Boundary>
     </Shell>
   )
 }
