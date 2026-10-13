@@ -22,7 +22,7 @@ from app.main import app
 pytestmark = pytest.mark.skipif(not os.environ.get("DATABASE_URL"), reason="needs DATABASE_URL")
 
 CFG = Config(str(Path(__file__).parents[2] / "alembic.ini"))
-TABLES = ["solves", "quizzes", "llm_calls", "heartbeats"]
+TABLES = ["solves", "quizzes", "llm_calls", "heartbeats", "jobs"]
 QUIZ = Quiz(
     title="t",
     items=[

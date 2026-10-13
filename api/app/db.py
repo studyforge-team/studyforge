@@ -69,6 +69,16 @@ heartbeats = Table(
     Column("at", DateTime(timezone=True), nullable=False, server_default=_now),
     Column("source", Text, nullable=False),
 )
+jobs = Table(
+    "jobs", metadata,
+    Column("id", BigInteger, Identity(), primary_key=True),
+    Column("user_id", Text, nullable=False, index=True),
+    Column("kind", Text, nullable=False),
+    Column("dedupe_key", Text, nullable=False, unique=True),
+    Column("due_at", DateTime(timezone=True), nullable=False),
+    Column("sent_at", DateTime(timezone=True)),
+    Column("payload", JSONB, nullable=False, server_default=text("'{}'::jsonb")),
+)
 
 
 def db_url() -> str:
