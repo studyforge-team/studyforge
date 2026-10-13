@@ -127,7 +127,10 @@ _CAP = "AND (payload->>'round')::int < :max ON CONFLICT (dedupe_key) DO NOTHING"
 
 async def sweep(engine: AsyncEngine, now_utc: datetime) -> int:
     """Ignored check-ins (sent >= 24 h ago, no answer) get the next round, due now. Idempotent."""
+    # skip tasks already marked done on any round (a late "right" on round 1 while round 2 is out)
     stmt = text(_NEXT + "WHERE kind = 'checkin' AND sent_at <= :cutoff AND payload->'answer' IS NULL "
+                "AND NOT EXISTS (SELECT 1 FROM app.jobs d WHERE d.user_id = jobs.user_id "
+                "AND d.payload->>'task' = jobs.payload->>'task' AND d.payload->>'done' = 'true') "
                 + _CAP)
     async with engine.begin() as conn:
         res = await conn.execute(stmt, {"due": now_utc, "cutoff": now_utc - FOLLOW_UP, "max": MAX_ROUNDS})

@@ -104,6 +104,17 @@ async def _exercise() -> None:
     assert (await post(r3, False)).json() == {"done": False, "follow_up_at": None}
     assert await sweep(engine, t3 + 3 * DAY) == 0
 
+    # (d) LATE RIGHT: round 1 ignored, round 2 out, then round 1 answered right -> no round 3
+    d2, c2 = DEADLINE + 10 * DAY, CHECKIN + 10 * DAY
+    assert await schedule(engine, "C", "Late", d2, NOW) == 4
+    late = [x for x in await drain(engine, c2) if x["payload"]["title"] == "Late"]
+    late1 = next(x["id"] for x in late if x["payload"]["slot"] == "checkin-1")
+    assert await sweep(engine, c2 + DAY + timedelta(minutes=1)) == 1
+    assert len(await drain(engine, c2 + DAY + timedelta(minutes=1))) == 1  # round 2 delivered
+    clock["t"] = c2 + DAY + timedelta(minutes=5)
+    assert (await post(late1, True, "C")).json()["done"] is True
+    assert await sweep(engine, c2 + 2 * DAY + timedelta(minutes=10)) == 0  # done: never nag again
+
     async with engine.connect() as c:
         assert (await c.execute(text(
             "select relrowsecurity from pg_class where oid='app.jobs'::regclass"))).scalar() is True
