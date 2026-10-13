@@ -82,6 +82,17 @@ async def test_declared_content_length_rejected_before_reading(env: Env) -> None
     assert r.status_code == 413 and not mem.objs
 
 
+async def test_chunked_body_without_content_length_411(env: Env) -> None:
+    app, mem, _ = env
+
+    async def body() -> Any:
+        yield b"x" * 10  # an async generator sends chunked: no Content-Length
+
+    async with cl(app) as c:
+        r = await c.post("/api/v1/uploads", content=body(), headers={"content-type": "multipart/form-data; boundary=b"})
+    assert r.status_code == 411 and not mem.objs
+
+
 @pytest.mark.parametrize("name,data", [
     ("a.png", b"this is just text"), ("a.html", b"<html><script>1</script></html>"),
     ("a.svg", b'<svg xmlns="http://www.w3.org/2000/svg"/>'), ("a.pdf", b""),
@@ -178,10 +189,13 @@ async def test_supabase_put_get() -> None:
     _auth(reqs[1])
 
 
-async def test_supabase_get_404_is_lookup_error() -> None:
-    s, _ = sb(lambda r: httpx.Response(404, json={"error": "not_found"}))
+@pytest.mark.parametrize("code", [400, 404])
+async def test_supabase_get_missing_is_lookup_error(code: int) -> None:
+    s, _ = sb(lambda r: httpx.Response(code, json={"statusCode": "404", "error": "not_found"}))
     with pytest.raises(LookupError):
         await s.get("A/x")
+    with pytest.raises(LookupError):
+        await uploads.fetch_upload(s, "A", "question-" + "a" * 32)
 
 
 async def test_supabase_sign_prefixes_url() -> None:

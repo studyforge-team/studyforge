@@ -37,15 +37,19 @@ ID_RE = re.compile(r"(question|notes)-[0-9a-f]{32}")
 
 
 class _SizeGuardRoute(APIRoute):
-    """FastAPI parses the multipart form before the handler runs, so a declared oversize body
-    must be refused here, before any of it is read."""
+    """Starlette spools the whole multipart body to a temp file before the handler runs, so the
+    size must be bounded here, before any of it is read. A POST must declare Content-Length
+    (browser fetch with FormData always does; uvicorn/h11 enforces the declared length), which
+    bounds the spool; a chunked body with no length would be unbounded -> 411."""
 
     def get_route_handler(self) -> Callable[[Request], Coroutine[Any, Any, Response]]:
         inner = super().get_route_handler()
 
         async def handler(request: Request) -> Response:
             declared = request.headers.get("content-length", "")
-            if declared.isdigit() and int(declared) > MAX_BYTES + 512 * 1024:  # + multipart overhead
+            if request.method == "POST" and not declared.isdigit():
+                raise HTTPException(411, "Content-Length required")
+            if int(declared or 0) > MAX_BYTES + 512 * 1024:  # + multipart overhead
                 raise HTTPException(413, "file too large (10 MB max)")
             return await inner(request)
         return handler

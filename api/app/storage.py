@@ -34,7 +34,8 @@ class SupabaseStorage:
             r = await self._http.request(method, url, headers=self._headers | kw.pop("headers", {}), **kw)
         except httpx.HTTPError as e:
             raise StorageError(f"storage unreachable ({type(e).__name__})") from None
-        if r.status_code == 404 and method == "GET":
+        # Supabase answers a missing object on GET with 404 or with 400 (body statusCode "404")
+        if r.status_code in (400, 404) and method == "GET":
             raise LookupError(url.rsplit("/", 1)[-1])
         if not r.is_success:
             raise StorageError(f"storage {method} failed: HTTP {r.status_code}", r.status_code)
