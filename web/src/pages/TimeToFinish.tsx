@@ -34,7 +34,9 @@ export default function TimeToFinish() {
 
   const unit = RATES[material].unit
   const count = wholeNumber(countText, MAX_COUNT)
-  const paceGiven = paceMinutes.trim() !== '' || paceCount.trim() !== ''
+  // The pace is used only when both boxes are filled; one box alone is a hint, not an error.
+  const paceGiven = paceMinutes.trim() !== '' && paceCount.trim() !== ''
+  const paceHalf = !paceGiven && (paceMinutes.trim() !== '' || paceCount.trim() !== '')
   const pm = wholeNumber(paceMinutes, MAX_COUNT)
   const pc = wholeNumber(paceCount, MAX_COUNT)
   const paceOk = !paceGiven || (pm !== null && pc !== null)
@@ -42,7 +44,7 @@ export default function TimeToFinish() {
 
   const errors = [
     count === null && `Enter the number of ${unit}s as a whole number from 1 to ${MAX_COUNT}.`,
-    !paceOk && `For your own pace, enter both the minutes and the number of ${unit}s, as whole numbers.`,
+    !paceOk && `Your pace needs whole numbers from 1 to ${MAX_COUNT} in both boxes.`,
     !deadlineOk && 'Enter the deadline as a valid date.',
   ].filter(Boolean) as string[]
 
@@ -72,7 +74,18 @@ export default function TimeToFinish() {
           <div className="mt-2 space-y-1">
             {(Object.keys(RATES) as Material[]).map((m) => (
               <label key={m} className="flex min-h-11 items-center gap-2 text-sm">
-                <input type="radio" name="material" value={m} checked={material === m} onChange={() => setMaterial(m)} />
+                <input
+                  type="radio"
+                  name="material"
+                  value={m}
+                  checked={material === m}
+                  onChange={() => {
+                    setMaterial(m)
+                    // a pace measured on one kind of material does not carry over to another
+                    setPaceMinutes('')
+                    setPaceCount('')
+                  }}
+                />
                 {RATES[m].label} ({RATES[m].min}–{RATES[m].max} min per {RATES[m].unit})
               </label>
             ))}
@@ -112,6 +125,7 @@ export default function TimeToFinish() {
             <span>I took</span>
             <input
               aria-label="Minutes you took"
+              aria-invalid={paceGiven && pm === null}
               inputMode="numeric"
               value={paceMinutes}
               onChange={(e) => setPaceMinutes(e.target.value)}
@@ -120,6 +134,7 @@ export default function TimeToFinish() {
             <span>minutes for</span>
             <input
               aria-label={`Number of ${unit}s you did in that time`}
+              aria-invalid={paceGiven && pc === null}
               inputMode="numeric"
               value={paceCount}
               onChange={(e) => setPaceCount(e.target.value)}
@@ -127,13 +142,18 @@ export default function TimeToFinish() {
             />
             <span>{unit}s.</span>
           </div>
+          {paceHalf && (
+            <p className="mt-2 text-sm text-muted-foreground" data-testid="ttf-pace-hint">
+              Fill in both boxes to use your own pace; until then the typical rate is used.
+            </p>
+          )}
         </fieldset>
 
         <div>
           <label htmlFor="ttf-deadline" className="block text-sm font-medium">
             Deadline (optional)
           </label>
-          <input id="ttf-deadline" type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} className={field} />
+          <input id="ttf-deadline" type="date" aria-invalid={!deadlineOk} value={deadline} onChange={(e) => setDeadline(e.target.value)} className={field} />
         </div>
 
         {errors.length > 0 && (

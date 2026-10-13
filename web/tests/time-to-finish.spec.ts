@@ -59,6 +59,34 @@ test('deadline today, deadline passed, and invalid input', async ({ page }) => {
     await expect(page.getByTestId('ttf-total')).toHaveCount(0)
   }
   await page.getByLabel('Number of pages', { exact: true }).fill('10')
-  await page.getByLabel('Minutes you took').fill('20') // pace half-filled
-  await expect(page.getByRole('alert')).toContainText('enter both the minutes and the number')
+  await page.getByLabel('Minutes you took').fill('20') // pace half-filled: a hint, not an error
+  await expect(page.getByTestId('ttf-pace-hint')).toBeVisible()
+  await expect(page.getByRole('alert')).toHaveCount(0)
+  await page.getByLabel(/you did in that time/).fill('0') // both filled, one invalid
+  await expect(page.getByRole('alert')).toContainText('whole numbers from 1 to 10000 in both boxes')
+})
+
+test('a pace does not carry over to another material; tiny totals and a 1-day deadline', async ({ page }) => {
+  await page.goto('/#time-to-finish')
+  await page.getByLabel('Minutes you took').fill('20')
+  await page.getByLabel(/you did in that time/).fill('5')
+  await page.getByLabel(/Numerical problems/).check()
+  await expect(page.getByLabel('Minutes you took')).toHaveValue('')
+  await page.getByLabel('Number of problems', { exact: true }).fill('12')
+  await expect(page.getByTestId('ttf-total')).toHaveText('2 hr–4 hr') // typical rate, not the old page pace
+  await expect(page.getByTestId('ttf-basis')).not.toContainText('your pace')
+
+  await page.getByLabel(/Slides or short notes/).check()
+  await page.getByLabel('Number of pages', { exact: true }).fill('1')
+  await page.getByLabel('Minutes you took').fill('1')
+  await page.getByLabel(/you did in that time/).fill('10000')
+  await page.getByLabel('Deadline (optional)').fill('2026-10-14') // tomorrow
+  await expect(page.getByTestId('ttf-total')).toHaveText('<1 min–<1 min')
+  await expect(page.getByTestId('ttf-per-day')).toHaveText('About <1 min–<1 min per day for the next 1 day.')
+
+  // 100 pages of slides: 100..300 min over 1 day
+  await page.getByLabel('Minutes you took').fill('')
+  await page.getByLabel(/you did in that time/).fill('')
+  await page.getByLabel('Number of pages', { exact: true }).fill('100')
+  await expect(page.getByTestId('ttf-per-day')).toHaveText('About 1 hr 40 min–5 hr per day for the next 1 day.')
 })

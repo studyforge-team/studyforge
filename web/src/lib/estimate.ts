@@ -53,8 +53,9 @@ export function estimate(input: EstimateInput): Estimate {
   const perUnitLow = rate === null ? typical.min : rate * (1 - PACE_SPREAD)
   const perUnitHigh = rate === null ? typical.max : rate * (1 + PACE_SPREAD)
   const rounds = 1 + REVISION_FACTOR * (input.passes - 1)
-  const low = Math.round(input.count * perUnitLow * rounds)
-  const high = Math.round(input.count * perUnitHigh * rounds)
+  // Kept unrounded: formatDuration rounds for display and shows "<1 min" instead of "0 min".
+  const low = input.count * perUnitLow * rounds
+  const high = input.count * perUnitHigh * rounds
 
   const due = input.deadline ? parseDate(input.deadline) : null
   const diff = due ? localDay(due) - localDay(input.today) : null
@@ -67,13 +68,14 @@ export function estimate(input: EstimateInput): Estimate {
     fromPace: rate !== null,
     daysLeft,
     overdue: diff !== null && diff < 0,
-    perDayLow: daysLeft ? Math.ceil(low / daysLeft) : null,
-    perDayHigh: daysLeft ? Math.ceil(high / daysLeft) : null,
+    perDayLow: daysLeft ? low / daysLeft : null,
+    perDayHigh: daysLeft ? high / daysLeft : null,
   }
 }
 
 export function formatDuration(minutes: number): string {
-  const m = Math.round(minutes)
+  if (minutes > 0 && minutes < 0.5) return '<1 min'
+  const m = Math.max(1, Math.round(minutes))
   if (m < 60) return `${m} min`
   const h = Math.floor(m / 60)
   const rest = m % 60
