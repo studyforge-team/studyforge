@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 from app import auth
 from app.db import beat, make_engine
 from app.reminders import drain, sweep
-from app.routers import checkins, solve
+from app.routers import checkins, dashboard, solve
 
 
 class JsonFormatter(logging.Formatter):
@@ -88,5 +88,6 @@ def _get_engine() -> AsyncEngine:
 app.dependency_overrides[solve.current_user] = auth.current_user
 app.dependency_overrides[checkins.get_engine] = _get_engine
 app.include_router(checkins.router)
+app.include_router(dashboard.router)
 # solve.router is NOT included yet: it also needs get_deps (LLM/store wiring, a P1/P2 decision).
 app.include_router(api_router, prefix="/api/v1")

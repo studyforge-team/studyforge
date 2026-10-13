@@ -100,7 +100,7 @@ export async function getDashboard(): Promise<Dashboard> {
     ],
     reminders: [
       { id: 'r1', title: 'CRE assignment 3 due in 5 h — open your prep pack', due_at_utc: at(-2), sent_at: at(-2), channel: 'push' },
-      { id: 'r2', title: 'Revise heat exchanger weak topic', due_at_utc: at(-24), sent_at: at(-24), channel: 'app' },
+      { id: 'r2', title: 'Reminder: Revise heat exchanger weak topic is due tomorrow (Fri 30 Oct, 22:30 IST). Your prep pack: /#prep/0123456789abcdef?checkin=1234567890', due_at_utc: at(-24), sent_at: at(-24), channel: 'app' },
       { id: 'r3', title: 'Heat transfer quiz tomorrow — do 5 practice questions', due_at_utc: at(20), sent_at: null, channel: 'app' },
     ],
   }
