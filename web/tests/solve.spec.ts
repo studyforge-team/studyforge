@@ -46,11 +46,56 @@ test('unknown question gets an honest demo-mode answer at 375px', async ({ page 
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
 })
 
-test('confirm shows the confirm box', async ({ page }) => {
+async function openConfirm(page: import('@playwright/test').Page, text = 'please confirm cstr k = 0.2 1/min tau = 10 min') {
   await page.goto('/#solve')
-  await page.getByLabel('Your question').fill('please confirm')
-  await page.getByRole('button', { name: 'Solve' }).click()
-  await expect(page.getByText('Confirm screen (S5) goes here')).toBeVisible()
+  await page.getByLabel('Your question').fill(text)
+  await page.getByRole('button', { name: 'Solve', exact: true }).click()
+  const box = page.getByLabel('Question as we read it')
+  await expect(page.getByRole('heading', { name: 'Check the question before solving' })).toBeVisible()
+  return box
+}
+
+test('confirm card: edit then approve runs the normal solve', async ({ page }) => {
+  const box = await openConfirm(page)
+  await expect(box).toHaveValue('please confirm cstr k = 0.2 1/min tau = 10 min')
+  await expect(box).toBeEditable()
+  await box.fill(Q)
+  await page.getByRole('button', { name: 'Solve this question' }).click()
+  const card = page.getByRole('region', { name: 'Answer' })
+  await expect(card).toBeVisible({ timeout: 120_000 })
+  await expect(card.getByTestId('confidence')).toHaveText('high')
+  expect(await card.innerText()).toMatch(/0\.667|66\.7/)
+  await expect(page.getByRole('heading', { name: 'Check the question before solving' })).toHaveCount(0)
+  await expect(page.getByLabel('Your question')).toHaveValue(Q)
+})
+
+test('confirm card: Type it myself dismisses; blank text disables Solve this question', async ({ page }) => {
+  const box = await openConfirm(page)
+  const go = page.getByRole('button', { name: 'Solve this question' })
+  await box.fill('   ')
+  await expect(go).toBeDisabled()
+  await box.fill('x')
+  await expect(go).toBeEnabled()
+  await page.getByRole('button', { name: 'Type it myself' }).click()
+  await expect(page.getByRole('heading', { name: 'Check the question before solving' })).toHaveCount(0)
+  await expect(page.getByRole('region', { name: 'Answer' })).toHaveCount(0)
+})
+
+test('confirm card fits at 375px', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 })
+  await openConfirm(page)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= 375)).toBe(true)
+  for (const n of ['Solve this question', 'Type it myself']) {
+    const bb = await page.getByRole('button', { name: n }).boundingBox()
+    expect(bb!.height).toBeGreaterThanOrEqual(44)
+  }
+})
+
+test('demo mode: attaching a file shows the plain empty-text error, no confirm card', async ({ page }) => {
+  await page.goto('/#solve')
+  await page.locator('input[type=file]').first().setInputFiles({ name: 'q.png', mimeType: 'image/png', buffer: Buffer.from('x') })
+  await expect(page.getByRole('alert')).toContainText("Demo mode doesn't read photos")
+  await expect(page.getByRole('heading', { name: 'Check the question before solving' })).toHaveCount(0)
 })
 
 test('mermaid chunk is not loaded before solving', async ({ page }) => {
