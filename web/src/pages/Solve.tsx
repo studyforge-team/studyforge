@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useState } from 'react'
 import { postResult, readUpload, startSolve, uploadFile } from '@/api/client'
 import type { Step, UploadRead } from '@/api/types'
 import { Check, Cross } from '@/components/icons'
+import { ConfirmQuestion } from '@/components/ConfirmQuestion'
 import { FilePick } from '@/components/FilePick'
 import { Button } from '@/components/ui/button'
 import { friendly, PlainError } from '@/lib/errors'
@@ -74,13 +75,13 @@ export default function Solve() {
     }
   }
 
-  async function submit() {
-    if (busy || !question.trim()) return
+  async function submit(text = question, confirmed = false) {
+    if (busy || !text.trim()) return
     setBusy(true); setRows([]); setEnd(undefined); setError(''); setSlow(false)
     void loadCard() // fire and forget: fetch the answer-card chunk while Python runs
     const onSlow = () => setSlow(true)
     try {
-      const first = await startSolve(question, onSlow, file?.id)
+      const first = await startSolve(text, onSlow, file?.id, confirmed)
       let step = first.step
       for (let n = 0; step.type === 'run_python'; n++) {
         if (n >= MAX_STEPS) throw new PlainError('Too many steps, stopping.')
@@ -129,14 +130,12 @@ export default function Solve() {
             </button>
           </span>
         )}
-        {/* S5 (confirm screen, owned by another teammate) replaces this block */}
         {file && read && (
-          <div className="mt-3 rounded-lg border-2 border-warn-line bg-warn-bg p-4 text-sm">
-            <p className="font-medium">{file.name}</p>
-            <pre className="mt-2 whitespace-pre-wrap break-words">{read.text}</pre>
-            {read.confidence === 'low' && <p className="mt-2 text-warn">Check this carefully — the reading may be wrong.</p>}
-            <Button className="mt-3" onClick={() => setQuestion(read.text)}>Use this text</Button>
-          </div>
+          <ConfirmQuestion
+            text={read.text} low={read.confidence === 'low'}
+            onSolve={(t) => { setQuestion(t); setRead(undefined); void submit(t, true) }}
+            onDismiss={() => { setFile(undefined); setRead(undefined) }}
+          />
         )}
         {slow && <p className="mt-2 text-sm text-muted-foreground">Waking up the server…</p>}
       </div>
@@ -148,10 +147,11 @@ export default function Solve() {
           </ol>
         )}
         {end?.type === 'need_confirm' && (
-          <div className="mt-3 rounded-lg border-2 border-warn-line bg-warn-bg p-4 text-sm">
-            <pre className="whitespace-pre-wrap break-words">{end.extracted_text}</pre>
-            <p className="mt-2 text-warn">Confirm screen (S5) goes here</p>
-          </div>
+          <ConfirmQuestion
+            text={end.extracted_text}
+            onSolve={(t) => { setQuestion(t); void submit(t, true) }}
+            onDismiss={() => setEnd(undefined)}
+          />
         )}
       </div>
       {end?.type === 'final' && (

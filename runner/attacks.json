@@ -1,0 +1,12 @@
+{
+ "function_process": "import js\nresult = {'ok': False}\ntry:\n    p = js.Function('return process')()\n    result['ok'] = p is not None and p.env is not None\nexcept BaseException as e:\n    result['exc'] = repr(e)[:200]\n",
+ "constructor_process": "import js\nresult = {'ok': False}\ntry:\n    p = js.Object.constructor('return process')()\n    result['ok'] = p is not None and p.env is not None\nexcept BaseException as e:\n    result['exc'] = repr(e)[:200]\n",
+ "eval_process": "import js\nresult = {'ok': False}\ntry:\n    p = js.eval('process')\n    result['ok'] = p is not None and p.env is not None\nexcept BaseException as e:\n    result['exc'] = repr(e)[:200]\n",
+ "environ_python": "import js\nresult = {'ok': False}\ntry:\n    result['ok'] = len(open('/proc/self/environ').read()) > 0\nexcept BaseException as e:\n    result['exc'] = repr(e)[:200]\n",
+ "environ_js": "import js\nresult = {'ok': False}\ntry:\n    fs = await js.eval(\"import('node:fs')\")\n    result['ok'] = fs.readFileSync('/proc/self/environ', 'utf8') is not None\nexcept BaseException as e:\n    result['exc'] = repr(e)[:200]\n",
+ "subprocess_python": "import js\nresult = {'ok': False}\ntry:\n    import subprocess\n    result['ok'] = subprocess.run(['id'], capture_output=True).returncode == 0\nexcept BaseException as e:\n    result['exc'] = repr(e)[:200]\n",
+ "subprocess_js": "import js\nfrom pyodide.ffi import to_js\nresult = {'ok': False}\ntry:\n    cp = await js.eval(\"import('node:child_process')\")\n    result['ok'] = len(str(cp.execSync('echo hi', to_js({'encoding': 'utf8'}, dict_converter=js.Object.fromEntries)))) > 0\nexcept BaseException as e:\n    result['exc'] = repr(e)[:200]\n",
+ "socket_python": "import js\nresult = {'ok': False}\ntry:\n    import socket\n    socket.create_connection(('1.1.1.1', 80), timeout=2)\n    result['ok'] = True\nexcept BaseException as e:\n    result['exc'] = repr(e)[:200]\n",
+ "urllib_python": "import js\nresult = {'ok': False}\ntry:\n    import urllib.request\n    urllib.request.urlopen('http://1.1.1.1', timeout=2)\n    result['ok'] = True\nexcept BaseException as e:\n    result['exc'] = repr(e)[:200]\n",
+ "fetch_js": "import js\nresult = {'ok': False}\ntry:\n    r = await js.fetch('http://1.1.1.1')\n    result['ok'] = True\nexcept BaseException as e:\n    result['exc'] = repr(e)[:200]\n"
+}

@@ -28,8 +28,9 @@ async function post<T>(path: string, body: unknown | FormData, onSlow?: () => vo
   }
 }
 
-export const startSolve = (question: string, onSlow?: () => void, uploadId?: string): Promise<SolveStart> =>
-  BASE ? post('/solve', uploadId ? { question, upload_id: uploadId } : { question }, onSlow) : mock.startSolve(question)
+// confirmed: true = the student approved this text on the confirm screen (server then skips need_confirm)
+export const startSolve = (question: string, onSlow?: () => void, uploadId?: string, confirmed?: boolean): Promise<SolveStart> =>
+  BASE ? post('/solve', { question, ...(uploadId && { upload_id: uploadId }), ...(confirmed && { confirmed: true }) }, onSlow) : mock.startSolve(question)
 
 export function uploadFile(file: File, kind: UploadKind, onSlow?: () => void): Promise<{ upload_id: string }> {
   const form = new FormData()

@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 from fastapi import APIRouter, FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 
-from app import auth, db
+from app import auth, db, wiring
 from app.db import beat
 from app.reminders import drain, sweep
 from app.routers import checkins, dashboard, me, notes, notices, quizzes, solve, uploads
@@ -72,12 +72,13 @@ async def keepalive(response: Response, source: str = "") -> dict[str, str | boo
 
 
 app.dependency_overrides[solve.current_user] = auth.current_user
+app.dependency_overrides[solve.get_deps] = wiring.get_deps
+app.include_router(solve.router)
 app.dependency_overrides[checkins.get_engine] = db.shared_engine
 app.include_router(checkins.router)
 app.include_router(dashboard.router)
 app.include_router(quizzes.router)  # shares checkins.get_engine
 app.include_router(notes.router)  # shares checkins.get_engine, solve.current_user, uploads.get_storage
-# solve.router is NOT included yet: it also needs get_deps (LLM/store wiring, a P1/P2 decision).
 app.dependency_overrides[me.current_user] = auth.current_user
 app.include_router(me.router)  # carries its own /api/v1 prefix, like solve.router
 app.dependency_overrides[notices.current_user] = auth.current_user

@@ -23,7 +23,11 @@ from app.agent.steps import ResultBody
 
 SMOKE_USER = "smoke"
 DEFAULT_IMAGE = "node:22-slim"
-DEFAULT_COMMAND = ("node", "/runner/node-pyodide.mjs")
+# node's permission model: the process may read only /runner (no writes, spawn, workers,
+# wasi, addons); it is the second layer behind docker's --network none / read-only fs.
+DEFAULT_COMMAND = (
+    "node", "--permission", "--allow-fs-read=/runner", "/runner/node-pyodide.mjs"
+)  # fmt: skip
 TIMEOUT_GRACE_S = 20.0
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
@@ -55,7 +59,7 @@ async def _spawn_exec(*argv: str, **kwargs: Any) -> _Proc:
 
 class NodeRunner:
     """Runs code in the Node Pyodide runner under docker: no network, empty
-    environment, runner directory mounted read-only. One container per run; the
+    environment, read-only fs, no capabilities, runner directory mounted read-only. One container per run; the
     request is one JSON line on stdin, the reply one JSON line on stdout."""
 
     def __init__(
@@ -80,7 +84,11 @@ class NodeRunner:
             self.docker, "run", "--rm", "-i", "--name", name,
             "--network", "none",
             "--env-file", "/dev/null",
-            "-v", f"{self.repo_root / 'runner'}:/runner:ro",
+            "--read-only", "--tmpfs", "/tmp:size=64m",
+            "--cap-drop", "ALL", "--security-opt", "no-new-privileges",
+            "--pids-limit", "64", "--memory", "1g", "--cpus", "1",
+            "--user", "node",
+            "-v", f"{(self.repo_root / 'runner').as_posix()}:/runner:ro",
             self.image, *self.command,
         )  # fmt: skip
 
