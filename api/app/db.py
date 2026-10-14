@@ -12,6 +12,7 @@ from sqlalchemy import (
     BigInteger,
     Boolean,
     Column,
+    Computed,
     DateTime,
     Double,
     Identity,
@@ -25,7 +26,7 @@ from sqlalchemy import (
     select,
     text,
 )
-from sqlalchemy.dialects.postgresql import JSONB, insert
+from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR, insert
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_engine
 
 from app import spend
@@ -107,6 +108,21 @@ topic_results = Table(
     Column("created_at", DateTime(timezone=True), nullable=False, server_default=_now),
     UniqueConstraint("user_id", "source", "ref", "item", name="uq_topic_results_once"),
     Index("ix_topic_results_user_created", "user_id", "created_at"),
+)
+
+
+note_chunks = Table(
+    "note_chunks", metadata,
+    Column("id", BigInteger, Identity(), primary_key=True),
+    Column("user_id", Text, nullable=False),
+    Column("upload_id", Text, nullable=False),
+    Column("page", Integer, nullable=False),
+    Column("text", Text, nullable=False),
+    Column("tsv", TSVECTOR, Computed("to_tsvector('english', text)", persisted=True)),  # never inserted
+    Column("created_at", DateTime(timezone=True), nullable=False, server_default=_now),
+    UniqueConstraint("user_id", "upload_id", "page", name="uq_note_chunks_page"),
+    Index("ix_note_chunks_tsv", "tsv", postgresql_using="gin"),
+    Index("ix_note_chunks_user", "user_id"),
 )
 
 

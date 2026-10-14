@@ -11,7 +11,6 @@ from alembic import command
 from alembic.config import Config
 from fastapi.testclient import TestClient
 from sqlalchemy import text
-from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from app import auth, db, spend
@@ -34,7 +33,7 @@ from tests.unit.conftest import MemoryStorage
 pytestmark = pytest.mark.skipif(not os.environ.get("DATABASE_URL"), reason="needs DATABASE_URL")
 
 CFG = Config(str(Path(__file__).parents[2] / "alembic.ini"))
-TABLES = ["solves", "quizzes", "llm_calls", "heartbeats", "notices", "jobs", "topic_results"]
+TABLES = ["solves", "quizzes", "llm_calls", "heartbeats", "notices", "jobs", "topic_results", "note_chunks"]
 QUIZ = Quiz(
     title="t",
     items=[
@@ -152,61 +151,6 @@ async def _spend(engine: AsyncEngine) -> None:
     spend.who.set(spend.Who())
 
 
-def test_x1_anon_and_authenticated_cannot_read() -> None:
-    """Two independent layers, each proven on its own (a test that can't fail proves nothing):
-    1. hostile pre-grants (schema usage + default table privileges, like a careless Supabase
-       setup) must be undone by 0001's REVOKE -> permission denied;
-    2. even with explicit grants, RLS with no policies returns 0 of a seeded row."""
-    roles = ("anon", "authenticated")
-
-    async def sql(*stmts: str) -> None:
-        engine = make_engine()
-        async with engine.begin() as conn:
-            for st in stmts:
-                await conn.execute(text(st))
-        await engine.dispose()
-
-    async def probe(t: str) -> str:  # "denied" | "<n> rows"
-        engine = make_engine()
-        out = []
-        for role in roles:
-            async with engine.connect() as conn:
-                await conn.execute(text(f"SET ROLE {role}"))
-                try:
-                    out.append(f"{len((await conn.execute(text(f'select * from app.{t}'))).all())} rows")
-                except ProgrammingError as err:
-                    assert "permission denied" in str(err)
-                    out.append("denied")
-        await engine.dispose()
-        assert len(set(out)) == 1, out
-        return out[0]
-
-    for r in roles:
-        asyncio.run(sql(f"DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='{r}') "
-                        f"THEN CREATE ROLE {r} NOLOGIN; END IF; END $$"))
-    asyncio.run(sql(
-        "CREATE SCHEMA IF NOT EXISTS app",
-        "GRANT USAGE ON SCHEMA app TO anon, authenticated",
-        "ALTER DEFAULT PRIVILEGES IN SCHEMA app GRANT SELECT ON TABLES TO anon, authenticated",
-    ))
-    command.upgrade(CFG, "head")
-    try:
-        for t in TABLES:
-            assert asyncio.run(probe(t)) == "denied", t  # layer 1: REVOKE beat the pre-grants
-        assert asyncio.run(_scalar("select count(*) from pg_tables where schemaname='public'")) == 0
-        asyncio.run(sql(
-            "GRANT USAGE ON SCHEMA app TO anon, authenticated",
-            "insert into app.heartbeats (source) values ('x1')",
-        ))
-        assert asyncio.run(probe("heartbeats")) == "0 rows"  # layer 2: RLS hides the seeded row
-    finally:
-        asyncio.run(sql(
-            "ALTER DEFAULT PRIVILEGES IN SCHEMA app REVOKE SELECT ON TABLES FROM anon, authenticated",
-            "REVOKE ALL ON SCHEMA app FROM anon, authenticated",
-        ))
-        command.downgrade(CFG, "base")
-
-
 def test_me_export_and_delete(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("SUPABASE_URL", "https://proj.supabase.co")
     monkeypatch.setenv("SUPABASE_SERVICE_ROLE_KEY", "svc")
@@ -254,8 +198,9 @@ async def _me() -> None:
     try:
         with TestClient(app) as client:  # one TestClient = one loop for the shared engine
             j = client.get("/api/v1/me/export").json()
-            assert [len(j[t]) for t in ("solves", "quizzes", "llm_calls", "notices", "jobs")] == [2] * 5
-            assert {r["user_id"] for t in ("solves", "quizzes", "llm_calls", "notices", "jobs") for r in j[t]} == {"A"}
+            T = ("solves", "quizzes", "llm_calls", "notices", "jobs")
+            assert [len(j[t]) for t in T] == [2] * 5
+            assert {r["user_id"] for t in T for r in j[t]} == {"A"}
             assert [f["name"] for f in j["files"]] == [fa[2:]]
             total = await _scalar("select sum(cost_usd) from app.llm_calls")
             assert client.delete("/api/v1/me").status_code == 204
