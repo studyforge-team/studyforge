@@ -30,6 +30,7 @@ export type MCQItem = ItemBase & { type: 'mcq'; options: string[]; correct_index
 export type NumericalItem = ItemBase & { type: 'numerical'; key_code: string; unit: string; tolerance_rel: number; worked_solution: string }
 export type SubjectiveItem = ItemBase & { type: 'subjective'; rubric: string[] }
 export type QuizItem = MCQItem | NumericalItem | SubjectiveItem
+export type CheckinResult = { done: boolean; follow_up_at: string | null }
 export type Quiz = { id?: string; title: string; items: QuizItem[] }
 
 // Notices (D1), docs/api-contract.md section 4: pasted or shared text, stored as given.

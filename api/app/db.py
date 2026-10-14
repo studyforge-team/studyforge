@@ -20,6 +20,7 @@ from sqlalchemy import (
     MetaData,
     Table,
     Text,
+    UniqueConstraint,
     func,
     select,
     text,
@@ -91,6 +92,21 @@ notices = Table(
     Column("url", Text),
     Column("created_at", DateTime(timezone=True), nullable=False, server_default=_now),
     Index("ix_notices_user_created", "user_id", "created_at"),
+)
+
+
+topic_results = Table(
+    "topic_results", metadata,
+    Column("id", BigInteger, Identity(), primary_key=True),
+    Column("user_id", Text, nullable=False),
+    Column("topic", Text, nullable=False),
+    Column("correct", Boolean, nullable=False),
+    Column("source", Text, nullable=False),  # "quiz" | "checkin"
+    Column("ref", Text, nullable=False),
+    Column("item", Integer, nullable=False),
+    Column("created_at", DateTime(timezone=True), nullable=False, server_default=_now),
+    UniqueConstraint("user_id", "source", "ref", "item", name="uq_topic_results_once"),
+    Index("ix_topic_results_user_created", "user_id", "created_at"),
 )
 
 
