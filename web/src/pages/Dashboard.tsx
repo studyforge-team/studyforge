@@ -5,6 +5,7 @@ import { FilePick } from '@/components/FilePick'
 import { Button } from '@/components/ui/button'
 import { warm } from '@/sandbox/client'
 
+const CHECKIN_LINK = /\/#(prep\/[0-9a-f]+\?checkin=\d+)/
 const KEY = 'sf-seen-reminders'
 const H = 3_600_000
 const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' })
@@ -141,7 +142,7 @@ export default function Dashboard() {
       <div className="mt-4 grid grid-cols-1 items-start gap-4 md:grid-cols-2">
         <Card title="Deadlines" empty="No open deadlines.">
           {open.map((t) => (
-            <li key={t.id} className="text-sm"><span className="font-medium">{t.title}</span><br /><span className="tabular-nums text-muted-foreground">{dtf.format(new Date(t.due_at_utc))} · {rel(t.due_at_utc)}</span></li>
+            <li key={t.id} className="text-sm"><span className="break-words font-medium">{t.title}</span><br /><span className="tabular-nums text-muted-foreground">{dtf.format(new Date(t.due_at_utc))} · {rel(t.due_at_utc)}</span></li>
           ))}
         </Card>
         <Card title="Weak topics" empty="No weak topics yet. Solve a few questions first.">
@@ -164,8 +165,9 @@ export default function Dashboard() {
               <li key={r.id} className="text-sm">
                 <p className="flex items-start gap-2">
                   {r.sent_at && !seen.includes(r.id) && <span className="mt-0.5 inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-primary"><span aria-hidden="true" className="size-2 rounded-full bg-primary" />New</span>}
-                  <span>{r.title}</span>
+                  <span className="min-w-0 break-words">{r.title.replace(CHECKIN_LINK, '')}</span>
                 </p>
+                {CHECKIN_LINK.test(r.title) && <a href={`#${r.title.match(CHECKIN_LINK)![1]}`} className="mt-1 inline-flex min-h-11 items-center rounded-lg border px-4 font-medium text-primary">Answer the check-in</a>}
                 <p className="text-muted-foreground">
                   {r.sent_at ? `Sent ${rel(r.sent_at)}` : `Scheduled ${rel(r.due_at_utc)}`} · {r.channel === 'push' ? 'Phone notification' : 'In app'}
                 </p>

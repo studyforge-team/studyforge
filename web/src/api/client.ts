@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase'
 import { HttpError, PlainError } from '@/lib/errors'
 import * as mock from './mock'
-import type { Dashboard, Notice, NoticeIn, Quiz, ResultBody, SolveStart, Step, UploadKind, UploadRead } from './types'
+import type { CheckinResult, Dashboard, Notice, NoticeIn, Quiz, ResultBody, SolveStart, Step, UploadKind, UploadRead } from './types'
 
 const BASE = import.meta.env.VITE_API_URL as string | undefined
 
@@ -55,6 +55,10 @@ export async function getDashboard(): Promise<Dashboard> {
 export const getQuiz = (topic: string, onSlow?: () => void): Promise<Quiz> =>
   BASE ? post('/quizzes', { topic }, onSlow) : mock.getQuiz()
 
+// D7: POST /checkins/{job_id}. 409 = already answered, 404 = gone (HttpError.status).
+export const answerCheckin = (jobId: string, correct: boolean): Promise<CheckinResult> =>
+  BASE ? post(`/checkins/${encodeURIComponent(jobId)}`, { correct }) : mock.answerCheckin(correct)
+
 // Fire-and-forget; failures are swallowed (a missed report or save must never block the student).
 const quiet = (path: string, body: unknown) => { void post(path, body).catch(() => {}) }
 
@@ -64,8 +68,8 @@ export const reportItem = (quizId: string | undefined, index: number, reason: st
 }
 
 // Not in the contract; body shape is a gap. Demo mode saves to localStorage in the page instead.
-export const saveAnswers = (quizId: string | undefined, answers: string[], score: number) => {
-  if (BASE && quizId) quiet(`/quizzes/${quizId}/answers`, { answers, score })
+export const saveAnswers = (quizId: string | undefined, answers: string[], score: number, correct: boolean[]) => {
+  if (BASE && quizId) quiet(`/quizzes/${quizId}/answers`, { answers, score, correct })
 }
 
 // D10 privacy panel. No demo fallback: there is no account to export or delete.

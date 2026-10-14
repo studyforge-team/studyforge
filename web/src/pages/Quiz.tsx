@@ -153,7 +153,7 @@ export default function Quiz() {
     setDone(all)
     if (all.length < items!.length) return setI(i + 1)
     const score = all.reduce((s, x) => s + x.score, 0)
-    saveAnswers(id, all.map((x) => x.answer), score)
+    saveAnswers(id, all.map((x) => x.answer), score, all.map((x) => x.score === 1))
     try { localStorage.setItem('sf.quiz.last', JSON.stringify({ score, total: all.length, at: Date.now() })) } catch { /* private mode: results screen still works */ }
   }
 
