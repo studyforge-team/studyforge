@@ -251,6 +251,9 @@ export function predict(papers: readonly string[]): Prediction {
 export function paperText(pages: string[]): string {
   const seen = new Map<string, number>()
   for (const p of pages) for (const l of new Set(p.split('\n'))) seen.set(l, (seen.get(l) ?? 0) + 1)
-  const furniture = (l: string) => (pages.length > 1 && (seen.get(l) ?? 0) >= 2) || /^(page\s*)?\d+(\s*(of|\/)\s*\d+)?$/i.test(l.trim())
+  // never a line that carries marks or starts a question/sub-part ("(10 marks)" alone under each question)
+  const partOfAQuestion = (l: string) => EXPLICIT_MARKS.test(l) || numberOf(l) !== null || SUBPART.test(l.trim()) || BARE_NUMBER.test(l)
+  const furniture = (l: string) =>
+    (pages.length > 1 && (seen.get(l) ?? 0) >= 2 && !partOfAQuestion(l)) || /^(page\s*)?\d+(\s*(of|\/)\s*\d+)?$/i.test(l.trim())
   return pages.flatMap((p) => p.split('\n')).filter((l) => l.trim() && !furniture(l)).join('\n')
 }

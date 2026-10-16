@@ -199,4 +199,8 @@ test('PDF paper text: repeated header and page numbers dropped, every question l
   )
   expect(paperText(['Mass Transfer\nQ1. Define a stage. (5 marks)\n3'])).toBe('Mass Transfer\nQ1. Define a stage. (5 marks)')
   expect(JSON.stringify(predict([paperText(pdfPages), paperText(pdfPages)])).toLowerCase()).not.toContain('heat transfer')
+  // marks on their own line under each question repeat on every page: they stay, so marks still count
+  const marksBelow = paperText(['Q1. Derive the design equation of a CSTR.\n(10 marks)', 'Q2. Size a PFR for a first-order reaction.\n(10 marks)'])
+  expect(marksBelow.split('\n')).toEqual(['Q1. Derive the design equation of a CSTR.', '(10 marks)', 'Q2. Size a PFR for a first-order reaction.', '(10 marks)'])
+  expect(predict([marksBelow, marksBelow]).usedMarks).toBe(true)
 })
