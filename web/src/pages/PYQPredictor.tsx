@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
+import { readPdf } from '@/api/client'
 import { Button } from '@/components/ui/button'
-import { predict, type Prediction, type Trend } from '@/lib/pyq'
+import { friendly, HttpError } from '@/lib/errors'
+import { paperText, predict, type Prediction, type Trend } from '@/lib/pyq'
 
 const MIN = 2
 const MAX = 8
@@ -33,6 +35,8 @@ export default function PYQPredictor() {
   const [papers, setPapers] = useState<string[]>(loadPapers)
   const [error, setError] = useState('')
   const [result, setResult] = useState<Prediction | null>(null)
+  const [pdfNote, setPdfNote] = useState<{ index: number; text: string } | null>(null)
+  const [busy, setBusy] = useState(false)
 
   useEffect(() => {
     try {
@@ -48,6 +52,28 @@ export default function PYQPredictor() {
     setPapers((cur) => cur.map((p, i) => (i === index ? value : p)))
     setResult(null) // results always match the papers on screen
     setError('')
+  }
+
+  // PY: a past paper's PDF fills its box with the PDF's own text (questions split by line, as when pasted).
+  async function pickPdf(index: number, file: File | undefined, input: HTMLInputElement) {
+    if (!file) return
+    setBusy(true)
+    setPdfNote({ index, text: 'Reading the PDF…' })
+    try {
+      const r = await readPdf(file, () => setPdfNote({ index, text: 'Waking up the server…' }))
+      if (!r.words) {
+        setPdfNote({ index, text: 'This PDF has no text layer (probably a scan). Paste or type its questions instead.' })
+        return
+      }
+      edit(index, paperText(r.text))
+      setPdfNote({ index, text: `${file.name}: text of ${r.pages} page${r.pages === 1 ? '' : 's'} added. Check it before predicting.` })
+    } catch (e) {
+      const st = e instanceof HttpError ? e.status : 0
+      setPdfNote({ index, text: `${st === 415 ? 'That file is not a readable PDF.' : st === 413 ? 'That PDF is over 10 MB.' : st === 401 ? 'Sign in to read a PDF.' : friendly(e)} You can paste the questions instead.` })
+    } finally {
+      setBusy(false)
+      input.value = '' // picking the same file again reads it again
+    }
   }
 
   function run() {
@@ -95,8 +121,10 @@ export default function PYQPredictor() {
                     type="button"
                     className="min-h-11 px-2 text-sm text-muted-foreground underline hover:text-foreground"
                     aria-label={`Remove past paper ${index + 1}`}
+                    disabled={busy} // a PDF being read fills its box by position
                     onClick={() => {
                       setPapers((cur) => cur.filter((_, i) => i !== index))
+                      setPdfNote(null) // its box index no longer matches
                       setResult(null)
                       setError('')
                     }}
@@ -112,6 +140,9 @@ export default function PYQPredictor() {
                 value={paper}
                 onChange={(event) => edit(index, event.target.value)}
               />
+              <label htmlFor={`past-paper-pdf-${index + 1}`} className="mt-2 block text-sm text-muted-foreground">Or pick past paper {index + 1} as a PDF:</label>
+              <input id={`past-paper-pdf-${index + 1}`} type="file" accept="application/pdf,.pdf" disabled={busy} className="mt-1 block min-h-11 w-full text-sm" onChange={(e) => void pickPdf(index, e.target.files?.[0], e.target)} />
+              {pdfNote?.index === index && <p role="status" className="mt-1 text-sm text-muted-foreground">{pdfNote.text}</p>}
             </div>
           )
         })}
