@@ -177,3 +177,11 @@ test('PYQ predictor: a wrapped line starting with a value ("300 K. Given") is no
   await expect(page.getByRole('status').filter({ hasText: 'Read 2 papers' })).toContainText('Read 2 papers and 4 questions. Weighted by marks.')
   await expect(row(page, 'Reaction engineering')).toContainText('2 / 2')
 })
+
+test('picking a past paper PDF: explained in demo mode, the box is left as it was', async ({ page }) => {
+  await page.goto('/#pyq-predictor')
+  await page.getByLabel('Past paper 2', { exact: true }).fill('Q1. Derive the CSTR design equation (10 marks)')
+  await page.getByLabel('Or pick past paper 2 as a PDF:').setInputFiles({ name: 'paper.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4\n') })
+  await expect(page.getByRole('status').filter({ hasText: 'Reading a PDF works in the live app' })).toBeVisible()
+  await expect(page.getByLabel('Past paper 2', { exact: true })).toHaveValue('Q1. Derive the CSTR design equation (10 marks)')
+})
