@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { answerCheckin, getDashboard, getQuiz } from '@/api/client'
+import { answerCheckin, getDashboard, getPrep } from '@/api/client'
 import type { CheckinResult, MCQItem } from '@/api/types'
 import { Button } from '@/components/ui/button'
 import { friendly, HttpError } from '@/lib/errors'
@@ -23,7 +23,9 @@ export default function CheckIn({ jobId }: { jobId: string }) {
     let live = true
     void (async () => {
       const t = await getDashboard().then((d) => d.reminders.find((r) => r.id === jobId)?.title.match(/^Did you finish (.+?)\? Answer one quick question/)?.[1]).catch(() => undefined) || 'this task'
-      const item = await getQuiz(t).then((z) => z.items.find((x): x is MCQItem => x.type === 'mcq') ?? null).catch(() => null)
+      // D5: the question comes from this task's prep pack (the check-in link carries its key)
+      const key = /^#prep\/([0-9a-f]{16})\?/.exec(location.hash)?.[1]
+      const item = key ? await getPrep(key).then((p) => p.quiz.items.find((x): x is MCQItem => x.type === 'mcq') ?? null).catch(() => null) : null
       if (live) { setTitle(t); setQ(item) }
     })()
     return () => { live = false }

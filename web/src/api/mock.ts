@@ -1,5 +1,5 @@
 // Scripted stand-in for the backend, used when VITE_API_URL is unset. Same two functions as client.ts.
-import type { CheckinResult, Dashboard, Notice, NoticeIn, Quiz, ResultBody, SolveStart, Step, UploadRead } from './types'
+import type { CheckinResult, Dashboard, PrepPack, Notice, NoticeIn, Quiz, ResultBody, SolveStart, Step, UploadRead } from './types'
 import quizMock from './quizMock.json'
 
 const wait = () => new Promise((r) => setTimeout(r, 300))
@@ -152,4 +152,12 @@ export async function addNotice(n: NoticeIn): Promise<Notice> {
 export async function deleteNotice(id: string): Promise<void> {
   await wait()
   writeNotices(readNotices().filter((n) => n.id !== id))
+}
+
+// D5 demo: the sample quiz as a prep pack; the first question is linked to page 2 of sample notes.
+export async function getPrep(): Promise<PrepPack> {
+  const quiz = await getQuiz()
+  const due = new Date(Date.now() + 5 * 3_600_000).toISOString()
+  return { task: { title: 'CRE assignment 3 — CSTR design', deadline_utc: due }, quiz_id: 'prep-demo', quiz,
+    links: quiz.items.map((_, i) => (i === 0 ? { upload_id: 'notes-demo', page: 2 } : null)) }
 }
