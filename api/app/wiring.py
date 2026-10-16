@@ -57,3 +57,12 @@ def get_deps() -> Deps:
             tools=DbTools(engine, llm), templates=load_template_specs(),
         ))
     return _cache[1]
+
+
+def prep_llm() -> LLMClient | None:
+    """D5: the model for building a prep pack, or None (no key or no database). A stored pack
+    opens without it; app/routers/prep.py answers 503 only when a new pack must be built."""
+    try:
+        return get_deps().llm  # type: ignore[return-value]
+    except HTTPException:
+        return None

@@ -92,3 +92,20 @@ type Notice = { id: string; text: string; source: 'paste' | 'share';
 Team note: "D1 adds `POST/GET /api/v1/notices` and `DELETE /api/v1/notices/{id}` (additive,
 nothing existing changes). A notice is pasted or shared text; it is only stored for now. Shape in
 `docs/api-contract.md` section 4. D10 export/delete will include the new table."
+
+## 6. Prep pack (D5, 16 Oct): additive, new endpoint only
+
+`GET /api/v1/prep/{key}`, where `key` is the 16-hex task key in the reminder and check-in links
+(`/#prep/<key>`), answers `{task: {title, deadline_utc}, quiz_id, quiz: Quiz, links}`:
+- `quiz` has the Q1 `Quiz` shape (5 items, numerical keys checked in the browser sandbox as for any quiz).
+- `links[i]` is `{upload_id, page}` (the student's notes page matching question i; open it with
+  `GET /uploads/{upload_id}`) or `null`. The same link is in `quiz.items[i].source` as
+  `"notes:<upload_id>#page=<n>"`.
+- Built from the student's notes the first time it is opened, then stored as quiz `prep-<key>`
+  (covered by export/delete like every quiz); later opens never call the model.
+- Errors: 401 not signed in; 404 not one of this student's tasks; 503 no database, or the pack is
+  not built yet and the model is not available; 502 the model failed (nothing stored, try again);
+  429 the model budget is used up.
+
+Team note: "D5 adds `GET /api/v1/prep/{key}` (additive). Reminder and check-in links open it;
+it needs the model only the first time. Shape in `docs/api-contract.md` section 6."
