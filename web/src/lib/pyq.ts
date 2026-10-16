@@ -252,7 +252,11 @@ export function paperText(pages: string[]): string {
   const seen = new Map<string, number>()
   for (const p of pages) for (const l of new Set(p.split('\n'))) seen.set(l, (seen.get(l) ?? 0) + 1)
   // never a line that carries marks or starts a question/sub-part ("(10 marks)" alone under each question)
-  const partOfAQuestion = (l: string) => EXPLICIT_MARKS.test(l) || numberOf(l) !== null || SUBPART.test(l.trim()) || BARE_NUMBER.test(l)
+  // (a roman-numeral or letter start counts only with marks: "V. R. Siddhartha Engineering College" is a header)
+  const marksAlone = (l: string) => /^\W*\d{1,3}\s*(?:m|marks?)\W*$/i.test(l.trim())
+  const lettered = (l: string) => ROMAN.test(l) || SUBPART.test(l.trim())
+  const startsQuestion = (l: string) => (numberOf(l) !== null || lettered(l)) && !(lettered(l) && marksOf(l) === null)
+  const partOfAQuestion = (l: string) => marksAlone(l) || startsQuestion(l) || BARE_NUMBER.test(l)
   const furniture = (l: string) =>
     (pages.length > 1 && (seen.get(l) ?? 0) >= 2 && !partOfAQuestion(l)) || /^(page\s*)?\d+(\s*(of|\/)\s*\d+)?$/i.test(l.trim())
   return pages.flatMap((p) => p.split('\n')).filter((l) => l.trim() && !furniture(l)).join('\n')

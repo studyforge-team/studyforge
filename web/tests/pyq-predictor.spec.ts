@@ -203,4 +203,9 @@ test('PDF paper text: repeated header and page numbers dropped, every question l
   const marksBelow = paperText(['Q1. Derive the design equation of a CSTR.\n(10 marks)', 'Q2. Size a PFR for a first-order reaction.\n(10 marks)'])
   expect(marksBelow.split('\n')).toEqual(['Q1. Derive the design equation of a CSTR.', '(10 marks)', 'Q2. Size a PFR for a first-order reaction.', '(10 marks)'])
   expect(predict([marksBelow, marksBelow]).usedMarks).toBe(true)
+  // a header that mentions marks next to the course name is still page furniture
+  const hdr = 'CH 305 Heat Transfer      Max. Marks: 70'
+  const withHeader = paperText([`${hdr}\nQ1. Derive the design equation of a CSTR. (10 marks)`, `${hdr}\nQ2. Size a PFR for a first-order reaction. (10 marks)`])
+  expect(withHeader).not.toContain('Heat Transfer')
+  expect(paperText(['V. R. Siddhartha Engineering College\nQ1. Define a CSTR. (5 marks)', 'V. R. Siddhartha Engineering College\nQ2. Define a PFR. (5 marks)'])).not.toContain('Siddhartha')
 })
