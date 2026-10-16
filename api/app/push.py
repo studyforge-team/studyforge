@@ -137,9 +137,10 @@ def message(job: dict[str, Any]) -> dict[str, str]:
 
 def _payload(msg: dict[str, str]) -> bytes:
     data = json.dumps(msg, ensure_ascii=False).encode()
-    if len(data) > MAX_BODY:  # a very long task title: shorten the body, keep the link
-        cut = dict(msg, body=msg["body"][: max(0, len(msg["body"]) - (len(data) - MAX_BODY) - 1)] + "…")
-        data = json.dumps(cut, ensure_ascii=False).encode()
+    body = msg["body"]
+    while len(data) > MAX_BODY and body:  # a very long task title: shorten the body, keep the link
+        body = body[: len(body) - max(1, (len(data) - MAX_BODY) // 6)]  # ≤ 6 bytes per char once escaped
+        data = json.dumps(dict(msg, body=body + "…"), ensure_ascii=False).encode()
     return data
 
 

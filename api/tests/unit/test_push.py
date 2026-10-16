@@ -117,8 +117,11 @@ def test_messages_for_reminders_and_checkins() -> None:
     assert push.message({"id": 7, "payload": p | {"slot": "t-1d"}}) == {
         "title": "StudyForge reminder", "body": "CRE assignment 3 is due tomorrow. Tap for your prep pack.", "url": "/#prep/abc"}
     assert push.message({"id": 7, "payload": p | {"slot": "checkin-2"}})["url"] == "/#prep/abc?checkin=7"
-    long = push._payload({"title": "t", "body": "é" * 5000, "url": "/#prep/abc"})
-    assert len(long) <= push.MAX_BODY and json.loads(long)["url"] == "/#prep/abc" and json.loads(long)["body"].endswith("…")
+    for ch in ("é", "a", '"'):  # 2-byte, 1-byte, and a character JSON escapes to 2 bytes
+        long = push._payload({"title": "t", "body": ch * 5000, "url": "/#prep/abc"})
+        got = json.loads(long)
+        assert len(long) <= push.MAX_BODY and got["url"] == "/#prep/abc" and got["body"].endswith("…")
+        assert len(got["body"]) > 1000  # shortened, not emptied
 
 
 @pytest.mark.anyio
