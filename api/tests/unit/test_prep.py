@@ -23,7 +23,13 @@ def test_model_is_optional_for_the_route(monkeypatch: pytest.MonkeyPatch) -> Non
     assert wiring.prep_llm() is None  # no database or no key: None, never an exception
 
 
-def test_sign_in_and_database_required(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("DATABASE_URL", raising=False)
+def test_database_and_sign_in_required(monkeypatch: pytest.MonkeyPatch) -> None:
     c = TestClient(app)
-    assert c.get("/api/v1/prep/0123456789abcdef").status_code in (401, 503)  # no token, no database: never 200
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    assert c.get("/api/v1/prep/0123456789abcdef").status_code == 503
+    monkeypatch.setenv("DATABASE_URL", "postgresql://unused@localhost/x")  # never connected: auth fails first
+    assert c.get("/api/v1/prep/0123456789abcdef").status_code == 401
+
+
+def test_common_words_never_link() -> None:
+    assert prep._words("What is the heat calculate value of THIS exchanger?") == {"heat", "exchanger"}

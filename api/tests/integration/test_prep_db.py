@@ -13,7 +13,8 @@ from alembic.config import Config
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
 
-from app import db, reminders
+from app import db, reminders, spend
+from app import prep as prep_mod
 from app.agent.quiz import MCQItem, Quiz
 from app.db import make_engine, note_chunks
 from app.llm.errors import BudgetExceeded, ModelUnavailable
@@ -47,11 +48,13 @@ def _quiz(stems: list[str]) -> Quiz:
 
 class FakeLLM:
     def __init__(self, quiz: Quiz) -> None:
-        self.quiz, self.calls, self.prompts = quiz, 0, []  # type: list[Any]
+        self.quiz, self.calls, self.prompts, self.who = quiz, 0, [], []  # type: list[Any]
 
     async def chat_json(self, role: str, messages: list[Any], schema: type[Any], **_: Any) -> tuple[Any, Any]:
         self.calls += 1
         self.prompts.append(messages[-1]["content"])
+        self.who.append(spend.who.get().user_id)  # whose caps and cost rows this call counts against
+        await asyncio.sleep(0.05)  # long enough for a second, simultaneous open to arrive
         return self.quiz, None
 
 
@@ -82,9 +85,11 @@ async def _exercise() -> None:
                                  prep.get_llm: lambda: who["llm"]}
     try:
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://t") as c:
-            r = await c.get(f"/api/v1/prep/{hx}")
-            assert r.status_code == 200, r.text
+            r, r2 = await asyncio.gather(c.get(f"/api/v1/prep/{hx}"), c.get(f"/api/v1/prep/{hx}"))  # two tabs at once
+            assert r.status_code == r2.status_code == 200, r.text
             body = r.json()
+            assert r2.json() == body and fake.calls == 1  # one build, not two
+            assert fake.who == ["A"]  # the student's own spend caps and cost rows
             assert body["task"]["title"] == "Heat exchanger assignment" and body["quiz_id"] == f"prep-{hx}"
             assert len(body["quiz"]["items"]) == 5
             assert body["links"] == [{"upload_id": NOTES, "page": p} for p in (1, 2, 3, 4)] + [None]
@@ -95,17 +100,22 @@ async def _exercise() -> None:
             assert again.status_code == 200 and again.json() == body and fake.calls == 1
             # a task with no stored pack and no model: 503, never a made-up pack
             assert (await c.get(f"/api/v1/prep/{qm}")).status_code == 503
-            # the model returns nothing usable: 502, nothing stored
-            who["llm"] = FakeLLM(Quiz.model_construct(title="x", items=[]))
-            assert (await c.get(f"/api/v1/prep/{qm}")).status_code == 502
 
             class Down(FakeLLM):
                 async def chat_json(self, *a: Any, **k: Any) -> tuple[Any, Any]:
+                    self.calls += 1
                     raise exc
 
+            # failures: nothing stored; then a minute of 503 without calling the model again
             for exc, code in ((ModelUnavailable("down"), 502), (BudgetExceeded("cap"), 429)):
-                who["llm"] = Down(fake.quiz)
+                prep_mod._failed.clear()
+                who["llm"] = down = Down(fake.quiz)
                 assert (await c.get(f"/api/v1/prep/{qm}")).status_code == code
+                assert (await c.get(f"/api/v1/prep/{qm}")).status_code == 503 and down.calls == 1
+            prep_mod._failed.clear()
+            who["llm"] = FakeLLM(_quiz(STEMS[:3]))  # fewer than 5 usable questions: refused, not stored
+            assert (await c.get(f"/api/v1/prep/{qm}")).status_code == 502
+            prep_mod._failed.clear()
             who["llm"] = fake
             # another student, or a key that is no task: 404 before any model call
             who["u"] = "B"

@@ -11,7 +11,7 @@ from app.agent.quiz_gen import ChatJSON, QuizGenerationFailed
 from app.llm.errors import BudgetExceeded, LLMError
 from app.routers.checkins import get_engine
 from app.routers.dashboard import _need_db
-from app.routers.solve import current_user
+from app.routers.solve import current_user, spend_context
 
 router = APIRouter(prefix="/api/v1")
 
@@ -22,21 +22,23 @@ def get_llm() -> ChatJSON | None:
     return None
 
 
-@router.get("/prep/{key}", dependencies=[Depends(_need_db)])
+@router.get("/prep/{key}", dependencies=[Depends(_need_db), Depends(spend_context)])  # caps + cost rows per student
 async def prep_pack(key: str, user: Annotated[str, Depends(current_user)],
                     engine: Annotated[AsyncEngine, Depends(get_engine)],
                     llm: Annotated[ChatJSON | None, Depends(get_llm)]) -> dict[str, Any]:
     if not prep.KEY.fullmatch(key):
         raise HTTPException(404, "no such prep pack")
     try:
-        task = await prep.find_task(engine, user, key)  # 404 before any model call
+        await prep.find_task(engine, user, key)  # 404 before any model call
     except prep.TaskNotFound:
         raise HTTPException(404, "no such prep pack") from None  # also another student's task
-    if await prep.stored(engine, user, key) is None and llm is None:
-        raise HTTPException(503, "the model is not available to build this pack yet")
     try:
-        return await prep.get_or_build(engine, llm, user, key) | {"task": task}  # type: ignore[arg-type]
+        return await prep.get_or_build(engine, llm, user, key)
+    except prep.ModelNotAvailable:
+        raise HTTPException(503, "the model is not available to build this pack yet") from None
+    except prep.BuildCoolingDown:
+        raise HTTPException(503, "building this pack failed a moment ago; try again in a minute") from None
     except BudgetExceeded:
         raise HTTPException(429, "today's model budget is used up; the pack can be built tomorrow") from None
-    except (QuizGenerationFailed, LLMError):  # no usable questions, model down, bad JSON: nothing stored
+    except (QuizGenerationFailed, LLMError):  # too few usable questions, model down, bad JSON: nothing stored
         raise HTTPException(502, "could not build this pack, try again") from None

@@ -64,5 +64,5 @@ def prep_llm() -> LLMClient | None:
     opens without it; app/routers/prep.py answers 503 only when a new pack must be built."""
     try:
         return get_deps().llm  # type: ignore[return-value]
-    except HTTPException:
+    except Exception:  # noqa: BLE001 - no key, no database, a bad registry: all mean "no model" (503)
         return None
