@@ -14,7 +14,8 @@ def test_links_of() -> None:
 
 def test_keys_are_task_hashes() -> None:
     assert prep.KEY.fullmatch("0123456789abcdef")
-    for bad in ("0123456789ABCDEF", "0123456789abcde", "../etc/passwd", "0123456789abcdef0"):
+    good = "0123456789abcdef"
+    for bad in (good.upper(), good[:-1], "../etc/passwd", good + "0"):
         assert not prep.KEY.fullmatch(bad)
 
 
