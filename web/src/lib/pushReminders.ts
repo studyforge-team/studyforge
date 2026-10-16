@@ -46,7 +46,12 @@ export async function turnOn(ready?: Promise<{ key: Uint8Array<ArrayBuffer>; reg
     sub = null
   }
   sub ??= await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key })
-  await savePushSubscription(sub.toJSON())
+  try {
+    await savePushSubscription(sub.toJSON())
+  } catch (e) { // not saved (device limit, sign-in, server down): never leave the card saying "on"
+    await sub.unsubscribe().catch(() => {})
+    throw e
+  }
 }
 
 export async function turnOff(): Promise<void> {
