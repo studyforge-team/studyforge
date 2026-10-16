@@ -15,7 +15,7 @@ No open PRs in the repo at all; no branch touches P5 areas, so no risk of two pe
 |---|---|---|---|---|---|---|---|
 | D1 | In-app intake: Web Share Target + paste box -> notice | 2 | 14 Oct | merged (done): API #68, app #69 | notices API + migration 0004 + contract §4; manifest share_target + Notices page | follow-up: add notices to D10 export/delete after #62 merges | D6 #66 must renumber its migration to 0005 |
 | D1b | Web push: SW, "Turn on reminders", VAPID in env, sender for D6 | 3 | 16 Oct | PRs open, CI green, waiting for a teammate approval: server #80, app #82 | own RFC 8291/8292 sender (no new dep; RFC vector test), migration 0008, sw.js, Today card | approval; VAPID keys on Render; real-phone check | main now requires 1 approving review |
-| D5 | Prep pack, built when opened (5 questions each linked) | 5 | 18 Oct | not started | Q1 quiz engine merged (`api/app/agent/quiz*.py`); "Open prep pack" only a mock label | everything | NR notes search (P2) not on main; `api/app/search/` empty |
+| D5 | Prep pack, built when opened (5 questions each linked) | 5 | 18 Oct | PRs open, CI green, waiting for a teammate approval: server #83, app #84 | GET /api/v1/prep/{key} (notes search + Q1, stored as quiz `prep-<key>`, spend caps, build lock); #prep page with notes-page links; check-in uses the pack | approval; Nebius credits + real notes for the live done-when | none |
 | V2Da | 2D CSTR drawings: plan/front/side/section, IS SP 46 | 3 | 19 Oct | merged (done) | #13 + #35 + #63 (half section A-A added, review fixes), `web/tests/check-v2da.mjs` | hand-drawn check not recorded | none |
 | OA | OA prep lite: aptitude MCQs + 3 Python problems, hidden tests | 4 | 21 Oct | not started | - | everything | MCQ half needs Q1 (merged: OK). Hidden tests must run in the browser sandbox (rule 1) |
 | IB | Interview bank lite, filtered by company | 3 | 21 Oct | not started | - | everything | rule 13: the real bank must never go into an assistant -> code + synthetic sample only |
@@ -68,3 +68,4 @@ Checks run on main (12 Oct): web `oxlint` 0 errors (2 warnings, not P5), `tsc -b
 - 13 Oct: D1 backend merged (#68, POST/GET/DELETE /api/v1/notices, 2 review rounds, real-Postgres tests incl. concurrent cap). Page renamed "Notices" (D6/D7 use "inbox" for reminders). Told Supreeth: D6 migration must become 0005.
 - 13 Oct: D1 app half merged (#69, 3 review rounds). D1 done.
 - 16 Oct: D1b built (server #80, app #82) + F1/F7 prep docs (#81); each reviewed and fixed. Branch protection now needs 1 teammate approval per PR, so they wait for approval before merging. D5 next (needs model for the done-when).
+- 16 Oct: D5 built (server #83, app #84), reviewed and fixed; demo mode fully tested. Live check waits for Nebius credits.
