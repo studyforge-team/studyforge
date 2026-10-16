@@ -17,10 +17,10 @@ No open PRs in the repo at all; no branch touches P5 areas, so no risk of two pe
 | D1b | Web push: SW, "Turn on reminders", VAPID in env, sender for D6 | 3 | 16 Oct | PRs open, CI green, waiting for a teammate approval: server #80, app #82 | own RFC 8291/8292 sender (no new dep; RFC vector test), migration 0008, sw.js, Today card | approval; VAPID keys on Render; real-phone check | main now requires 1 approving review |
 | D5 | Prep pack, built when opened (5 questions each linked) | 5 | 18 Oct | PRs open, CI green, waiting for a teammate approval: server #83, app #84 | GET /api/v1/prep/{key} (notes search + Q1, stored as quiz `prep-<key>`, spend caps, build lock); #prep page with notes-page links; check-in uses the pack | approval; Nebius credits + real notes for the live done-when | none |
 | V2Da | 2D CSTR drawings: plan/front/side/section, IS SP 46 | 3 | 19 Oct | merged (done) | #13 + #35 + #63 (half section A-A added, review fixes), `web/tests/check-v2da.mjs` | hand-drawn check not recorded | none |
-| OA | OA prep lite: aptitude MCQs + 3 Python problems, hidden tests | 4 | 21 Oct | not started | - | everything | MCQ half needs Q1 (merged: OK). Hidden tests must run in the browser sandbox (rule 1) |
-| IB | Interview bank lite, filtered by company | 3 | 21 Oct | not started | - | everything | rule 13: the real bank must never go into an assistant -> code + synthetic sample only |
-| PY | PYQ predictor lite: 3 papers -> frequency table + likely paper | 3 | 22 Oct | not started | - | everything | C1 uploads (P2) not on main; A3 merged |
-| TE | Time-to-finish lite: range for a 30-page PDF | 3 | 22 Oct | not started | - | everything | C1 uploads (P2) |
+| OA | OA prep lite: aptitude MCQs + 3 Python problems, hidden tests | 4 | 21 Oct | merged (done) | `web/src/pages/OA.tsx` (Shreyas + review fixes), `web/tests/oa.spec.ts` | none | none |
+| IB | Interview bank lite, filtered by company | 3 | 21 Oct | merged (done) | `web/src/pages/InterviewBank.tsx` (synthetic sample), `web/tests/interview-bank.spec.ts` | none | none |
+| PY | PYQ predictor lite: 3 papers -> frequency table + likely paper | 3 | 22 Oct | merged (paste); PDF input PR #86 (stacked on #85) | `web/src/pages/PYQPredictor.tsx`, `web/src/lib/pyq.ts` | approval; live check with a real paper PDF | #85 first |
+| TE | Time-to-finish lite: range for a 30-page PDF | 3 | 22 Oct | merged (typed count); PDF page count PR #85 (`POST /api/v1/pdf/read`) | `web/src/pages/TimeToFinish.tsx`, `api/app/routers/pdf.py` | approval | none |
 | V2Db | 2D column + exchanger drawings (4 equipment types) | 5 | 22 Oct | merged: column #64, exchanger #65 | `web/src/chemlab/drawings/{sheet,column,hx}.ts`, McCabe + new Heat exchanger tab, `web/tests/{chemlab,hx}-drawing.spec.ts` | "4 equipment types": CSTR + column + exchanger exist; 4th type not named anywhere -> asked Supreeth | none |
 | F1 | Real users: 3-5 classmates on a real deadline | 6 | 22 Oct | not started | - | human activity; I can prepare the plan + log template | needs a deployed working build |
 | F7 | Film 26 Oct (frozen build) + edit 27 Oct | 8 | 27 Oct | not started | - | human activity; I can prepare shot list/checklist | frozen build, F6 script (P4) |
@@ -69,3 +69,4 @@ Checks run on main (12 Oct): web `oxlint` 0 errors (2 warnings, not P5), `tsc -b
 - 13 Oct: D1 app half merged (#69, 3 review rounds). D1 done.
 - 16 Oct: D1b built (server #80, app #82) + F1/F7 prep docs (#81); each reviewed and fixed. Branch protection now needs 1 teammate approval per PR, so they wait for approval before merging. D5 next (needs model for the done-when).
 - 16 Oct: D5 built (server #83, app #84), reviewed and fixed; demo mode fully tested. Live check waits for Nebius credits.
+- 16 Oct: TE PDF page count (#85) and PY past papers as PDFs (#86). Reviews requested on #80-#86; team asks posted in issue #87.
