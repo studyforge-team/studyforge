@@ -34,3 +34,24 @@ def test_database_and_sign_in_required(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_common_words_never_link() -> None:
     assert prep._words("What is the heat calculate value of THIS exchanger?") == {"heat", "exchanger"}
+
+
+@pytest.mark.anyio
+async def test_budget_exceeded_never_starts_the_cooldown(monkeypatch: pytest.MonkeyPatch) -> None:
+    from app.llm.errors import BudgetExceeded
+
+    async def task(*_: object) -> dict[str, str]:
+        return {"title": "CRE", "deadline_utc": ""}
+
+    async def none(*_: object) -> None:
+        return None
+
+    async def over(*_: object) -> None:
+        raise BudgetExceeded("daily cap")
+
+    monkeypatch.setattr(prep, "find_task", task)
+    monkeypatch.setattr(prep, "stored", none)
+    monkeypatch.setattr(prep, "build", over)
+    for _ in range(2):  # the second open is still "budget", not "cooling down"
+        with pytest.raises(BudgetExceeded):
+            await prep.get_or_build(None, object(), "u", "0123456789abcdef")  # type: ignore[arg-type]

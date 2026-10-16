@@ -26,6 +26,7 @@ from app import notes
 from app.agent.quiz import Quiz
 from app.agent.quiz_gen import ChatJSON, QuizGenerationFailed, generate_quiz
 from app.db import quizzes
+from app.llm.errors import BudgetExceeded
 
 N_QUESTIONS = 5
 RETRY_AFTER_S = 60  # after a failed build: no new model call for this pack for a minute
@@ -126,6 +127,8 @@ async def _open(engine: AsyncEngine, llm: ChatJSON | None, user_id: str, key: st
                 raise BuildCoolingDown(key)
             try:
                 quiz = await build(engine, llm, user_id, key, task["title"])
+            except BudgetExceeded:
+                raise  # 429 every time until the budget resets: a cooldown would turn it into 503
             except Exception:
                 _failed[slot] = time.monotonic()
                 raise
