@@ -106,12 +106,17 @@ async def _exercise() -> None:
                     self.calls += 1
                     raise exc
 
-            # failures: nothing stored; then a minute of 503 without calling the model again
-            for exc, code in ((ModelUnavailable("down"), 502), (BudgetExceeded("cap"), 429)):
-                prep_mod._failed.clear()
-                who["llm"] = down = Down(fake.quiz)
-                assert (await c.get(f"/api/v1/prep/{qm}")).status_code == code
-                assert (await c.get(f"/api/v1/prep/{qm}")).status_code == 503 and down.calls == 1
+            # a failed build: nothing stored; then a minute of 503 without calling the model again
+            exc: Exception = ModelUnavailable("down")
+            who["llm"] = down = Down(fake.quiz)
+            assert (await c.get(f"/api/v1/prep/{qm}")).status_code == 502
+            assert (await c.get(f"/api/v1/prep/{qm}")).status_code == 503 and down.calls == 1
+            # a used-up budget is 429 every time (no cooldown: retrying in a minute would not help)
+            prep_mod._failed.clear()
+            exc = BudgetExceeded("cap")
+            who["llm"] = Down(fake.quiz)
+            for _ in range(2):
+                assert (await c.get(f"/api/v1/prep/{qm}")).status_code == 429
             prep_mod._failed.clear()
             who["llm"] = FakeLLM(_quiz(STEMS[:3]))  # fewer than 5 usable questions: refused, not stored
             assert (await c.get(f"/api/v1/prep/{qm}")).status_code == 502
