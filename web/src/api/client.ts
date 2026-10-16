@@ -101,7 +101,7 @@ export async function deleteNotice(id: string): Promise<void> {
 
 // PY/TE: page count, words and text of a PDF the student picks. Read on the server and not stored.
 export async function readPdf(file: File, onSlow?: () => void): Promise<PdfRead> {
-  if (!BASE) throw new PlainError('Reading a PDF works in the live app once you sign in. Type the number here instead.')
+  if (!BASE) throw new PlainError('Reading a PDF works in the live app once you sign in.')
   if (file.size > 10 * 1024 * 1024) throw new PlainError('That PDF is over 10 MB.')
   const form = new FormData()
   form.append('file', file)
