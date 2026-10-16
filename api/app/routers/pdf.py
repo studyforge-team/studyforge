@@ -13,16 +13,18 @@ import pypdfium2 as pdfium  # type: ignore[import-untyped]
 from fastapi import APIRouter, File, HTTPException, UploadFile
 
 from app.notes import MAX_PAGE_CHARS, MAX_PAGES
+from app.pdfium_lock import one_at_a_time
 from app.routers.uploads import MAX_BYTES, UserDep, _SizeGuardRoute, sniff
 
 router = APIRouter(prefix="/api/v1", route_class=_SizeGuardRoute)
-_busy = asyncio.Lock()  # pdfium is not thread-safe: one PDF at a time (also bounds memory on Render free)
+_busy = asyncio.Lock()  # one PDF in memory at a time on Render free (pdfium itself: app/pdfium_lock.py)
 
 
 def _lines(raw: str) -> str:
     return "\n".join(" ".join(ln.split()) for ln in raw.splitlines() if ln.strip())
 
 
+@one_at_a_time
 def read(data: bytes) -> dict[str, Any]:
     """pages: the true page count. text: one entry per page (first MAX_PAGES); line breaks kept (PY
     splits questions by line), spaces within a line collapsed, blank lines dropped.

@@ -50,7 +50,7 @@ export default function TimeToFinish() {
       setPdfNote(`${file.name}: ${plural(r.pages, 'page')}${r.words ? '' : ' (no text layer, so it may be a scan; pages still count)'}.`)
     } catch (e) {
       const s = e instanceof HttpError ? e.status : 0
-      setPdfNote(s === 415 ? 'That file is not a readable PDF.' : s === 413 ? 'That PDF is over 10 MB.' : s === 401 ? 'Sign in to read a PDF.' : friendly(e))
+      setPdfNote(`${s === 415 ? 'That file is not a readable PDF.' : s === 413 ? 'That PDF is over 10 MB.' : s === 401 ? 'Sign in to read a PDF.' : friendly(e)} Type the number of pages instead.`)
     } finally {
       setPdfBusy(false)
       input.value = '' // picking the same file again reads it again
@@ -91,7 +91,7 @@ export default function TimeToFinish() {
       </p>
 
       <section className="mt-5 space-y-5 rounded-lg border bg-card p-4 sm:p-5">
-        <fieldset>
+        <fieldset disabled={pdfBusy /* a PDF being read fills the page count */}>
           <legend className="text-sm font-medium">Type of material</legend>
           <div className="mt-2 space-y-1">
             {(Object.keys(RATES) as Material[]).map((m) => (
