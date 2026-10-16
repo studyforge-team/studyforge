@@ -33,7 +33,8 @@ Due 22 Oct. Owner: P5 (Supreeth). Feeds F2 (final fixes).
 1. Open the site on their phone, sign in with Google (or "Try demo").
 2. **Notices:** share a real class WhatsApp message about their deadline to StudyForge
    (Android: install the app first, browser menu → Install app; iPhone: paste it instead).
-3. **Phone reminders:** Today → Turn on phone reminders → Send a test. Did it arrive? Tap it.
+3. **Phone reminders** (only once D1b, PRs #80 and #82, is merged and the VAPID keys are on Render;
+   otherwise skip and log "not live"): Today → Turn on phone reminders → Send a test. Did it arrive? Tap it.
 4. **Ask:** one real question from their subject (photo or typed). Did the confirm screen read it
    right? Is the answer right? Did they trust the numbers?
 5. **Quiz:** a quiz on their deadline's topic; answer it; check-in later.
@@ -59,7 +60,7 @@ Do not help unless they are stuck for over a minute; write down where they got s
 | Deadline (kind, days away) | e.g. lab report, 4 days |
 | Signed in with | Google / demo |
 | Notice shared or pasted | worked / failed: what happened |
-| Phone reminder test | arrived / not; tap opened the right page? |
+| Phone reminder test | arrived / not / not live; tap opened the right page? |
 | Ask: question type | photo / typed; subject area |
 | Ask: read correctly? answer correct? | yes / no, what was wrong |
 | Quiz and check-in | worked / failed |
