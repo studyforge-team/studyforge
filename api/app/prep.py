@@ -108,6 +108,15 @@ async def get_or_build(engine: AsyncEngine, llm: ChatJSON | None, user_id: str, 
     task = await find_task(engine, user_id, key)
     slot = f"{user_id}|{key}"
     lock = _locks.setdefault(slot, asyncio.Lock())
+    try:
+        return await _open(engine, llm, user_id, key, task, slot, lock)
+    finally:
+        if not lock.locked():
+            _locks.pop(slot, None)  # also after a failed build; a stray re-creation is harmless
+
+
+async def _open(engine: AsyncEngine, llm: ChatJSON | None, user_id: str, key: str,
+                task: dict[str, str], slot: str, lock: asyncio.Lock) -> dict[str, Any]:
     async with lock:
         quiz = await stored(engine, user_id, key)
         if quiz is None:
@@ -127,8 +136,6 @@ async def get_or_build(engine: AsyncEngine, llm: ChatJSON | None, user_id: str, 
                     index_elements=["id"], set_={"quiz": stmt.excluded.quiz},
                     where=quizzes.c.user_id == user_id))  # another student's row with this id is never touched
             quiz = await stored(engine, user_id, key) or quiz
-    if not lock.locked():
-        _locks.pop(slot, None)
     return {"task": task, "quiz_id": f"prep-{key}", "quiz": quiz.model_dump(mode="json"),
             "links": [links_of(i.source) for i in quiz.items]}
 
