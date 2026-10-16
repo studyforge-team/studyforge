@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase'
 import { HttpError, PlainError } from '@/lib/errors'
 import * as mock from './mock'
-import type { CheckinResult, Dashboard, Notice, NoticeIn, Quiz, ResultBody, SolveStart, Step, UploadKind, UploadRead } from './types'
+import type { PdfRead, CheckinResult, Dashboard, Notice, NoticeIn, Quiz, ResultBody, SolveStart, Step, UploadKind, UploadRead } from './types'
 
 const BASE = import.meta.env.VITE_API_URL as string | undefined
 
@@ -97,4 +97,13 @@ export async function deleteNotice(id: string): Promise<void> {
   if (!BASE) return mock.deleteNotice(id)
   const r = await fetch(`${BASE}/api/v1/notices/${encodeURIComponent(id)}`, { method: 'DELETE', headers: await auth(), signal: AbortSignal.timeout(90_000) })
   if (!r.ok && r.status !== 404) throw new HttpError(r.status) // 404: already gone
+}
+
+// PY/TE: page count, words and text of a PDF the student picks. Read on the server and not stored.
+export async function readPdf(file: File, onSlow?: () => void): Promise<PdfRead> {
+  if (!BASE) throw new PlainError('Reading a PDF works in the live app once you sign in. Type the number here instead.')
+  if (file.size > 10 * 1024 * 1024) throw new PlainError('That PDF is over 10 MB.')
+  const form = new FormData()
+  form.append('file', file)
+  return post('/pdf/read', form, onSlow)
 }

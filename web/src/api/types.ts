@@ -36,3 +36,6 @@ export type Quiz = { id?: string; title: string; items: QuizItem[] }
 // Notices (D1), docs/api-contract.md section 4: pasted or shared text, stored as given.
 export type NoticeIn = { text: string; source: 'paste' | 'share'; title?: string; url?: string }
 export type Notice = { id: string; text: string; source: 'paste' | 'share'; title: string | null; url: string | null; created_at: string }
+
+// PY/TE: POST /pdf/read. text: one entry per page (first 200 pages); a scanned PDF has words 0.
+export type PdfRead = { pages: number; words: number; text: string[] }

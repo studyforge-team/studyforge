@@ -92,3 +92,22 @@ type Notice = { id: string; text: string; source: 'paste' | 'share';
 Team note: "D1 adds `POST/GET /api/v1/notices` and `DELETE /api/v1/notices/{id}` (additive,
 nothing existing changes). A notice is pasted or shared text; it is only stored for now. Shape in
 `docs/api-contract.md` section 4. D10 export/delete will include the new table."
+
+## 7. PDF reading (TE and PY, 16 Oct): additive, one new endpoint
+
+(Sections 5 and 6 are D1b push and D5 prep pack, in their own PRs.)
+
+```
+POST /api/v1/pdf/read   multipart: file (PDF, 10 MB max)
+  -> 200 { pages: number,    // the true page count
+           words: number,    // words in the text layer of the first 200 pages (0 for a scan)
+           text: string[] }  // one entry per page, first 200 pages, whitespace-collapsed, ≤ 5000 chars each
+```
+
+- Signed in only. Nothing is stored: the file is read in memory and dropped.
+- Errors (`{detail: string}`): 401 not signed in; 411 no Content-Length; 413 over 10 MB;
+  415 not a PDF, or a PDF that can't be read (broken or password-locked).
+
+Team note: "TE and PY add `POST /api/v1/pdf/read` (additive, nothing existing changes). It returns
+a PDF's page count, word count and text, and stores nothing. TE uses the page count; PY uses the
+text of past papers. Shape in `docs/api-contract.md` section 7."
