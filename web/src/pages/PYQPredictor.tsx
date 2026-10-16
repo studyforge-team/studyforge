@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { readPdf } from '@/api/client'
 import { Button } from '@/components/ui/button'
 import { friendly, HttpError } from '@/lib/errors'
-import { predict, type Prediction, type Trend } from '@/lib/pyq'
+import { paperText, predict, type Prediction, type Trend } from '@/lib/pyq'
 
 const MIN = 2
 const MAX = 8
@@ -65,11 +65,11 @@ export default function PYQPredictor() {
         setPdfNote({ index, text: 'This PDF has no text layer (probably a scan). Paste or type its questions instead.' })
         return
       }
-      edit(index, r.text.filter(Boolean).join('\n'))
+      edit(index, paperText(r.text))
       setPdfNote({ index, text: `${file.name}: text of ${r.pages} page${r.pages === 1 ? '' : 's'} added. Check it before predicting.` })
     } catch (e) {
       const st = e instanceof HttpError ? e.status : 0
-      setPdfNote({ index, text: st === 415 ? 'That file is not a readable PDF.' : st === 413 ? 'That PDF is over 10 MB.' : st === 401 ? 'Sign in to read a PDF.' : friendly(e) })
+      setPdfNote({ index, text: `${st === 415 ? 'That file is not a readable PDF.' : st === 413 ? 'That PDF is over 10 MB.' : st === 401 ? 'Sign in to read a PDF.' : friendly(e)} You can paste the questions instead.` })
     } finally {
       setBusy(false)
       input.value = '' // picking the same file again reads it again

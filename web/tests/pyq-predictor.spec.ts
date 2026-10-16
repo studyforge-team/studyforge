@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { paperText, predict } from '../src/lib/pyq.ts'
 
 // Three chemical engineering papers, oldest first, every question with marks.
 // Hand check, reaction engineering: shares 10/25, 10/25, 10/30 by paper; recency weights 1, 2, 3
@@ -184,4 +185,18 @@ test('picking a past paper PDF: explained in demo mode, the box is left as it wa
   await page.getByLabel('Or pick past paper 2 as a PDF:').setInputFiles({ name: 'paper.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4\n') })
   await expect(page.getByRole('status').filter({ hasText: 'Reading a PDF works in the live app' })).toBeVisible()
   await expect(page.getByLabel('Past paper 2', { exact: true })).toHaveValue('Q1. Derive the CSTR design equation (10 marks)')
+})
+
+// paperText: a past paper read from a PDF (runs in Node, no page needed)
+const pdfPages = [
+  'Heat Transfer (CH-305)\nQ1. Derive the design equation of a CSTR. (10 marks)\nQ2. Explain the Arrhenius law. (10 marks)\nPage 1 of 2',
+  'Heat Transfer (CH-305)\nQ3. Size a PFR for a first-order reaction. (10 marks)\nPage 2 of 2',
+]
+
+test('PDF paper text: repeated header and page numbers dropped, every question line kept', () => {
+  expect(paperText(pdfPages)).toBe(
+    'Q1. Derive the design equation of a CSTR. (10 marks)\nQ2. Explain the Arrhenius law. (10 marks)\nQ3. Size a PFR for a first-order reaction. (10 marks)',
+  )
+  expect(paperText(['Mass Transfer\nQ1. Define a stage. (5 marks)\n3'])).toBe('Mass Transfer\nQ1. Define a stage. (5 marks)')
+  expect(JSON.stringify(predict([paperText(pdfPages), paperText(pdfPages)])).toLowerCase()).not.toContain('heat transfer')
 })
