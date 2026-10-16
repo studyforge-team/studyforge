@@ -160,7 +160,7 @@ async def _exercise() -> None:
 def test_notes_search(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("SUPABASE_URL", "https://proj.supabase.co")
     monkeypatch.setenv("SUPABASE_SERVICE_ROLE_KEY", "svc")
-    assert ScriptDirectory.from_config(CFG).get_heads() == ["0007"]
+    assert len(ScriptDirectory.from_config(CFG).get_heads()) == 1  # one migration chain, whatever its latest number
     command.upgrade(CFG, "head")
     try:
         asyncio.run(_exercise())

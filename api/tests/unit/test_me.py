@@ -81,14 +81,14 @@ def test_export(setup: Any) -> None:
     j = r.json()
     assert j["user_id"] == "A" and j["exported_at"]
     row = {"id": "x", "updated_at": "2026-01-02T00:00:00+00:00"}
-    assert j["solves"] == j["quizzes"] == j["llm_calls"] == j["notices"] == j["jobs"] == j["topic_results"] == j["note_chunks"] == [row]
+    assert j["solves"] == j["quizzes"] == j["llm_calls"] == j["notices"] == j["jobs"] == j["topic_results"] == j["note_chunks"] == j["push_subscriptions"] == [row]
 
 
 def test_delete_ok_and_auth_404_is_success(setup: Any) -> None:
     eng, status = setup
     c = TestClient(app)
     assert c.delete("/api/v1/me").status_code == 204
-    assert len(eng.conn.stmts) == 7  # solves, quizzes, notices, jobs, topic_results, note_chunks deleted; llm_calls anonymised
+    assert len(eng.conn.stmts) == 8  # solves, quizzes, notices, jobs, topic_results, note_chunks, push_subscriptions deleted; llm_calls anonymised
     req = calls[0]
     assert req.method == "DELETE" and str(req.url) == f"{URL}/auth/v1/admin/users/A"
     assert req.headers["apikey"] == "svc" and req.headers["authorization"] == "Bearer svc"
