@@ -47,3 +47,9 @@ def test_read_caps_pages_but_reports_the_true_count(monkeypatch: pytest.MonkeyPa
     monkeypatch.setattr(pdf, "MAX_PAGES", 3)
     got = pdf.read(make_pdf(["a b", "c", "d", "e f g"]))
     assert got == {"pages": 4, "words": 4, "text": ["a b", "c", "d"]}
+
+
+def test_line_breaks_are_kept_for_question_splitting() -> None:
+    q = "Q1. Derive the design equation of a CSTR and state every assumption you make clearly (10 marks)"
+    got = pdf.read(make_pdf([q]))["text"][0]
+    assert "\n" in got and got.replace("\n", " ").split() == q.split()

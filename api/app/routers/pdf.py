@@ -19,12 +19,17 @@ router = APIRouter(prefix="/api/v1", route_class=_SizeGuardRoute)
 _busy = asyncio.Lock()  # pdfium is not thread-safe: one PDF at a time (also bounds memory on Render free)
 
 
+def _lines(raw: str) -> str:
+    return "\n".join(" ".join(ln.split()) for ln in raw.splitlines() if ln.strip())
+
+
 def read(data: bytes) -> dict[str, Any]:
-    """pages: the true page count. text: one entry per page (first MAX_PAGES), whitespace-collapsed.
+    """pages: the true page count. text: one entry per page (first MAX_PAGES); line breaks kept (PY
+    splits questions by line), spaces within a line collapsed, blank lines dropped.
     words: counted over those pages. Raises pdfium.PdfiumError for an unreadable or locked file."""
     pdf = pdfium.PdfDocument(data)
     try:
-        text = [" ".join(pdf[i].get_textpage().get_text_range().split())[:MAX_PAGE_CHARS]
+        text = [_lines(pdf[i].get_textpage().get_text_range())[:MAX_PAGE_CHARS]
                 for i in range(min(len(pdf), MAX_PAGES))]
         return {"pages": len(pdf), "words": sum(len(t.split()) for t in text), "text": text}
     finally:
