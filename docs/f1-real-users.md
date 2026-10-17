@@ -7,8 +7,10 @@ Due 22 Oct. Owner: P5 (Supreeth). Feeds F2 (final fixes).
 
 1. **Live app, not the demo.** Render needs `DATABASE_URL`, `SUPABASE_URL` and
    `SUPABASE_SERVICE_ROLE_KEY` (Render dashboard only, never in the repo or a chat). Without them
-   notices, uploads, reminders and check-ins do not save.
-2. **The model (Nebius credits).** Without it "Ask" answers nothing and quizzes cannot be made.
+   notices, uploads, reminders and check-ins do not save. Vercel needs `VITE_API_URL`,
+   `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`; without them the site silently runs the
+   demo/mock. Values only in the dashboards, never in the repo or a chat.
+2. **The model (Nebius credits).** Needs `TF_API_KEY` on Render. Without it "Ask" answers nothing and quizzes cannot be made.
    If credits are late, run the session anyway on what works and log "Ask not tested".
 3. **Phone reminders (optional):** the three `VAPID_*` variables on Render (D1b).
 4. Try it yourself first on https://studyforge-ten-alpha.vercel.app : sign in with Google, save
@@ -33,11 +35,14 @@ Due 22 Oct. Owner: P5 (Supreeth). Feeds F2 (final fixes).
 1. Open the site on their phone, sign in with Google (or "Try demo").
 2. **Notices:** share a real class WhatsApp message about their deadline to StudyForge
    (Android: install the app first, browser menu → Install app; iPhone: paste it instead).
-3. **Phone reminders** (only once D1b, PRs #80 and #82, is merged and the VAPID keys are on Render;
-   otherwise skip and log "not live"): Today → Turn on phone reminders → Send a test. Did it arrive? Tap it.
+3. **Phone reminders** (only if the VAPID keys are on Render; otherwise skip and log "not live"):
+   Today → Turn on phone reminders → Send a test. Did it arrive? Tap it. Tapping opens the prep
+   pack page, which needs PRs #83 and #84 merged (until then the link lands on the default page).
 4. **Ask:** one real question from their subject (photo or typed). Did the confirm screen read it
    right? Is the answer right? Did they trust the numbers?
-5. **Quiz:** a quiz on their deadline's topic; answer it; check-in later.
+5. **Quiz:** open the prep pack for their deadline from a reminder link (`#prep/…`, needs
+   #83/#84 merged); if not live, use the Quiz page (fixed topic: Reactor basics); answer it;
+   check-in later.
 6. **ChemLab:** one template relevant to them; change an input; open the drawing.
 7. Their own words: "What would make you use this before your next deadline?"
 
