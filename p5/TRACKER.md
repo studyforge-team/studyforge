@@ -14,7 +14,7 @@ No open PRs in the repo at all; no branch touches P5 areas, so no risk of two pe
 | ID | Ticket | h | Due | Status | Evidence | What's left | Blockers |
 |---|---|---|---|---|---|---|---|
 | D1 | In-app intake: Web Share Target + paste box -> notice | 2 | 14 Oct | merged (done): API #68, app #69 | notices API + migration 0004 + contract §4; manifest share_target + Notices page | follow-up: add notices to D10 export/delete after #62 merges | D6 #66 must renumber its migration to 0005 |
-| D1b | Web push: SW, "Turn on reminders", VAPID in env, sender for D6 | 3 | 16 Oct | PRs open, CI green, waiting for a teammate approval: server #80, app #82 | own RFC 8291/8292 sender (no new dep; RFC vector test), migration 0008, sw.js, Today card | approval; VAPID keys on Render; real-phone check | main now requires 1 approving review |
+| D1b | Web push: SW, "Turn on reminders", VAPID in env, sender for D6 | 3 | 16 Oct | merged (done): server #80, app #82 (17 Oct) | push.py sender, migration 0008, sw.js, Today card | VAPID keys on Render; real-phone check | Supreeth (keys) |
 | D5 | Prep pack, built when opened (5 questions each linked) | 5 | 18 Oct | PRs open, CI green, waiting for a teammate approval: server #83, app #84 | GET /api/v1/prep/{key} (notes search + Q1, stored as quiz `prep-<key>`, spend caps, build lock); #prep page with notes-page links; check-in uses the pack | approval; Nebius credits + real notes for the live done-when | none |
 | V2Da | 2D CSTR drawings: plan/front/side/section, IS SP 46 | 3 | 19 Oct | merged (done) | #13 + #35 + #63 (half section A-A added, review fixes), `web/tests/check-v2da.mjs` | hand-drawn check not recorded | none |
 | OA | OA prep lite: aptitude MCQs + 3 Python problems, hidden tests | 4 | 21 Oct | merged (done) | `web/src/pages/OA.tsx` (Shreyas + review fixes), `web/tests/oa.spec.ts` | none | none |
@@ -24,7 +24,7 @@ No open PRs in the repo at all; no branch touches P5 areas, so no risk of two pe
 | V2Db | 2D column + exchanger drawings (4 equipment types) | 5 | 22 Oct | merged: column #64, exchanger #65 | `web/src/chemlab/drawings/{sheet,column,hx}.ts`, McCabe + new Heat exchanger tab, `web/tests/{chemlab,hx}-drawing.spec.ts` | "4 equipment types": CSTR + column + exchanger exist; 4th type not named anywhere -> asked Supreeth | none |
 | F1 | Real users: 3-5 classmates on a real deadline | 6 | 22 Oct | not started | - | human activity; I can prepare the plan + log template | needs a deployed working build |
 | F7 | Film 26 Oct (frozen build) + edit 27 Oct | 8 | 27 Oct | not started | - | human activity; I can prepare shot list/checklist | frozen build, F6 script (P4) |
-| PFD | SHOULD: process flow diagrams (12 units) | 4 | after MUST | not started | - | only after every P5 MUST is merged | - |
+| PFD | SHOULD: process flow diagrams (12 units) | 4 | after MUST | PR #88 open, CI running; merge after #83/#84/#85 | `web/src/chemlab/drawings/pfd.ts`, ChemLab section, `web/tests/pfd.spec.ts` | approval | P5 MUSTs first |
 
 Checks run on main (12 Oct): web `oxlint` 0 errors (2 warnings, not P5), `tsc -b` exit 0, `check-v2da.mjs` passed.
 
@@ -70,3 +70,4 @@ Checks run on main (12 Oct): web `oxlint` 0 errors (2 warnings, not P5), `tsc -b
 - 16 Oct: D1b built (server #80, app #82) + F1/F7 prep docs (#81); each reviewed and fixed. Branch protection now needs 1 teammate approval per PR, so they wait for approval before merging. D5 next (needs model for the done-when).
 - 16 Oct: D5 built (server #83, app #84), reviewed and fixed; demo mode fully tested. Live check waits for Nebius credits.
 - 16 Oct: TE PDF page count (#85) and PY past papers as PDFs (#86). Reviews requested on #80-#86; team asks posted in issue #87.
+- 17 Oct: #80, #82 merged (Samarth approved). #84/#85 approvals dismissed by the conflict-fix pushes; re-approval requested with #83 and #81. PFD built (#88).
