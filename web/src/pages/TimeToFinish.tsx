@@ -120,6 +120,7 @@ export default function TimeToFinish() {
           </label>
           <input
             id="ttf-count"
+            disabled={pdfBusy}
             inputMode="numeric"
             value={countText}
             onChange={(e) => setCountText(e.target.value)}

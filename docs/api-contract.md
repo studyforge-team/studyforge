@@ -123,8 +123,6 @@ variables are set on Render. Shape in `docs/api-contract.md` section 5."
 
 ## 7. PDF reading (TE and PY, 16 Oct): additive, one new endpoint
 
-(Section 6 is the D5 prep pack, in its own PR.)
-
 ```
 POST /api/v1/pdf/read   multipart: file (PDF, 10 MB max)
   -> 200 { pages: number,    // the true page count
