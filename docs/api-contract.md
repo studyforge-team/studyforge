@@ -127,7 +127,7 @@ variables are set on Render. Shape in `docs/api-contract.md` section 5."
 (`/#prep/<key>`), answers `{task: {title, deadline_utc}, quiz_id, quiz: Quiz, links}`:
 - `quiz` has the Q1 `Quiz` shape (5 items, numerical keys checked in the browser sandbox as for any quiz).
 - `links[i]` is `{upload_id, page}` (the student's notes page matching question i; open it with
-  `GET /uploads/{upload_id}`) or `null`. The same link is in `quiz.items[i].source` as
+  `GET /api/v1/uploads/{upload_id}`) or `null`. The same link is in `quiz.items[i].source` as
   `"notes:<upload_id>#page=<n>"`.
 - Built from the student's notes the first time it is opened, then stored as quiz `prep-<key>`
   (covered by export/delete like every quiz); later opens never call the model.
