@@ -7,6 +7,7 @@ import { McCabe } from '@/chemlab/drawings/McCabe'
 import { cstrViews } from '@/chemlab/drawings/cstr'
 import { columnViews } from '@/chemlab/drawings/column'
 import { hxViews, type HxGeometry } from '@/chemlab/drawings/hx'
+import { pfrViews } from '@/chemlab/drawings/pfr'
 
 const Cstr3D = lazy(() => import('@/chemlab/three/Cstr3D')) // three.js stays in its own chunk
 
@@ -18,7 +19,7 @@ type Out = {
   ok: boolean; errors: { message: string }[]; warnings: string[]
   inputs: Record<string, { value: number; unit: string }>; outputs: Record<string, { value: number; unit: string }>
   steady_states: { T: number; X: number; stable: boolean }[]
-  geometry: { diameter_m: number; height_m: number; n_trays?: number; feed_tray?: number } & Partial<HxGeometry>; series: Record<string, Ser>
+  geometry: { diameter_m: number; height_m: number; n_trays?: number; feed_tray?: number } & Partial<HxGeometry> & { length_m?: number; volume_m3?: number }; series: Record<string, Ser>
 }
 
 const TABS = [['cstr', 'CSTR'], ['batch', 'Batch'], ['pfr', 'PFR'], ['mccabe', 'McCabe-Thiele'], ['hx', 'Heat exchanger']]
@@ -93,6 +94,7 @@ export default function ChemLab() {
     if (!out?.ok) return ''
     if (t === 'cstr') return cstrViews(out.geometry, out.inputs)
     if (t === 'mccabe') return columnViews({ ...out.geometry, n_trays: out.geometry.n_trays ?? 0, feed_tray: out.geometry.feed_tray ?? 1 }, out.inputs)
+    if (t === 'pfr' && out.geometry.length_m != null) return pfrViews({ length_m: out.geometry.length_m, diameter_m: out.geometry.diameter_m, volume_m3: out.geometry.volume_m3 ?? NaN }, out.inputs)
     // no geometry when a 1-2 shell-and-tube exchanger cannot do the duty (the template warns)
     if (t === 'hx' && out.geometry.n_tubes != null) return hxViews(out.geometry as HxGeometry, out.inputs)
     return ''
@@ -225,6 +227,7 @@ export default function ChemLab() {
                   lines={[{ name: 'hot', x: sr.hot_profile.x, y: sr.hot_profile.y, color: 'var(--destructive)' }, { name: 'cold', x: sr.cold_profile.x, y: sr.cold_profile.y, color: 'var(--primary)' }]} />
               )}
               {t === 'hx' && drawing}
+              {t === 'pfr' && drawing}
               {t === 'hx' && out.geometry.n_tubes == null && (
                 <p className="text-sm text-muted-foreground">No exchanger drawing: a 1-2 shell-and-tube exchanger cannot do this duty (see the warning above).</p>
               )}
