@@ -8,6 +8,8 @@ import { mm, n as r1, scaleText, sheet, sig, type Inputs } from './sheet.ts'
 export type PfrGeometry = { length_m: number; diameter_m: number; volume_m3: number }
 
 const BREAK_RATIO = 12 // L/D above this: drawn broken (shorter ratios keep true proportions)
+// sheet.ts mm() rounds to whole millimetres, which misstates small bores (D = 0.0024 m would print 2 mm)
+const dia = (m: number) => (m < 0.01 ? `${sig(m * 1000)} mm` : mm(m))
 
 export function pfrViews(g: PfrGeometry, inputs: Inputs): string {
   const L = g.length_m, D = g.diameter_m, V = g.volume_m3
@@ -63,11 +65,11 @@ export function pfrViews(g: PfrGeometry, inputs: Inputs): string {
   line(cx, cy - R - wall - 14, cx, cy + R + wall + 14, 'cl')
   arrow(cx - 4, cy, cx - R, cy)
   arrow(cx + 4, cy, cx + R, cy)
-  text(cx, cy - 8, `Ø D = ${mm(D)}`, 'middle')
+  text(cx, cy - 8, `Ø D = ${dia(D)}`, 'middle')
   lead(cx + R + 40, cy - R - wall + 10, cx + 0.7071 * (R + wall / 2), cy - 0.7071 * (R + wall / 2), 'Wall (schematic)')
 
   const notes = [
-    `Tube inner diameter D = ${mm(D)}.`,
+    `Tube inner diameter D = ${dia(D)}.`,
     `Length L = ${sig(L)} m.`,
     `V = ${sig(V)} m³.`,
     broken ? 'Length broken: not to scale.' : `Elevation approx. ${scaleText(s)} at 1000 mm sheet width.`,
@@ -77,7 +79,7 @@ export function pfrViews(g: PfrGeometry, inputs: Inputs): string {
   if (broken) notes.push('Tube diameter drawn enlarged in elevation.')
   S.titleBlock('Tubular reactor (PFR)', notes, inputs)
   return S.finish(
-    `Tubular reactor (PFR), ${mm(D)} bore, ${sig(L)} m long, volume ${sig(V)} m³`,
+    `Tubular reactor (PFR), ${dia(D)} bore, ${sig(L)} m long, volume ${sig(V)} m³`,
     `Schematic first-angle drawing of a straight tubular reactor: front elevation with flanged inlet and outlet nozzles and flow arrows${broken ? ', the tube drawn with break lines and dimensioned at its true length' : ''}, and section A-A through the tube bore, with a title block listing the template inputs.`,
   )
 }

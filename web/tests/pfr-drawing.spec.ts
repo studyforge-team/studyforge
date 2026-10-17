@@ -26,6 +26,12 @@ test('pfr drawing: short tube is drawn unbroken at a stated scale', () => {
   expect(s).toMatch(/Elevation approx\. (1:\d+|[\d.]+:1) at 1000 mm sheet width/)
 })
 
+test('pfr drawing: small bore keeps its significant figures', () => {
+  const s = pfrViews(geo(1e-4, 0.0024), inputs)
+  expect(s).toContain('2.4 mm')
+  expect(s).not.toContain('Ø D = 2 mm')
+})
+
 test('pfr drawing: finite, escaped, inside the sheet, bad geometry draws nothing', () => {
   const sweep = [geo(1, 0.1), geo(0.005, 0.1), geo(1e-3, 10), geo(10, 1e-3), geo(0.1, 0.05), geo(1, 1)]
   const ids = sweep.flatMap((g) => [...pfrViews(g, inputs).matchAll(/\bid="([^"]+)"/g)].map((m) => m[1]))
