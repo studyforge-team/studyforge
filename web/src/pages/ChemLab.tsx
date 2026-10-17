@@ -7,6 +7,7 @@ import { McCabe } from '@/chemlab/drawings/McCabe'
 import { cstrViews } from '@/chemlab/drawings/cstr'
 import { columnViews } from '@/chemlab/drawings/column'
 import { hxViews, type HxGeometry } from '@/chemlab/drawings/hx'
+import { pfd } from '@/chemlab/drawings/pfd'
 
 const Cstr3D = lazy(() => import('@/chemlab/three/Cstr3D')) // three.js stays in its own chunk
 
@@ -125,6 +126,19 @@ export default function ChemLab() {
       x: s.x.slice(b.start, b.stop), y: s.y.slice(b.start, b.stop), color: b.stable ? 'var(--primary)' : 'var(--destructive)', dash: !b.stable,
     }))
   const sr = out?.series ?? {}
+  const flow = pfd(t)
+  const flowsheet = flow && (
+    <section className="rounded-lg border bg-card p-4">
+      <h2 className="text-base font-semibold">Process flow diagram</h2>
+      {/* pfd() escapes all text and every other interpolated value is a number; no process values are drawn */}
+      <div className="mt-2 rounded-md bg-white [&>svg]:h-auto [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: flow }} />
+      <Button className="mt-3 min-h-11" onClick={() => {
+        const a = document.createElement('a')
+        a.href = URL.createObjectURL(new Blob([flow], { type: 'image/svg+xml' }))
+        a.download = `${t === 'mccabe' ? 'column' : t}-pfd.svg`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href))
+      }}>Download SVG</Button>
+    </section>
+  )
   const drawing = sheet && (
     <section className="rounded-lg border bg-card p-4">
       <h2 className="text-base font-semibold">Drawing (2D, first-angle)</h2>
@@ -213,6 +227,7 @@ export default function ChemLab() {
               )}
               {sr.s_curve && <LineChart title="S-curve: conversion vs residence time" logX xLabel="residence time (s)" yLabel="conversion X (-)" lines={lines(sr.s_curve)} />}
               </>}
+              {flowsheet}
               {(CHARTS[t] ?? []).map(([k, title, xn, yn]) => sr[k] && (
                 <LineChart key={k} title={title} xLabel={ax(xn, sr[k].x_unit)} yLabel={ax(yn, sr[k].y_unit)} lines={lines(sr[k], yn)} />
               ))}
