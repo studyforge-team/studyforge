@@ -99,6 +99,22 @@ export async function deleteNotice(id: string): Promise<void> {
   if (!r.ok && r.status !== 404) throw new HttpError(r.status) // 404: already gone
 }
 
+// Phone reminders (D1b), docs/api-contract.md §5. Live backend only: demo mode has no account to remind.
+async function pushApi<T>(method: 'GET' | 'POST' | 'DELETE', path: string, body?: unknown): Promise<T> {
+  if (!BASE) throw new PlainError('Phone reminders need the live app.')
+  const r = await fetch(`${BASE}/api/v1/push${path}`, {
+    method, signal: AbortSignal.timeout(90_000),
+    headers: { ...(body ? { 'Content-Type': 'application/json' } : {}), ...(await auth()) },
+    ...(body ? { body: JSON.stringify(body) } : {}),
+  })
+  if (!r.ok && !(method === 'DELETE' && r.status === 404)) throw new HttpError(r.status) // 404 on delete: already off
+  return (r.status === 204 || method === 'DELETE' ? undefined : await r.json()) as T
+}
+export const getPushKey = async (): Promise<string> => (await pushApi<{ public_key: string }>('GET', '/key')).public_key
+export const savePushSubscription = (sub: PushSubscriptionJSON): Promise<void> => pushApi('POST', '/subscriptions', sub)
+export const deletePushSubscription = (endpoint: string): Promise<void> => pushApi('DELETE', `/subscriptions?endpoint=${encodeURIComponent(endpoint)}`)
+export const sendTestPush = async (): Promise<number> => (await pushApi<{ sent: number }>('POST', '/test')).sent
+
 // D5: GET /prep/{key}, built by the server the first time it is opened (needs the model then).
 export async function getPrep(key: string, onSlow?: () => void): Promise<PrepPack> {
   if (!BASE) return mock.getPrep()

@@ -111,6 +111,15 @@ topic_results = Table(
 )
 
 
+push_subscriptions = Table(  # D1b: one row per phone/browser with reminders on
+    "push_subscriptions", metadata,
+    Column("id", BigInteger, Identity(), primary_key=True),
+    Column("user_id", Text, nullable=False, index=True),
+    Column("endpoint", Text, nullable=False, unique=True),
+    Column("p256dh", Text, nullable=False),
+    Column("auth", Text, nullable=False),
+    Column("created_at", DateTime(timezone=True), nullable=False, server_default=_now),
+)
 note_chunks = Table(
     "note_chunks", metadata,
     Column("id", BigInteger, Identity(), primary_key=True),
