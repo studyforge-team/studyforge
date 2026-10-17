@@ -3,6 +3,7 @@ import { getDashboard, uploadFile } from '@/api/client'
 import type { Dashboard as Data } from '@/api/types'
 import { FilePick } from '@/components/FilePick'
 import { Button } from '@/components/ui/button'
+import PushReminders from '@/components/PushReminders'
 import { warm } from '@/sandbox/client'
 
 const CHECKIN_LINK = /\/#(prep\/[0-9a-f]+\?checkin=\d+)/
@@ -160,6 +161,7 @@ export default function Dashboard() {
           ))}
         </Card>
         <div ref={inboxRef} role="region" aria-label="Reminders inbox">
+          <PushReminders />
           <Card title="Reminders inbox" empty="No reminders yet.">
             {[...fired, ...upcoming].map((r) => (
               <li key={r.id} className="text-sm">

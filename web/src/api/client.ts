@@ -99,6 +99,22 @@ export async function deleteNotice(id: string): Promise<void> {
   if (!r.ok && r.status !== 404) throw new HttpError(r.status) // 404: already gone
 }
 
+// Phone reminders (D1b), docs/api-contract.md §5. Live backend only: demo mode has no account to remind.
+async function pushApi<T>(method: 'GET' | 'POST' | 'DELETE', path: string, body?: unknown): Promise<T> {
+  if (!BASE) throw new PlainError('Phone reminders need the live app.')
+  const r = await fetch(`${BASE}/api/v1/push${path}`, {
+    method, signal: AbortSignal.timeout(90_000),
+    headers: { ...(body ? { 'Content-Type': 'application/json' } : {}), ...(await auth()) },
+    ...(body ? { body: JSON.stringify(body) } : {}),
+  })
+  if (!r.ok && !(method === 'DELETE' && r.status === 404)) throw new HttpError(r.status) // 404 on delete: already off
+  return (r.status === 204 || method === 'DELETE' ? undefined : await r.json()) as T
+}
+export const getPushKey = async (): Promise<string> => (await pushApi<{ public_key: string }>('GET', '/key')).public_key
+export const savePushSubscription = (sub: PushSubscriptionJSON): Promise<void> => pushApi('POST', '/subscriptions', sub)
+export const deletePushSubscription = (endpoint: string): Promise<void> => pushApi('DELETE', `/subscriptions?endpoint=${encodeURIComponent(endpoint)}`)
+export const sendTestPush = async (): Promise<number> => (await pushApi<{ sent: number }>('POST', '/test')).sent
+
 // PY/TE: page count, words and text of a PDF the student picks. Read on the server and not stored.
 export async function readPdf(file: File, onSlow?: () => void): Promise<PdfRead> {
   if (!BASE) throw new PlainError('Reading a PDF works in the live app once you sign in.')
