@@ -69,7 +69,11 @@ for (const [tab, tags] of [['cstr', ['R-101', 'Coolant in']], ['mccabe', ['T-101
     await expect(sec).toBeVisible({ timeout: 180_000 })
     await expect(sec.locator('svg')).toHaveCount(1)
     for (const t of tags) await expect(sec.locator('svg')).toContainText(t)
-    await expect(sec.getByRole('button', { name: 'Download SVG' })).toBeVisible()
+    await expect(sec.getByRole('button', { name: 'Download SVG of the process flow diagram', exact: true })).toBeVisible()
+    if (tab === 'cstr') { // WCAG 2.4.6: the PFD and Drawing download buttons need distinct accessible names
+      await expect(page.getByRole('button', { name: 'Download SVG of the drawing', exact: true })).toHaveCount(1)
+      await expect(page.getByRole('button', { name: /^Download SVG/ })).toHaveCount(2)
+    }
     const over = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
     expect(over).toBeLessThanOrEqual(0) // no horizontal page scroll at 375 px
   })
