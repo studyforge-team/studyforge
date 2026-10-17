@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase'
 import { HttpError, PlainError } from '@/lib/errors'
 import * as mock from './mock'
-import type { CheckinResult, Dashboard, Notice, NoticeIn, Quiz, ResultBody, SolveStart, Step, UploadKind, UploadRead } from './types'
+import type { CheckinResult, Dashboard, PrepPack, Notice, NoticeIn, Quiz, ResultBody, SolveStart, Step, UploadKind, UploadRead } from './types'
 
 const BASE = import.meta.env.VITE_API_URL as string | undefined
 
@@ -97,4 +97,41 @@ export async function deleteNotice(id: string): Promise<void> {
   if (!BASE) return mock.deleteNotice(id)
   const r = await fetch(`${BASE}/api/v1/notices/${encodeURIComponent(id)}`, { method: 'DELETE', headers: await auth(), signal: AbortSignal.timeout(90_000) })
   if (!r.ok && r.status !== 404) throw new HttpError(r.status) // 404: already gone
+}
+
+// Phone reminders (D1b), docs/api-contract.md §5. Live backend only: demo mode has no account to remind.
+async function pushApi<T>(method: 'GET' | 'POST' | 'DELETE', path: string, body?: unknown): Promise<T> {
+  if (!BASE) throw new PlainError('Phone reminders need the live app.')
+  const r = await fetch(`${BASE}/api/v1/push${path}`, {
+    method, signal: AbortSignal.timeout(90_000),
+    headers: { ...(body ? { 'Content-Type': 'application/json' } : {}), ...(await auth()) },
+    ...(body ? { body: JSON.stringify(body) } : {}),
+  })
+  if (!r.ok && !(method === 'DELETE' && r.status === 404)) throw new HttpError(r.status) // 404 on delete: already off
+  return (r.status === 204 || method === 'DELETE' ? undefined : await r.json()) as T
+}
+export const getPushKey = async (): Promise<string> => (await pushApi<{ public_key: string }>('GET', '/key')).public_key
+export const savePushSubscription = (sub: PushSubscriptionJSON): Promise<void> => pushApi('POST', '/subscriptions', sub)
+export const deletePushSubscription = (endpoint: string): Promise<void> => pushApi('DELETE', `/subscriptions?endpoint=${encodeURIComponent(endpoint)}`)
+export const sendTestPush = async (): Promise<number> => (await pushApi<{ sent: number }>('POST', '/test')).sent
+
+// D5: GET /prep/{key}, built by the server the first time it is opened (needs the model then).
+export async function getPrep(key: string, onSlow?: () => void): Promise<PrepPack> {
+  if (!BASE) return mock.getPrep()
+  const t = setTimeout(() => onSlow?.(), 3000) // Render free tier sleeps; building can also take a while
+  try {
+    const r = await fetch(`${BASE}/api/v1/prep/${encodeURIComponent(key)}`, { headers: await auth(), signal: AbortSignal.timeout(90_000) })
+    if (!r.ok) throw new HttpError(r.status)
+    return (await r.json()) as PrepPack
+  } finally {
+    clearTimeout(t)
+  }
+}
+
+// C1: a signed link to one of the student's own uploads, valid 10 minutes.
+export async function getUploadUrl(id: string): Promise<string> {
+  if (!BASE) throw new PlainError('Your notes open in the live app.')
+  const r = await fetch(`${BASE}/api/v1/uploads/${encodeURIComponent(id)}`, { headers: await auth(), signal: AbortSignal.timeout(90_000) })
+  if (!r.ok) throw new HttpError(r.status)
+  return ((await r.json()) as { url: string }).url
 }

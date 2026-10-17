@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { Button } from '@/components/ui/button'
+import { turnOff } from '@/lib/pushReminders' // D1b: stop this device's reminders while the token still works
 import { getCaptchaToken, supabase } from '@/lib/supabase'
 
 export default function Auth() {
@@ -20,7 +21,7 @@ export default function Auth() {
         {session ? (
           <>
             <span className="min-w-0 flex-1 truncate text-sm">{session.user.is_anonymous ? 'Demo student' : session.user.email}</span>
-            <Button variant="outline" onClick={() => void run(supabase!.auth.signOut())}>Sign out</Button>
+            <Button variant="outline" onClick={() => void run(turnOff().catch(() => {}).then(() => supabase!.auth.signOut()))}>Sign out</Button>
           </>
         ) : (
           <>
