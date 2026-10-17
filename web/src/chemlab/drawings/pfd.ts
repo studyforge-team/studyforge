@@ -89,7 +89,7 @@ const flowsheets: Record<string, [string, string, Draw]> = {
   }],
   batch: ['PFD: batch reactor', 'Charge through valve FV-101 into batch reactor R-101 with jacket, product to pump P-101.', (c) => {
     c.stream([[40, 100], [226, 100]]); c.text(40, 90, 'Charge', 'start'); S.valve(c, 240, 100); c.tag(240, 128, 'FV-101')
-    c.stream([[254, 100], [420, 100], [420, 118]]); S.batch(c, 420, 190); c.tag(500, 160, 'R-101', 'start'); c.text(500, 176, 'Batch reactor', 'start')
+    c.stream([[254, 100], [436, 100], [436, 148]]); S.batch(c, 420, 190); c.tag(500, 160, 'R-101', 'start'); c.text(500, 176, 'Batch reactor', 'start')
     c.stream([[320, 210], [380, 210]]); c.text(320, 200, 'Utility in', 'start'); c.stream([[460, 210], [600, 210]]); c.text(606, 214, 'Utility out', 'start')
     c.stream([[420, 232], [420, 330], [582, 330]]); S.pump(c, 600, 330); c.tag(600, 366, 'P-101'); c.stream([[618, 330], [940, 330]]); c.text(940, 320, 'Product', 'end')
   }],

@@ -89,6 +89,7 @@ export default function ChemLab() {
     return () => clearTimeout(h)
   }, [body, t])
 
+  const flow = useMemo(() => pfd(t), [t])
   // hooks stay above the early returns; each drawing comes from the template's own geometry and inputs
   const sheet = useMemo(() => {
     if (!out?.ok) return ''
@@ -126,7 +127,6 @@ export default function ChemLab() {
       x: s.x.slice(b.start, b.stop), y: s.y.slice(b.start, b.stop), color: b.stable ? 'var(--primary)' : 'var(--destructive)', dash: !b.stable,
     }))
   const sr = out?.series ?? {}
-  const flow = pfd(t)
   const flowsheet = flow && (
     <section className="rounded-lg border bg-card p-4">
       <h2 className="text-base font-semibold">Process flow diagram</h2>
