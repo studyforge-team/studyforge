@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase'
 import { HttpError, PlainError } from '@/lib/errors'
 import * as mock from './mock'
-import type { PdfRead, CheckinResult, Dashboard, Notice, NoticeIn, Quiz, ResultBody, SolveStart, Step, UploadKind, UploadRead } from './types'
+import type { CheckinResult, Dashboard, Notice, NoticeIn, PdfRead, PrepPack, Quiz, ResultBody, SolveStart, Step, UploadKind, UploadRead } from './types'
 
 const BASE = import.meta.env.VITE_API_URL as string | undefined
 
@@ -114,6 +114,27 @@ export const getPushKey = async (): Promise<string> => (await pushApi<{ public_k
 export const savePushSubscription = (sub: PushSubscriptionJSON): Promise<void> => pushApi('POST', '/subscriptions', sub)
 export const deletePushSubscription = (endpoint: string): Promise<void> => pushApi('DELETE', `/subscriptions?endpoint=${encodeURIComponent(endpoint)}`)
 export const sendTestPush = async (): Promise<number> => (await pushApi<{ sent: number }>('POST', '/test')).sent
+
+// D5: GET /prep/{key}, built by the server the first time it is opened (needs the model then).
+export async function getPrep(key: string, onSlow?: () => void): Promise<PrepPack> {
+  if (!BASE) return mock.getPrep()
+  const t = setTimeout(() => onSlow?.(), 3000) // Render free tier sleeps; building can also take a while
+  try {
+    const r = await fetch(`${BASE}/api/v1/prep/${encodeURIComponent(key)}`, { headers: await auth(), signal: AbortSignal.timeout(90_000) })
+    if (!r.ok) throw new HttpError(r.status)
+    return (await r.json()) as PrepPack
+  } finally {
+    clearTimeout(t)
+  }
+}
+
+// C1: a signed link to one of the student's own uploads, valid 10 minutes.
+export async function getUploadUrl(id: string): Promise<string> {
+  if (!BASE) throw new PlainError('Your notes open in the live app.')
+  const r = await fetch(`${BASE}/api/v1/uploads/${encodeURIComponent(id)}`, { headers: await auth(), signal: AbortSignal.timeout(90_000) })
+  if (!r.ok) throw new HttpError(r.status)
+  return ((await r.json()) as { url: string }).url
+}
 
 // PY/TE: page count, words and text of a PDF the student picks. Read on the server and not stored.
 export async function readPdf(file: File, onSlow?: () => void): Promise<PdfRead> {

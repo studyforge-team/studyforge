@@ -37,5 +37,9 @@ export type Quiz = { id?: string; title: string; items: QuizItem[] }
 export type NoticeIn = { text: string; source: 'paste' | 'share'; title?: string; url?: string }
 export type Notice = { id: string; text: string; source: 'paste' | 'share'; title: string | null; url: string | null; created_at: string }
 
+// D5 prep pack, docs/api-contract.md section 6. links[i]: the notes page for quiz.items[i], or null.
+export type NotesLink = { upload_id: string; page: number }
+export type PrepPack = { task: { title: string; deadline_utc: string }; quiz_id: string; quiz: Quiz; links: (NotesLink | null)[] }
+
 // PY/TE: POST /pdf/read. text: one entry per page (first 200 pages); a scanned PDF has words 0.
 export type PdfRead = { pages: number; words: number; text: string[] }
