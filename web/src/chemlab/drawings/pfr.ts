@@ -3,13 +3,14 @@
 // inlet and outlet nozzles and flow arrows; a long tube is drawn with two conventional break lines and
 // dimensioned at its true length. Section A-A: the tube bore with a schematic wall. The template has no wall
 // thickness, flange or nozzle size, so those are schematic and not dimensioned.
-import { mm, n as r1, scaleText, sheet, sig, type Inputs } from './sheet.ts'
+import { n as r1, scaleText, sheet, sig, type Inputs } from './sheet.ts'
 
 export type PfrGeometry = { length_m: number; diameter_m: number; volume_m3: number }
 
+const MIN_LP = 140 // minimum drawn tube length (px): the dimension text must fit inside the span
 const BREAK_RATIO = 12 // L/D above this: drawn broken (shorter ratios keep true proportions)
-// sheet.ts mm() rounds to whole millimetres, which misstates small bores (D = 0.0024 m would print 2 mm)
-const dia = (m: number) => (m < 0.01 ? `${sig(m * 1000)} mm` : mm(m))
+// 4 significant figures, so the section label matches the title block (sheet.ts mm() rounds to whole mm)
+const dia = (m: number) => `${sig(m * 1000)} mm`
 
 export function pfrViews(g: PfrGeometry, inputs: Inputs): string {
   const L = g.length_m, D = g.diameter_m, V = g.volume_m3
@@ -20,7 +21,8 @@ export function pfrViews(g: PfrGeometry, inputs: Inputs): string {
 
   // ---- front elevation: tube (xa..xb) on a horizontal axis at yc, flanges at both ends, nozzle stubs beyond
   const s = broken ? 0 : Math.min(520 / L, 110 / D) // px per m, only when drawn to scale
-  const Lp = broken ? 520 : L * s
+  const Lp = broken ? 520 : Math.max(L * s, MIN_LP) // a very short tube keeps a minimum drawn length
+  const enlarged = !broken && L * s < MIN_LP
   const hd = broken ? 40 : D * s
   const xa = 500 - Lp / 2, xb = 500 + Lp / 2, yc = 150
   const y0 = yc - hd / 2, y1 = yc + hd / 2
@@ -72,7 +74,7 @@ export function pfrViews(g: PfrGeometry, inputs: Inputs): string {
     `Tube inner diameter D = ${dia(D)}.`,
     `Length L = ${sig(L)} m.`,
     `V = ${sig(V)} m³.`,
-    broken ? 'Length broken: not to scale.' : `Elevation approx. ${scaleText(s)} at 1000 mm sheet width.`,
+    broken ? 'Length broken: not to scale.' : enlarged ? 'Length drawn enlarged: not to scale.' : `Elevation approx. ${scaleText(s)} at 1000 mm sheet width.`,
     `Section A–A ${scaleText(k)}. Wall not to scale.`,
     'Flanges and nozzles schematic.',
   ]

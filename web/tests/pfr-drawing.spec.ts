@@ -32,6 +32,24 @@ test('pfr drawing: small bore keeps its significant figures', () => {
   expect(s).not.toContain('Ø D = 2 mm')
 })
 
+test('pfr drawing: bores of 10 mm and more keep 4 significant figures', () => {
+  expect(pfrViews(geo(0.01, 0.0254), inputs)).toContain('Ø D = 25.4 mm')
+  expect(pfrViews(geo(0.01, 0.0125), inputs)).toContain('12.5 mm')
+})
+
+test('pfr drawing: short wide tube gets a minimum drawn length, true dimension text', () => {
+  const g = geo(0.2, 10) // L ~ 0.00255 m
+  const s = pfrViews(g, inputs)
+  expect(s).toContain(`L = ${sig(g.length_m)} m`)
+  expect(s).toContain('Length drawn enlarged: not to scale.')
+  expect(s).not.toMatch(/Elevation approx\./)
+  // the elevation tube is the only o2 rect on the sheet besides the 980 px border
+  const tube = [...s.matchAll(/<rect class="o2" x="[\d.]+" y="[\d.]+" width="([\d.]+)"/g)].map((m) => +m[1]).filter((w) => w < 900)
+  expect(tube).toHaveLength(1)
+  expect(tube[0]).toBeGreaterThanOrEqual(140)
+  expect(s).not.toContain('width="0"')
+})
+
 test('pfr drawing: finite, escaped, inside the sheet, bad geometry draws nothing', () => {
   const sweep = [geo(1, 0.1), geo(0.005, 0.1), geo(1e-3, 10), geo(10, 1e-3), geo(0.1, 0.05), geo(1, 1)]
   const ids = sweep.flatMap((g) => [...pfrViews(g, inputs).matchAll(/\bid="([^"]+)"/g)].map((m) => m[1]))
