@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app import auth, db, wiring
 from app.db import beat
+from app.push import deliver
 from app.reminders import drain, sweep
 from app.routers import (
     checkins,
@@ -17,6 +18,7 @@ from app.routers import (
     notes,
     notices,
     pdf,
+    push,
     quizzes,
     solve,
     uploads,
@@ -69,16 +71,22 @@ async def keepalive(response: Response, source: str = "") -> dict[str, str | boo
         response.status_code = 503
         return {"status": "error", "db": "down"}
     try:  # the ping is the scheduler clock: deliver due reminders (see app/reminders.py)
-        sent: int | None = len(await drain(db.shared_engine(), datetime.now(UTC)))
+        due = await drain(db.shared_engine(), datetime.now(UTC))
+        sent: int | None = len(due)
     except Exception:
         logging.getLogger(__name__).exception("keepalive drain failed")
-        sent = None  # never hide the heartbeat result
+        due, sent = [], None  # never hide the heartbeat result
+    try:  # D1b: the same jobs as phone notifications (None = push not switched on)
+        pushed: int | None = await deliver(db.shared_engine(), due)
+    except Exception:
+        logging.getLogger(__name__).exception("keepalive push failed")  # the in-app inbox still has them
+        pushed = None
     try:  # ignored check-ins -> next round (the next ping delivers it if drain already ran)
         followups: int | None = await sweep(db.shared_engine(), datetime.now(UTC))
     except Exception:
         logging.getLogger(__name__).exception("keepalive sweep failed")
         followups = None
-    return {"status": "ok", "db": "ok", "wrote": wrote, "sent": sent, "followups": followups}
+    return {"status": "ok", "db": "ok", "wrote": wrote, "sent": sent, "pushed": pushed, "followups": followups}
 
 
 app.dependency_overrides[solve.current_user] = auth.current_user
@@ -96,4 +104,6 @@ app.include_router(notices.router)  # carries its own /api/v1 prefix, like solve
 app.dependency_overrides[uploads.current_user] = auth.current_user
 app.include_router(uploads.router)  # carries its own /api/v1 prefix
 app.include_router(pdf.router)  # PY/TE PDF reading; uses uploads.current_user (overridden above)
+app.dependency_overrides[push.current_user] = auth.current_user
+app.include_router(push.router)  # carries its own /api/v1 prefix
 app.include_router(api_router, prefix="/api/v1")
