@@ -17,6 +17,7 @@ from app.routers import (
     me,
     notes,
     notices,
+    prep,
     push,
     quizzes,
     solve,
@@ -96,6 +97,8 @@ app.include_router(checkins.router)
 app.include_router(dashboard.router)
 app.include_router(quizzes.router)  # shares checkins.get_engine
 app.include_router(notes.router)  # shares checkins.get_engine, solve.current_user, uploads.get_storage
+app.dependency_overrides[prep.get_llm] = wiring.prep_llm
+app.include_router(prep.router)  # D5; shares checkins.get_engine, solve.current_user
 app.dependency_overrides[me.current_user] = auth.current_user
 app.include_router(me.router)  # carries its own /api/v1 prefix, like solve.router
 app.dependency_overrides[notices.current_user] = auth.current_user
