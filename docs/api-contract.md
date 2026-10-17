@@ -92,3 +92,31 @@ type Notice = { id: string; text: string; source: 'paste' | 'share';
 Team note: "D1 adds `POST/GET /api/v1/notices` and `DELETE /api/v1/notices/{id}` (additive,
 nothing existing changes). A notice is pasted or shared text; it is only stored for now. Shape in
 `docs/api-contract.md` section 4. D10 export/delete will include the new table."
+
+## 5. Phone reminders (D1b, 16 Oct): additive, new endpoints only
+
+The browser subscribes to web push; every reminder and check-in the keep-alive ping sends
+(D6/D7) also goes to the student's subscribed devices. Off until the host has the VAPID keys.
+
+| Endpoint | Body | Reply |
+|---|---|---|
+| `GET /api/v1/push/key` | (none) | `{public_key}` (base64url); `503` until the keys are set |
+| `POST /api/v1/push/subscriptions` | `PushSubscription.toJSON()`: `{endpoint, keys: {p256dh, auth}}` | `201 {ok: true}` |
+| `DELETE /api/v1/push/subscriptions?endpoint=…` | (none) | `204`; `404` if not this user's device |
+| `POST /api/v1/push/test` | (none) | `{sent: n}`, a test notification to this user's devices |
+
+- Signed in only. `endpoint` must be https on a browser push service (Google FCM, Mozilla,
+  Apple, Microsoft); the server never posts anywhere else. Re-subscribing the same device moves
+  it to the signed-in user. At most 10 devices per user (`429`); the test is limited to 3 per
+  10 minutes (`429`).
+- The notification payload (encrypted, RFC 8291) is `{title, body, url}`; `url` is a path on this
+  site (`/#prep/<task>`, or `…?checkin=<id>` for a check-in), and the service worker opens only
+  StudyForge pages.
+- Table `app.push_subscriptions` (migration 0008), RLS on with no policies; covered by
+  `GET /me/export` and `DELETE /me`.
+- Host env (never in the repo): `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` (from
+  `npx web-push generate-vapid-keys`) and `VAPID_SUBJECT` (`mailto:…`). `/keepalive` reports
+  `"pushed": n` (`null` while off).
+
+Team note: "D1b adds `/api/v1/push/*` (additive). Phone reminders switch on once the three VAPID
+variables are set on Render. Shape in `docs/api-contract.md` section 5."
