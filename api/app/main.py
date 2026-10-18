@@ -2,13 +2,27 @@ import json
 import logging
 import os
 import re
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 
-from app import auth, db
+from app import auth, db, wiring
 from app.db import beat
-from app.routers import me, notices, solve
+from app.push import deliver
+from app.reminders import drain, sweep
+from app.routers import (
+    checkins,
+    dashboard,
+    me,
+    notes,
+    notices,
+    prep,
+    push,
+    quizzes,
+    solve,
+    uploads,
+)
 
 
 class JsonFormatter(logging.Formatter):
@@ -46,22 +60,51 @@ def health_check() -> dict[str, str]:
 
 
 @app.api_route("/keepalive", methods=["GET", "HEAD"])  # UptimeRobot free tier may use HEAD
-async def keepalive(response: Response, source: str = "") -> dict[str, str | bool]:
+async def keepalive(response: Response, source: str = "") -> dict[str, str | bool | int | None]:
     if not os.environ.get("DATABASE_URL"):
         return {"status": "ok", "db": "off"}  # still wakes Render
     src = source if re.fullmatch(r"[a-z0-9-]{1,20}", source) else "unknown"
     try:
-        return {"status": "ok", "db": "ok", "wrote": await beat(db.shared_engine(), src)}
+        wrote = await beat(db.shared_engine(), src)
     except Exception:
         logging.getLogger(__name__).exception("keepalive db check failed")
         response.status_code = 503
         return {"status": "error", "db": "down"}
+    try:  # the ping is the scheduler clock: deliver due reminders (see app/reminders.py)
+        due = await drain(db.shared_engine(), datetime.now(UTC))
+        sent: int | None = len(due)
+    except Exception:
+        logging.getLogger(__name__).exception("keepalive drain failed")
+        due, sent = [], None  # never hide the heartbeat result
+    try:  # D1b: the same jobs as phone notifications (None = push not switched on)
+        pushed: int | None = await deliver(db.shared_engine(), due)
+    except Exception:
+        logging.getLogger(__name__).exception("keepalive push failed")  # the in-app inbox still has them
+        pushed = None
+    try:  # ignored check-ins -> next round (the next ping delivers it if drain already ran)
+        followups: int | None = await sweep(db.shared_engine(), datetime.now(UTC))
+    except Exception:
+        logging.getLogger(__name__).exception("keepalive sweep failed")
+        followups = None
+    return {"status": "ok", "db": "ok", "wrote": wrote, "sent": sent, "pushed": pushed, "followups": followups}
 
 
 app.dependency_overrides[solve.current_user] = auth.current_user
-# solve.router is NOT included yet: it also needs get_deps (LLM/store wiring, a P1/P2 decision).
+app.dependency_overrides[solve.get_deps] = wiring.get_deps
+app.include_router(solve.router)
+app.dependency_overrides[checkins.get_engine] = db.shared_engine
+app.include_router(checkins.router)
+app.include_router(dashboard.router)
+app.include_router(quizzes.router)  # shares checkins.get_engine
+app.include_router(notes.router)  # shares checkins.get_engine, solve.current_user, uploads.get_storage
+app.dependency_overrides[prep.get_llm] = wiring.prep_llm
+app.include_router(prep.router)  # D5; shares checkins.get_engine, solve.current_user
 app.dependency_overrides[me.current_user] = auth.current_user
 app.include_router(me.router)  # carries its own /api/v1 prefix, like solve.router
 app.dependency_overrides[notices.current_user] = auth.current_user
 app.include_router(notices.router)  # carries its own /api/v1 prefix, like solve.router
+app.dependency_overrides[uploads.current_user] = auth.current_user
+app.include_router(uploads.router)  # carries its own /api/v1 prefix
+app.dependency_overrides[push.current_user] = auth.current_user
+app.include_router(push.router)  # carries its own /api/v1 prefix
 app.include_router(api_router, prefix="/api/v1")

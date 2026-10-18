@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase'
 import { HttpError, PlainError } from '@/lib/errors'
 import * as mock from './mock'
-import type { Dashboard, Notice, NoticeIn, Quiz, ResultBody, SolveStart, Step, UploadKind, UploadRead } from './types'
+import type { CheckinResult, Dashboard, PrepPack, Notice, NoticeIn, Quiz, ResultBody, SolveStart, Step, UploadKind, UploadRead } from './types'
 
 const BASE = import.meta.env.VITE_API_URL as string | undefined
 
@@ -28,8 +28,9 @@ async function post<T>(path: string, body: unknown | FormData, onSlow?: () => vo
   }
 }
 
-export const startSolve = (question: string, onSlow?: () => void, uploadId?: string): Promise<SolveStart> =>
-  BASE ? post('/solve', uploadId ? { question, upload_id: uploadId } : { question }, onSlow) : mock.startSolve(question)
+// confirmed: true = the student approved this text on the confirm screen (server then skips need_confirm)
+export const startSolve = (question: string, onSlow?: () => void, uploadId?: string, confirmed?: boolean): Promise<SolveStart> =>
+  BASE ? post('/solve', { question, ...(uploadId && { upload_id: uploadId }), ...(confirmed && { confirmed: true }) }, onSlow) : mock.startSolve(question)
 
 export function uploadFile(file: File, kind: UploadKind, onSlow?: () => void): Promise<{ upload_id: string }> {
   const form = new FormData()
@@ -55,6 +56,10 @@ export async function getDashboard(): Promise<Dashboard> {
 export const getQuiz = (topic: string, onSlow?: () => void): Promise<Quiz> =>
   BASE ? post('/quizzes', { topic }, onSlow) : mock.getQuiz()
 
+// D7: POST /checkins/{job_id}. 409 = already answered, 404 = gone (HttpError.status).
+export const answerCheckin = (jobId: string, correct: boolean): Promise<CheckinResult> =>
+  BASE ? post(`/checkins/${encodeURIComponent(jobId)}`, { correct }) : mock.answerCheckin(correct)
+
 // Fire-and-forget; failures are swallowed (a missed report or save must never block the student).
 const quiet = (path: string, body: unknown) => { void post(path, body).catch(() => {}) }
 
@@ -64,8 +69,8 @@ export const reportItem = (quizId: string | undefined, index: number, reason: st
 }
 
 // Not in the contract; body shape is a gap. Demo mode saves to localStorage in the page instead.
-export const saveAnswers = (quizId: string | undefined, answers: string[], score: number) => {
-  if (BASE && quizId) quiet(`/quizzes/${quizId}/answers`, { answers, score })
+export const saveAnswers = (quizId: string | undefined, answers: string[], score: number, correct: boolean[]) => {
+  if (BASE && quizId) quiet(`/quizzes/${quizId}/answers`, { answers, score, correct })
 }
 
 // D10 privacy panel. No demo fallback: there is no account to export or delete.
@@ -92,4 +97,41 @@ export async function deleteNotice(id: string): Promise<void> {
   if (!BASE) return mock.deleteNotice(id)
   const r = await fetch(`${BASE}/api/v1/notices/${encodeURIComponent(id)}`, { method: 'DELETE', headers: await auth(), signal: AbortSignal.timeout(90_000) })
   if (!r.ok && r.status !== 404) throw new HttpError(r.status) // 404: already gone
+}
+
+// Phone reminders (D1b), docs/api-contract.md §5. Live backend only: demo mode has no account to remind.
+async function pushApi<T>(method: 'GET' | 'POST' | 'DELETE', path: string, body?: unknown): Promise<T> {
+  if (!BASE) throw new PlainError('Phone reminders need the live app.')
+  const r = await fetch(`${BASE}/api/v1/push${path}`, {
+    method, signal: AbortSignal.timeout(90_000),
+    headers: { ...(body ? { 'Content-Type': 'application/json' } : {}), ...(await auth()) },
+    ...(body ? { body: JSON.stringify(body) } : {}),
+  })
+  if (!r.ok && !(method === 'DELETE' && r.status === 404)) throw new HttpError(r.status) // 404 on delete: already off
+  return (r.status === 204 || method === 'DELETE' ? undefined : await r.json()) as T
+}
+export const getPushKey = async (): Promise<string> => (await pushApi<{ public_key: string }>('GET', '/key')).public_key
+export const savePushSubscription = (sub: PushSubscriptionJSON): Promise<void> => pushApi('POST', '/subscriptions', sub)
+export const deletePushSubscription = (endpoint: string): Promise<void> => pushApi('DELETE', `/subscriptions?endpoint=${encodeURIComponent(endpoint)}`)
+export const sendTestPush = async (): Promise<number> => (await pushApi<{ sent: number }>('POST', '/test')).sent
+
+// D5: GET /prep/{key}, built by the server the first time it is opened (needs the model then).
+export async function getPrep(key: string, onSlow?: () => void): Promise<PrepPack> {
+  if (!BASE) return mock.getPrep()
+  const t = setTimeout(() => onSlow?.(), 3000) // Render free tier sleeps; building can also take a while
+  try {
+    const r = await fetch(`${BASE}/api/v1/prep/${encodeURIComponent(key)}`, { headers: await auth(), signal: AbortSignal.timeout(90_000) })
+    if (!r.ok) throw new HttpError(r.status)
+    return (await r.json()) as PrepPack
+  } finally {
+    clearTimeout(t)
+  }
+}
+
+// C1: a signed link to one of the student's own uploads, valid 10 minutes.
+export async function getUploadUrl(id: string): Promise<string> {
+  if (!BASE) throw new PlainError('Your notes open in the live app.')
+  const r = await fetch(`${BASE}/api/v1/uploads/${encodeURIComponent(id)}`, { headers: await auth(), signal: AbortSignal.timeout(90_000) })
+  if (!r.ok) throw new HttpError(r.status)
+  return ((await r.json()) as { url: string }).url
 }

@@ -9,6 +9,11 @@ import PYQPredictor from './pages/PYQPredictor'
 import TimeToFinish from './pages/TimeToFinish'
 import Privacy from './pages/Privacy'
 import Notices from './pages/Notices'
+import CheckIn from './pages/CheckIn'
+import PrepPack from './pages/PrepPack'
+
+const CHECKIN = /^#prep\/[0-9a-f]+\?(.*&)?checkin=(\d+)/
+const PREP = /^#prep\/([0-9a-f]{16})$/ // D5: the link in reminders
 
 // ponytail: one boundary around the page; shows a fixed message, never the error
 class Boundary extends Component<{ children: ReactNode }, { bad: boolean }> {
@@ -44,7 +49,11 @@ export default function App() {
   return (
     <Shell hash={hash}>
       <Boundary key={hash}>
-      {hash === '#solve' ? (
+      {CHECKIN.test(hash) ? (
+        <CheckIn jobId={CHECKIN.exec(hash)![2]} />
+      ) : PREP.test(hash) ? (
+        <PrepPack taskKey={PREP.exec(hash)![1]} />
+      ) : hash === '#solve' ? (
         <Solve />
       ) : hash === '#quiz' ? (
         <Quiz />

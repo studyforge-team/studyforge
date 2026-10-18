@@ -1,5 +1,5 @@
 // Scripted stand-in for the backend, used when VITE_API_URL is unset. Same two functions as client.ts.
-import type { Dashboard, Notice, NoticeIn, Quiz, ResultBody, SolveStart, Step, UploadRead } from './types'
+import type { CheckinResult, Dashboard, PrepPack, Notice, NoticeIn, Quiz, ResultBody, SolveStart, Step, UploadRead } from './types'
 import quizMock from './quizMock.json'
 
 const wait = () => new Promise((r) => setTimeout(r, 300))
@@ -100,10 +100,15 @@ export async function getDashboard(): Promise<Dashboard> {
     ],
     reminders: [
       { id: 'r1', title: 'CRE assignment 3 due in 5 h — open your prep pack', due_at_utc: at(-2), sent_at: at(-2), channel: 'push' },
-      { id: 'r2', title: 'Revise heat exchanger weak topic', due_at_utc: at(-24), sent_at: at(-24), channel: 'app' },
+      { id: '1234567890', title: 'Did you finish Heat transfer quiz? Answer one quick question to check: /#prep/0123456789abcdef?checkin=1234567890', due_at_utc: at(-24), sent_at: at(-24), channel: 'app' },
       { id: 'r3', title: 'Heat transfer quiz tomorrow — do 5 practice questions', due_at_utc: at(20), sent_at: null, channel: 'app' },
     ],
   }
+}
+
+export async function answerCheckin(correct: boolean): Promise<CheckinResult> {
+  await wait()
+  return { done: correct, follow_up_at: correct ? null : new Date(Date.now() + 24 * 3_600_000).toISOString() }
 }
 
 export async function getQuiz(): Promise<Quiz> {
@@ -147,4 +152,12 @@ export async function addNotice(n: NoticeIn): Promise<Notice> {
 export async function deleteNotice(id: string): Promise<void> {
   await wait()
   writeNotices(readNotices().filter((n) => n.id !== id))
+}
+
+// D5 demo: the sample quiz as a prep pack; the first question is linked to page 2 of sample notes.
+export async function getPrep(): Promise<PrepPack> {
+  const quiz = await getQuiz()
+  const due = new Date(Date.now() + 5 * 3_600_000).toISOString()
+  return { task: { title: 'CRE assignment 3 — CSTR design', deadline_utc: due }, quiz_id: 'prep-demo', quiz,
+    links: quiz.items.map((_, i) => (i === 0 ? { upload_id: 'notes-demo', page: 2 } : null)) }
 }

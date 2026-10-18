@@ -12,6 +12,7 @@ from sqlalchemy import (
     BigInteger,
     Boolean,
     Column,
+    Computed,
     DateTime,
     Double,
     Identity,
@@ -20,11 +21,12 @@ from sqlalchemy import (
     MetaData,
     Table,
     Text,
+    UniqueConstraint,
     func,
     select,
     text,
 )
-from sqlalchemy.dialects.postgresql import JSONB, insert
+from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR, insert
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_engine
 
 from app import spend
@@ -71,6 +73,16 @@ heartbeats = Table(
     Column("at", DateTime(timezone=True), nullable=False, server_default=_now),
     Column("source", Text, nullable=False),
 )
+jobs = Table(
+    "jobs", metadata,
+    Column("id", BigInteger, Identity(), primary_key=True),
+    Column("user_id", Text, nullable=False, index=True),
+    Column("kind", Text, nullable=False),
+    Column("dedupe_key", Text, nullable=False, unique=True),
+    Column("due_at", DateTime(timezone=True), nullable=False),
+    Column("sent_at", DateTime(timezone=True)),
+    Column("payload", JSONB, nullable=False, server_default=text("'{}'::jsonb")),
+)
 notices = Table(
     "notices", metadata,
     Column("id", Text, primary_key=True),
@@ -81,6 +93,45 @@ notices = Table(
     Column("url", Text),
     Column("created_at", DateTime(timezone=True), nullable=False, server_default=_now),
     Index("ix_notices_user_created", "user_id", "created_at"),
+)
+
+
+topic_results = Table(
+    "topic_results", metadata,
+    Column("id", BigInteger, Identity(), primary_key=True),
+    Column("user_id", Text, nullable=False),
+    Column("topic", Text, nullable=False),
+    Column("correct", Boolean, nullable=False),
+    Column("source", Text, nullable=False),  # "quiz" | "checkin"
+    Column("ref", Text, nullable=False),
+    Column("item", Integer, nullable=False),
+    Column("created_at", DateTime(timezone=True), nullable=False, server_default=_now),
+    UniqueConstraint("user_id", "source", "ref", "item", name="uq_topic_results_once"),
+    Index("ix_topic_results_user_created", "user_id", "created_at"),
+)
+
+
+push_subscriptions = Table(  # D1b: one row per phone/browser with reminders on
+    "push_subscriptions", metadata,
+    Column("id", BigInteger, Identity(), primary_key=True),
+    Column("user_id", Text, nullable=False, index=True),
+    Column("endpoint", Text, nullable=False, unique=True),
+    Column("p256dh", Text, nullable=False),
+    Column("auth", Text, nullable=False),
+    Column("created_at", DateTime(timezone=True), nullable=False, server_default=_now),
+)
+note_chunks = Table(
+    "note_chunks", metadata,
+    Column("id", BigInteger, Identity(), primary_key=True),
+    Column("user_id", Text, nullable=False),
+    Column("upload_id", Text, nullable=False),
+    Column("page", Integer, nullable=False),
+    Column("text", Text, nullable=False),
+    Column("tsv", TSVECTOR, Computed("to_tsvector('english', text)", persisted=True)),  # never inserted
+    Column("created_at", DateTime(timezone=True), nullable=False, server_default=_now),
+    UniqueConstraint("user_id", "upload_id", "page", name="uq_note_chunks_page"),
+    Index("ix_note_chunks_tsv", "tsv", postgresql_using="gin"),
+    Index("ix_note_chunks_user", "user_id"),
 )
 
 
