@@ -124,13 +124,12 @@ Every template's inputs are also exported to `api/app/agent/chemlab_specs.json`
 (`chemlab/tools/export_specs.py`), which the agent uses to pick a template; a test fails
 if the file is out of date.
 
-The ChemLab page (`#chemlab`) has five tabs today: CSTR, Batch, PFR, McCabe-Thiele and
-Heat exchanger. Flash, recycle and pipe/pump are in the engine (the agent can pick them)
-and their tabs are coming. <!-- TODO(F4): list the flash, recycle and pipe/pump tabs once their PR is merged -->
+The ChemLab page (`#chemlab`) has a tab for each of the eight templates: CSTR, Batch, PFR,
+McCabe-Thiele, Heat exchanger, Flash drum, Recycle loop, and Pipe and pump.
 
 Visuals: charts on every tab; process flow diagrams for all eight templates; engineering
-drawings for the CSTR, the distillation column and the shell-and-tube exchanger (the PFR
-drawing is pending merge); 3D views for the CSTR, the column and the exchanger.
+drawings for the CSTR, the distillation column, the shell-and-tube exchanger and the PFR;
+3D views for the CSTR, the column and the exchanger.
 
 ## Setup
 
