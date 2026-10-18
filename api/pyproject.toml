@@ -17,6 +17,10 @@ dependencies = [
 "pillow==12.3.0",
 "PyJWT[crypto]==2.10.1",
 "cryptography==46.0.3",
+"sqlalchemy[asyncio]==2.0.54",
+"alembic==1.20.0",
+"asyncpg==0.31.0",
+"python-multipart==0.0.32",
 ]
 
 [project.optional-dependencies]
@@ -30,6 +34,9 @@ dev = [
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["app*"]
+
+[tool.setuptools.package-data]
+"app.agent" = ["*.json"]
 
 [tool.pytest.ini_options]
 pythonpath = [".", "tests/unit/agent"]

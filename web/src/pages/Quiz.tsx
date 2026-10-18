@@ -1,17 +1,18 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { getQuiz, reportItem, saveAnswers } from '@/api/client'
-import type { NumericalItem, QuizItem } from '@/api/types'
+import type { NumericalItem, Quiz as QuizData, QuizItem } from '@/api/types'
 import { Button } from '@/components/ui/button'
+import { friendly, PlainError } from '@/lib/errors'
 import { checkKey, fillSolution, fmt4 } from '@/quiz/key'
 import { run, warm } from '@/sandbox/client'
 
 const TOPIC = 'Reactor basics' // ponytail: no topic picker yet; live mode asks the backend for this fixed topic
 const field = 'rounded-lg border border-input bg-background p-3 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60'
 const row = 'flex min-h-11 items-center gap-3 rounded-lg border p-3 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring has-[:checked]:border-primary'
-type Prepared = { item: QuizItem; key?: { value: number; solution: string } }
+type Prepared = { item: QuizItem; idx: number; key?: { value: number; solution: string } } // idx: position in the quiz as served
 type Done = { topic: string; score: number; answer: string }
 
-function Question({ p, n, total, onNext }: { p: Prepared; n: number; total: number; onNext: (d: Done) => void }) {
+function Question({ p, n, total, onNext, extra }: { p: Prepared; n: number; total: number; onNext: (d: Done) => void; extra?: ReactNode }) {
   const { item } = p
   const [pick, setPick] = useState<number>()
   const [text, setText] = useState('')
@@ -98,6 +99,7 @@ function Question({ p, n, total, onNext }: { p: Prepared; n: number; total: numb
         )}
       </div>
 
+      {extra}
       {checked && (
         <Button className="mt-3 w-full sm:w-auto" onClick={() => onNext({ topic: item.topic, score, answer: item.type === 'mcq' ? item.options[pick!] : text })}>
           {n === total ? 'Finish' : 'Next'}
@@ -107,7 +109,9 @@ function Question({ p, n, total, onNext }: { p: Prepared; n: number; total: numb
   )
 }
 
-export default function Quiz() {
+// D5 reuses this page for a prep pack: `load` replaces the fixed-topic request, `heading` the title,
+// and `extra(idx)` adds a line under question idx (its notes link). Without props: the Quiz page as before.
+export default function Quiz({ load, heading = 'Quiz', extra }: { load?: (onSlow: () => void) => Promise<QuizData>; heading?: string; extra?: (idx: number) => ReactNode } = {}) {
   const [prog, setProg] = useState('Loading quiz…')
   const [items, setItems] = useState<Prepared[]>()
   const [skipped, setSkipped] = useState(0)
@@ -115,32 +119,35 @@ export default function Quiz() {
   const [i, setI] = useState(0)
   const [done, setDone] = useState<Done[]>([])
   const [id, setId] = useState<string>()
+  const loader = useRef(load) // the loader of the first render: a new function each render must not reload the quiz
 
   useEffect(() => {
     let live = true
     void warm() // boot Python while the quiz loads
     void (async () => {
       try {
-        const quiz = await getQuiz(TOPIC, () => setProg('Waking up the server…'))
+        if (!loader.current && !TOPIC.trim()) throw new PlainError('Pick a topic first.') // ponytail: TOPIC is a constant today; guards the future picker
+        const slow = () => setProg('Waking up the server…')
+        const quiz = await (loader.current ? loader.current(slow) : getQuiz(TOPIC, slow))
         const nums = quiz.items.filter((x) => x.type === 'numerical').length
         const out: Prepared[] = []
         let skip = 0, k = 0
         for (const [idx, item] of quiz.items.entries()) {
-          if (item.type !== 'numerical') { out.push({ item }); continue }
+          if (item.type !== 'numerical') { out.push({ item, idx }); continue }
           if (!live) return
           setProg(k === 0 ? 'Preparing questions… starting Python (the first run can take up to 20 s)' : `Preparing questions… checking answer key ${k + 1} of ${nums}`)
           k++
           const res = await run(item.key_code, { mode: 'solve' })
           const chk = res.ok ? checkKey(res.result, item) : undefined
           const solution = res.ok && chk?.ok ? fillSolution(item, res.result as Record<string, unknown>) : null
-          if (chk?.ok && solution !== null) out.push({ item, key: { value: chk.value, solution } })
+          if (chk?.ok && solution !== null) out.push({ item, idx, key: { value: chk.value, solution } })
           else { skip++; reportItem(quiz.id, idx, !res.ok ? `sandbox: ${res.error}` : chk && !chk.ok ? chk.reason : 'missing_placeholder') }
         }
         if (!live) return
-        if (!out.length) throw new Error('No usable questions in this quiz.')
+        if (!out.length) throw new PlainError('No usable questions in this quiz.')
         setId(quiz.id); setSkipped(skip); setItems(out)
       } catch (e) {
-        if (live) setError(e instanceof Error ? e.message : 'Could not load the quiz')
+        if (live) setError(friendly(e))
       }
     })()
     return () => { live = false }
@@ -151,7 +158,7 @@ export default function Quiz() {
     setDone(all)
     if (all.length < items!.length) return setI(i + 1)
     const score = all.reduce((s, x) => s + x.score, 0)
-    saveAnswers(id, all.map((x) => x.answer), score)
+    saveAnswers(id, all.map((x) => x.answer), score, all.map((x) => x.score === 1))
     try { localStorage.setItem('sf.quiz.last', JSON.stringify({ score, total: all.length, at: Date.now() })) } catch { /* private mode: results screen still works */ }
   }
 
@@ -162,11 +169,11 @@ export default function Quiz() {
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-6 sm:py-8">
-      <h1 className="text-2xl font-semibold tracking-tight">Quiz</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">{heading}</h1>
       {error && <p role="alert" className="mt-3 text-sm font-medium text-destructive">{error}</p>}
       {!items && !error && <p role="status" className="mt-4 flex items-center gap-2 text-sm text-muted-foreground"><span className="size-5 shrink-0 animate-spin rounded-full border-2 border-tint border-t-primary" />{prog}</p>}
       {skipped > 0 && <p role="status" className="mt-3 rounded-lg border-2 border-warn-line bg-warn-bg p-3 text-sm text-warn">{skipped} question{skipped > 1 ? 's' : ''} skipped because their answer key failed the double-check.</p>}
-      {items && !finished && <Question key={i} p={items[i]} n={i + 1} total={items.length} onNext={next} />}
+      {items && !finished && <Question key={i} p={items[i]} n={i + 1} total={items.length} onNext={next} extra={extra?.(items[i].idx)} />}
       {finished && (
         <section className="mt-4 rounded-lg border bg-card p-4 sm:p-5">
           <h2 className="text-lg font-semibold">Results</h2>

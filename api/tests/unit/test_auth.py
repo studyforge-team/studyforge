@@ -5,7 +5,7 @@ from typing import Any
 import jwt
 import pytest
 from cryptography.hazmat.primitives.asymmetric import ec
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, Request
 from fastapi.testclient import TestClient
 from test_loop import Clock
 from test_solve_routes import script
@@ -101,6 +101,19 @@ def test_unknown_kid_refetches_once(jwks: list[int], monkeypatch: pytest.MonkeyP
     monkeypatch.setattr(auth, "_fetched_at", time.monotonic() - 61)  # cooldown elapsed
     assert get(mint(kid="rotated")).status_code == 200  # rotation picked up
     assert get(mint(kid="rotated")).status_code == 200  # cached, no further fetch needed
+
+
+def test_anonymous_claim_reaches_request_state() -> None:
+    app = FastAPI()
+
+    @app.get("/anon")
+    def anon(request: Request, user: str = Depends(auth.current_user)) -> bool:
+        return bool(request.state.anon)
+
+    h = lambda t: {"Authorization": f"Bearer {t}"}
+    c = TestClient(app)
+    assert c.get("/anon", headers=h(mint("a", is_anonymous=True))).json() is True
+    assert c.get("/anon", headers=h(mint("b"))).json() is False
 
 
 def test_user_b_cannot_read_user_a_solve_404_not_403() -> None:

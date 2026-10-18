@@ -37,7 +37,8 @@ def one(
 
 
 def canon(canonical: str, value: float, unit: str) -> float:
-    specs = {"t": {"x": {"unit": canonical, "min": -1e30, "max": 1e30, "default": 0}}}
+    hi = 1.0 if canonical == "-" else 1e30  # "-" inputs taking "%" are fractions
+    specs = {"t": {"x": {"unit": canonical, "min": -1e30, "max": hi, "default": 0}}}
     pick = Pick(template="t", inputs={"x": Quantity(value=value, unit=unit)})
     return validate_pick(pick, specs)["x"]
 
@@ -78,6 +79,19 @@ CONVERSIONS = [
     ("Pa", 2, "bar", 2e5),
     ("Pa", 1, "atm", 101325),
     ("Pa", 760, "mmHg", 101325.0),
+    ("Pa", 2, "MPa", 2e6),
+    ("Pa", 1, "psi", 6894.757293168),
+    ("kg/s", 3600, "kg/h", 1),
+    ("kg/s", 60, "kg/min", 1),
+    ("kg/s", 500, "g/s", 0.5),
+    ("kg/s", 3.6, "t/h", 1),
+    ("J/(kg K)", 4.18, "kJ/(kg K)", 4180),
+    ("J/(kg K)", 4.18, "J/(g K)", 4180),
+    ("J/(kg K)", 1, "cal/(g K)", 4184),
+    ("W/(m^2 K)", 0.35, "kW/(m^2 K)", 350),
+    ("Pa s", 0.89, "mPa s", 8.9e-4),
+    ("Pa s", 1, "cP", 1e-3),
+    ("Pa s", 1, "P", 0.1),
     ("kmol/h", 10, "mol/s", 36),
     ("kmol/h", 1, "kmol/s", 3600),
     ("kg/kmol", 78.11, "g/mol", 78.11),
