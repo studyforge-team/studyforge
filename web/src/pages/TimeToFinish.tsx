@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { readPdf } from '@/api/client'
+import { friendly, HttpError } from '@/lib/errors'
 import {
   estimate,
   formatDuration,
@@ -26,6 +28,8 @@ function plural(n: number, word: string): string {
 export default function TimeToFinish() {
   const [material, setMaterial] = useState<Material>('textbook')
   const [countText, setCountText] = useState('30')
+  const [pdfNote, setPdfNote] = useState('')
+  const [pdfBusy, setPdfBusy] = useState(false)
   const [passes, setPasses] = useState(1)
   const [paceMinutes, setPaceMinutes] = useState('')
   const [paceCount, setPaceCount] = useState('')
@@ -34,6 +38,24 @@ export default function TimeToFinish() {
 
   const unit = RATES[material].unit
   const count = wholeNumber(countText, MAX_COUNT)
+
+  // TE: the page count comes from the PDF itself; the estimate still uses the stated rates.
+  const pickPdf = async (file: File | undefined, input: HTMLInputElement) => {
+    if (!file) return
+    setPdfBusy(true)
+    setPdfNote('Reading the PDF…')
+    try {
+      const r = await readPdf(file, () => setPdfNote('Waking up the server…'))
+      setCountText(String(Math.min(r.pages, MAX_COUNT)))
+      setPdfNote(`${file.name}: ${plural(r.pages, 'page')}${r.words ? '' : ' (no text layer, so it may be a scan; pages still count)'}.`)
+    } catch (e) {
+      const s = e instanceof HttpError ? e.status : 0
+      setPdfNote(`${s === 415 ? 'That file is not a readable PDF.' : s === 413 ? 'That PDF is over 10 MB.' : s === 401 ? 'Sign in to read a PDF.' : friendly(e)} Type the number of pages instead.`)
+    } finally {
+      setPdfBusy(false)
+      input.value = '' // picking the same file again reads it again
+    }
+  }
   // The pace is used only when both boxes are filled; one box alone is a hint, not an error.
   const paceGiven = paceMinutes.trim() !== '' && paceCount.trim() !== ''
   const paceHalf = !paceGiven && (paceMinutes.trim() !== '' || paceCount.trim() !== '')
@@ -69,7 +91,7 @@ export default function TimeToFinish() {
       </p>
 
       <section className="mt-5 space-y-5 rounded-lg border bg-card p-4 sm:p-5">
-        <fieldset>
+        <fieldset disabled={pdfBusy /* a PDF being read fills the page count */}>
           <legend className="text-sm font-medium">Type of material</legend>
           <div className="mt-2 space-y-1">
             {(Object.keys(RATES) as Material[]).map((m) => (
@@ -98,12 +120,20 @@ export default function TimeToFinish() {
           </label>
           <input
             id="ttf-count"
+            disabled={pdfBusy}
             inputMode="numeric"
             value={countText}
             onChange={(e) => setCountText(e.target.value)}
             aria-invalid={count === null}
             className={field}
           />
+          {unit === 'page' && (
+            <div className="mt-2 text-sm">
+              <label htmlFor="ttf-pdf" className="text-muted-foreground">Or pick the PDF to count its pages: </label>
+              <input id="ttf-pdf" type="file" accept="application/pdf,.pdf" disabled={pdfBusy} className="mt-1 block min-h-11 w-full text-sm" onChange={(e) => void pickPdf(e.target.files?.[0], e.target)} />
+              {pdfNote && <p role="status" className="mt-1 text-muted-foreground">{pdfNote}</p>}
+            </div>
+          )}
         </div>
 
         <div>
