@@ -90,3 +90,12 @@ test('a pace does not carry over to another material; tiny totals and a 1-day de
   await page.getByLabel('Number of pages', { exact: true }).fill('100')
   await expect(page.getByTestId('ttf-per-day')).toHaveText('About 1 hr 40 min–5 hr per day for the next 1 day.')
 })
+
+test('picking a PDF: explained in demo mode, count kept; not offered for problems', async ({ page }) => {
+  await page.goto('/#time-to-finish')
+  await page.getByLabel('Or pick the PDF to count its pages:').setInputFiles({ name: 'notes.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4\n') })
+  await expect(page.getByRole('status').filter({ hasText: 'Reading a PDF works in the live app' })).toBeVisible()
+  await expect(page.getByLabel('Number of pages', { exact: true })).toHaveValue('30')
+  await page.getByLabel(/Numerical problems/).check()
+  await expect(page.getByLabel('Or pick the PDF to count its pages:')).toHaveCount(0)
+})
