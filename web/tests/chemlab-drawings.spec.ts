@@ -77,5 +77,5 @@ test('ChemLab McCabe-Thiele tab shows the column drawing from the real template'
   await expect(sheet).toBeVisible({ timeout: 180_000 })
   await expect(sheet.locator('svg')).toContainText('FRONT ELEVATION')
   await expect(sheet.locator('svg')).toContainText('Feed (tray 10)') // matches the template's geometry above
-  await expect(sheet.getByRole('button', { name: 'Download SVG' })).toBeVisible()
+  await expect(sheet.getByRole('button', { name: 'Download SVG of the drawing', exact: true })).toBeVisible()
 })
