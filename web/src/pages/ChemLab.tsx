@@ -9,6 +9,7 @@ import { columnViews } from '@/chemlab/drawings/column'
 import { hxViews, type HxGeometry } from '@/chemlab/drawings/hx'
 
 const Cstr3D = lazy(() => import('@/chemlab/three/Cstr3D')) // three.js stays in its own chunk
+const Equip3D = lazy(() => import('@/chemlab/three/Equip3D'))
 
 // gap: the frozen contract has no `final.chemlab` field, so AnswerCard has no "Open in ChemLab" button yet.
 // The hook is ready: link to `#chemlab?V=2&T0=310` (or `#chemlab/pfr?L=3`) and those inputs pre-fill (validated, bad params ignored).
@@ -217,12 +218,22 @@ export default function ChemLab() {
                 <LineChart key={k} title={title} xLabel={ax(xn, sr[k].x_unit)} yLabel={ax(yn, sr[k].y_unit)} lines={lines(sr[k], yn)} />
               ))}
               {t === 'mccabe' && sr.stages && <McCabe series={sr} stages={out.outputs.N_theoretical?.value} />}
+              {t === 'mccabe' && drawing && (
+                <Suspense fallback={<p role="status" className="text-sm text-muted-foreground">Loading 3D view…</p>}>
+                  <Equip3D kind="column" g={{ ...out.geometry, n_trays: out.geometry.n_trays ?? 0, feed_tray: out.geometry.feed_tray ?? 1 }} />
+                </Suspense>
+              )}
               {t === 'mccabe' && (drawing || (
                 <p className="text-sm text-muted-foreground">No column drawing: there are no real trays (the reboiler alone does the separation).</p>
               ))}
               {t === 'hx' && sr.hot_profile && sr.cold_profile && (
                 <LineChart title="Counter-flow temperature profile" xLabel={ax('fraction of area from the hot inlet', sr.hot_profile.x_unit)} yLabel={ax('T', sr.hot_profile.y_unit)}
                   lines={[{ name: 'hot', x: sr.hot_profile.x, y: sr.hot_profile.y, color: 'var(--destructive)' }, { name: 'cold', x: sr.cold_profile.x, y: sr.cold_profile.y, color: 'var(--primary)' }]} />
+              )}
+              {t === 'hx' && drawing && (
+                <Suspense fallback={<p role="status" className="text-sm text-muted-foreground">Loading 3D view…</p>}>
+                  <Equip3D kind="hx" g={out.geometry as HxGeometry} />
+                </Suspense>
               )}
               {t === 'hx' && drawing}
               {t === 'hx' && out.geometry.n_tubes == null && (
