@@ -9,12 +9,19 @@ reminders, quizzes, prep packs, cited web answers, and ChemLab reactor and disti
 simulations.
 
 **Status: work in progress, hackathon build** (Nebius x NVIDIA Global AI Hackathon, Track 2).
-`main` holds the web app and the engine: the Nemotron client, the agent loop, the number
-guardrail, photo reading, the quiz engine and eight ChemLab templates. The FastAPI app
-(A2: `/health`, sign-in checks, CORS) and CI are merged, but the solve route is not mounted
-yet (it needs the `get_deps` wiring) and there is no database yet (A4), so the API does not
-solve end to end. The Nemotron models have **not been called yet**, so this README makes
-no claims about accuracy, latency or cost. <!-- TODO(F4): update status after get_deps wiring, A4 and G10 -->
+Live site: https://studyforge-ten-alpha.vercel.app. It runs in **demo/mock mode** until the
+Render and Vercel environment variables and the model key are set (see Demo mode below), so
+it is not a fully live solver yet.
+
+`main` holds the web app, the engine (the Nemotron client, the agent loop, the number
+guardrail, photo and PDF reading, the quiz engine) and eight ChemLab templates. On the
+backend, the FastAPI app, the solve route (mounted with `get_deps`), the Postgres schema
+(Alembic migrations under `api/migrations/`), uploads, notes full-text search, notices,
+reminders and phone push, prep packs and the hardened CI runner are merged, and CI runs on
+every pull request. The solve route answers 503 ("solver not available") until
+`DATABASE_URL` and the Token Factory key are set. The Nemotron models have **not been
+called yet**, so this README makes no claims about accuracy, latency or cost: **TBD after
+Nebius integration**. <!-- TODO(F4): update status after G10 and the first live run -->
 
 ## How a solve works
 
@@ -47,8 +54,8 @@ graph TD
     Browser -->|POST /solve and /solve/id/result| API[FastAPI agent loop]
     API -->|run_python step| Browser
     API --> TF[Nemotron on Nebius Token Factory]
-    API --> DB[Supabase: Auth now; Postgres and Storage planned]
-    CI[CI and evals] -.-> Runner[planned: Node Pyodide runner, docker network none]
+    API --> DB[Supabase: Auth, Postgres, Storage]
+    CI[CI and evals] --> Runner[Node Pyodide runner, docker network none]
     Runner -.->|same sandbox code path| Worker
 ```
 
@@ -78,12 +85,15 @@ model-dependent tests without a key.
 
 Model IDs: only `super` (`nvidia/nemotron-3-super-120b-a12b`) is filled in; `nano`,
 `ultra`, `vision` and all prices are `null` until ticket G10 confirms them from
-`GET /v1/models`. A null model is skipped in its role's chain.
+`GET /v1/models`. A null model is skipped in its role's chain. Confirmed model IDs,
+measured latency and cost per solve: **TBD after Nebius integration**.
 <!-- TODO(F4): fill model IDs, measured latency and cost after G10 / first live run -->
 
 The agent has exactly six tools: `run_python`, `search_my_notes`, `web_search`,
-`make_quiz`, `schedule_reminder`, `draw_diagram`. Unknown tools are refused in code. Until
-their tickets land, the four service tools answer "not available".
+`make_quiz`, `schedule_reminder`, `draw_diagram`. Unknown tools are refused in code. In the
+deployed wiring `make_quiz` and `schedule_reminder` are real; `search_my_notes` (the notes
+search route exists, the tool is not connected yet) and `web_search` still answer "not
+available".
 
 ## ChemLab templates
 
@@ -114,9 +124,13 @@ Every template's inputs are also exported to `api/app/agent/chemlab_specs.json`
 (`chemlab/tools/export_specs.py`), which the agent uses to pick a template; a test fails
 if the file is out of date.
 
-The ChemLab page (`#chemlab`) has tabs for the CSTR, batch, PFR and McCabe-Thiele
-templates, with charts, 2D drawings (CSTR sheet, McCabe-Thiele stages) and a 3D CSTR
-model; the newer templates are not on the page yet. <!-- TODO(F4): list the new template tabs once they are on the page -->
+The ChemLab page (`#chemlab`) has five tabs today: CSTR, Batch, PFR, McCabe-Thiele and
+Heat exchanger. Flash, recycle and pipe/pump are in the engine (the agent can pick them)
+and their tabs are coming. <!-- TODO(F4): list the flash, recycle and pipe/pump tabs once their PR is merged -->
+
+Visuals: charts on every tab; process flow diagrams for all eight templates; engineering
+drawings for the CSTR, the distillation column and the shell-and-tube exchanger (the PFR
+drawing is pending merge); 3D views for the CSTR, the column and the exchanger.
 
 ## Setup
 
@@ -124,7 +138,7 @@ model; the newer templates are not on the page yet. <!-- TODO(F4): list the new 
 git clone https://github.com/studyforge-team/studyforge.git && cd studyforge       # https://github.com/studyforge-team/studyforge
 cd web && npm install && npm run dev        # demo mode, no backend needed
 pip install -e "./chemlab[dev]" -e "./api[dev]"   # from the repo root
-cd api && uvicorn app.main:app --reload     # /health only until the solve route is mounted
+cd api && uvicorn app.main:app --reload     # solve answers 503 without DATABASE_URL and the model key
 cp .env.example .env                        # then fill the names (never commit values)
 ```
 
@@ -134,7 +148,10 @@ With `VITE_API_URL` unset, the web app uses a scripted mock (`web/src/api/mock.t
 only knows one built-in sample (a first-order CSTR: "CSTR first-order reaction, k = 0.2
 1/min, tau = 10 min. Find conversion."); the Python for it really runs in the Pyodide
 worker. Any other question gets an honest low-confidence reply saying the model is not
-connected. <!-- TODO(F4): hosted demo URL and any wider demo mode after A2/S4 -->
+connected. The mock also serves scripted data for the other pages, so the hosted site at
+https://studyforge-ten-alpha.vercel.app shows the screens but does not compute your own
+questions until `VITE_API_URL`, `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are set on
+Vercel and the Render API has its database and model key.
 
 ## Tests
 
@@ -143,41 +160,64 @@ connected. <!-- TODO(F4): hosted demo URL and any wider demo mode after A2/S4 --
 | api | `cd api && pytest` | lint: `ruff check . && mypy app`; needs `pip install -e ./chemlab` |
 | chemlab | `cd chemlab && pytest` | also run by CI |
 | web e2e | `cd web && npm run test:e2e` | Playwright; builds, then serves a preview |
-| web lint | `cd web && npm run lint && npx tsc --noEmit` | oxlint on `main` today |
-| runner | `node runner/node-pyodide.mjs` | not built yet (S1b; `runner/` is a placeholder); will run in docker with `--network none` |
+| web unit | `cd web && node --test tests/errors.test.ts` | Node's built-in test runner |
+| web lint | `cd web && npm run lint && npx tsc --noEmit` | oxlint; `npm run build` also runs `tsc -b` |
+| runner | `node runner/setup.mjs && node --test runner/test-runner.mjs` | CI/eval runner (S1b); model code runs in docker with `--network none` and an empty env |
 
-`npm test` (vitest) is listed in AGENTS.md but not defined in `web/package.json` on `main`
-yet. <!-- TODO(F4): confirm after T1/T5 -->
+CI (`.github/workflows/ci.yml`) runs four jobs on every pull request: api (ruff, mypy,
+pytest against a Postgres service, plus the chemlab tests), web (lint, build, unit test,
+Playwright), runner, and secrets (gitleaks). `npm test` (vitest) is listed in AGENTS.md but is not defined in
+`web/package.json`: the web unit test uses `node --test` instead.
 
 ## Folder map
 
 - `api/` FastAPI backend (agent loop, routers, tests)
 - `web/` React + Vite + TypeScript frontend, Pyodide sandbox, ChemLab screens
 - `chemlab/` simulation templates in plain Python, with tests
-- `runner/` placeholder for the Node Pyodide runner for CI and evals (S1b)
+- `runner/` hardened Node Pyodide runner for CI and evals (S1b)
 - `config/` model registry and settings
 - `docs/` architecture, decisions, feedback log
 
 ## Licences
 
-StudyForge is MIT licensed (see [LICENSE](LICENSE)). Third-party packages used, licences as
-read from installed metadata where available:
+StudyForge is MIT licensed (see [LICENSE](LICENSE)). Direct dependencies, licences as read
+from installed package metadata (Python: `pip show`; npm: each `package.json`).
+
+**Python** (`api/pyproject.toml`; `chemlab` also needs numpy and scipy):
 
 | Package | Licence |
 | --- | --- |
-| openai (Python) | Apache-2.0 |
-| httpx | BSD-3-Clause |
-| pydantic, fastapi, pytest | MIT |
-| numpy | BSD-3-Clause (plus bundled permissive terms) |
-| scipy | BSD-3-Clause (metadata only holds a copyright text: verify) |
+| fastapi, pydantic, pyyaml, PyJWT, sqlalchemy, alembic, pytest, ruff, mypy | MIT |
+| openai, asyncpg, python-multipart, types-PyYAML | Apache-2.0 |
+| httpx, uvicorn | BSD-3-Clause |
+| cryptography | Apache-2.0 OR BSD-3-Clause |
+| numpy | BSD-3-Clause (plus bundled permissive terms: 0BSD, MIT, Zlib, CC0-1.0) |
+| scipy | BSD-3-Clause (its LICENSE file; the metadata field holds only a copyright line) |
 | Pillow | MIT-CMU: **pending team review** against the MIT/Apache/MPL allow-list |
-| pypdfium2 | BSD-3-Clause / Apache-2.0: **pending team review** against the allow-list |
-| react, react-dom, react-markdown, remark-math, rehype-katex, katex, mermaid, dompurify, pyodide, @base-ui/react, class-variance-authority, tailwindcss, vite, typescript, @playwright/test, oxlint | verify (`web/node_modules` not installed here; DOMPurify is MPL-2.0 or Apache-2.0 per upstream, unverified) |
+| pypdfium2 | BSD-3-Clause or Apache-2.0, plus bundled dependency licences: **pending team review** |
 
-<!-- TODO(F4): verify npm licences after npm install; add sqlalchemy, alembic, instructor, apscheduler, aiogram once A2 pins them -->
+**npm** (`web/package.json`):
+
+| Licence | Packages |
+| --- | --- |
+| MIT | react, react-dom, react-markdown, remark-math, rehype-katex, katex, mermaid, three, @types/three, @base-ui/react, @supabase/supabase-js, cn, vite, tailwindcss, @tailwindcss/vite, @vitejs/plugin-react, oxlint, shadcn, @types/node, @types/react, @types/react-dom |
+| Apache-2.0 | class-variance-authority, @playwright/test, typescript |
+| MPL-2.0 | pyodide |
+| MPL-2.0 OR Apache-2.0 | dompurify |
+
+Pyodide's own bundled wheels (numpy, scipy, sympy, matplotlib) carry their upstream
+licences. <!-- TODO(F4): P4 to decide on Pillow (MIT-CMU) and pypdfium2 (bundled licences); check the licences of the Pyodide wheels -->
 
 ## Team
 
-<!-- TODO(F4): names and roles (P1 Engine & ChemLab, P2 Backend & data, P3 Frontend & sandbox, P4 Quality & release) -->
+Built by a team of equals; roles say who builds which ticket first, not who owns what.
+
+| GitHub | Role |
+| --- | --- |
+| [@ssupreethsg](https://github.com/ssupreethsg) (Supreeth) | P1 Engine & ChemLab (also covering P5) |
+| [@ragaveeru-bit](https://github.com/ragaveeru-bit) | P2 Backend & data |
+| [@samarthkombli-ops](https://github.com/samarthkombli-ops) | P3 Frontend & sandbox |
+| [@sudhanvaad1106-spec](https://github.com/sudhanvaad1106-spec) | P4 Quality & release |
+| [@shreyasgoudar251ch056](https://github.com/shreyasgoudar251ch056) (Shreyas) | team member <!-- TODO(F4): confirm Shreyas's role --> |
 
 Contributors and AI assistants: see [AGENTS.md](AGENTS.md).
