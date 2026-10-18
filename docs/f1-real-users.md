@@ -37,11 +37,11 @@ Due 22 Oct. Owner: P5 (Supreeth). Feeds F2 (final fixes).
    (Android: install the app first, browser menu → Install app; iPhone: paste it instead).
 3. **Phone reminders** (only if the VAPID keys are on Render; otherwise skip and log "not live"):
    Today → Turn on phone reminders → Send a test. Did it arrive? Tap it. Tapping opens the prep
-   pack page, which needs PRs #83 and #84 merged (until then the link lands on the default page).
+   pack page for that deadline.
 4. **Ask:** one real question from their subject (photo or typed). Did the confirm screen read it
    right? Is the answer right? Did they trust the numbers?
-5. **Quiz:** open the prep pack for their deadline from a reminder link (`#prep/…`, needs
-   #83/#84 merged); if not live, use the Quiz page (fixed topic: Reactor basics); answer it;
+5. **Quiz:** open the prep pack for their deadline from a reminder link (`#prep/…`); if
+   reminders are not live, use the Quiz page (fixed topic: Reactor basics); answer it;
    check-in later.
 6. **ChemLab:** one template relevant to them; change an input; open the drawing.
 7. Their own words: "What would make you use this before your next deadline?"

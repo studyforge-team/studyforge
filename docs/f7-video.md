@@ -25,7 +25,7 @@ recordings and subtitles (P3).
 | 2 | 15–60 | Ask → photo → confirm screen → answer | The model plans, the browser computes, every number comes from the sandbox (show "run_python" running, then the checked answer) |
 | 3 | 60–80 | The same answer: a wrong-number case or "Not verified" | It can't make up numbers |
 | 4 | 80–105 | Share a WhatsApp notice to StudyForge → Notices | In-app intake (D1) |
-| 5 | 105–125 | Phone notification arrives → tap → prep pack | Reminders (D6, D1b) and the prep pack (D5, if merged) |
+| 5 | 105–125 | Phone notification arrives → tap → prep pack | Reminders (D6, D1b) and the prep pack (D5) |
 | 6 | 125–150 | ChemLab: change an input, the drawing and 3D update | Engineering depth |
 | 7 | 150–165 | Quiz and check-in | Learning loop |
 | 8 | 165–175 | Title card: StudyForge, team, "Nemotron on Nebius Token Factory" | Close |
