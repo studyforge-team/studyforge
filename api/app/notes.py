@@ -10,11 +10,13 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from app.db import note_chunks
+from app.pdfium_lock import one_at_a_time
 
 MAX_PAGES = 200
 MAX_PAGE_CHARS = 5_000  # slides are short; caps per-user storage on the free DB
 
 
+@one_at_a_time
 def pdf_pages(data: bytes) -> list[tuple[int, str]]:
     """(page number, text) per page, whitespace-collapsed; empty pages are skipped, numbers stay true.
     Raises pdfium.PdfiumError for an unreadable file."""

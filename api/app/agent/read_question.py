@@ -18,6 +18,7 @@ from pydantic import BaseModel, ConfigDict
 from app.llm.client import LLMResult
 from app.llm.errors import LLMError, ModelUnavailable
 from app.llm.reasoning import extract_json
+from app.pdfium_lock import one_at_a_time
 
 MAX_INPUT_BYTES = 15 * 1024 * 1024
 MAX_SIDE = 1600
@@ -107,6 +108,7 @@ def _open_image(data: bytes) -> Image.Image:
         Image.MAX_IMAGE_PIXELS = old
 
 
+@one_at_a_time
 def _render_pdf_page(data: bytes, page: int) -> Image.Image:
     try:
         pdf = pdfium.PdfDocument(data)

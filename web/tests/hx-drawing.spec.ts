@@ -85,7 +85,7 @@ test('ChemLab heat exchanger tab shows the profile and the drawing from the real
   await expect(sheet.locator('svg circle.tube')).toHaveCount(28)
   const chart = page.locator('figure', { hasText: 'Counter-flow temperature profile' })
   await expect(chart.locator('polyline')).toHaveCount(2) // hot and cold
-  await expect(sheet.getByRole('button', { name: 'Download SVG' })).toBeVisible()
+  await expect(sheet.getByRole('button', { name: 'Download SVG of the drawing', exact: true })).toBeVisible()
 })
 
 test('ChemLab heat exchanger tab says why there is no drawing when a 1-2 exchanger cannot do the duty', async ({ page }) => {

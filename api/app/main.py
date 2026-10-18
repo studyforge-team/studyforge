@@ -17,6 +17,7 @@ from app.routers import (
     me,
     notes,
     notices,
+    pdf,
     prep,
     push,
     quizzes,
@@ -105,6 +106,7 @@ app.dependency_overrides[notices.current_user] = auth.current_user
 app.include_router(notices.router)  # carries its own /api/v1 prefix, like solve.router
 app.dependency_overrides[uploads.current_user] = auth.current_user
 app.include_router(uploads.router)  # carries its own /api/v1 prefix
+app.include_router(pdf.router)  # PY/TE PDF reading; uses uploads.current_user (overridden above)
 app.dependency_overrides[push.current_user] = auth.current_user
 app.include_router(push.router)  # carries its own /api/v1 prefix
 app.include_router(api_router, prefix="/api/v1")
