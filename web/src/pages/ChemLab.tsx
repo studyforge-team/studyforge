@@ -24,11 +24,13 @@ type Out = {
   geometry: { diameter_m: number; height_m: number; n_trays?: number; feed_tray?: number } & Partial<HxGeometry> & { length_m?: number; volume_m3?: number }; series: Record<string, Ser>
 }
 
-const TABS = [['cstr', 'CSTR'], ['batch', 'Batch'], ['pfr', 'PFR'], ['mccabe', 'McCabe-Thiele'], ['hx', 'Heat exchanger']]
+const TABS = [['cstr', 'CSTR'], ['batch', 'Batch'], ['pfr', 'PFR'], ['mccabe', 'McCabe-Thiele'], ['hx', 'Heat exchanger'], ['flash', 'Flash drum'], ['recycle', 'Recycle loop'], ['pipe', 'Pipe and pump']]
 // [series key, title, x name, y name]; axis units come from the series' own x_unit / y_unit
 const CHARTS: Record<string, [string, string, string, string][]> = {
   batch: [['concentration_time', 'Concentration vs time', 'time', 'CA'], ['conversion_time', 'Conversion vs time', 'time', 'X']],
   pfr: [['concentration_profile', 'Concentration along the reactor', 'length', 'CA'], ['conversion_profile', 'Conversion along the reactor', 'length', 'X'], ['levenspiel', 'Levenspiel plot', 'X', '1/(-rA)']],
+  recycle: [['purge_sweep', 'Overall conversion vs purge fraction', 'purge fraction', 'X overall'], ['inert_buildup', 'Inert in the recycle vs purge fraction', 'purge fraction', 'y inert']],
+  pipe: [['head_curve', 'System curve: head vs flow', 'flow', 'head']],
 }
 const ax = (n: string, unit?: string) => (unit && unit !== '-' ? `${n} (${unit})` : n)
 const SLIDERS = ['V', 'v0', 'T0', 'Ta', 'UA', 'CA0']
@@ -243,6 +245,10 @@ export default function ChemLab() {
               {t === 'mccabe' && (drawing || (
                 <p className="text-sm text-muted-foreground">No column drawing: there are no real trays (the reboiler alone does the separation).</p>
               ))}
+              {t === 'flash' && sr.T_x && sr.T_y && (
+                <LineChart title="T-x-y diagram" xLabel="mole fraction of compound 1" yLabel={ax('T', sr.T_x.y_unit)}
+                  lines={[{ name: 'liquid x', x: sr.T_x.x, y: sr.T_x.y, color: 'var(--primary)' }, { name: 'vapour y', x: sr.T_y.x, y: sr.T_y.y, color: 'var(--destructive)' }]} />
+              )}
               {t === 'hx' && sr.hot_profile && sr.cold_profile && (
                 <LineChart title="Counter-flow temperature profile" xLabel={ax('fraction of area from the hot inlet', sr.hot_profile.x_unit)} yLabel={ax('T', sr.hot_profile.y_unit)}
                   lines={[{ name: 'hot', x: sr.hot_profile.x, y: sr.hot_profile.y, color: 'var(--destructive)' }, { name: 'cold', x: sr.cold_profile.x, y: sr.cold_profile.y, color: 'var(--primary)' }]} />
