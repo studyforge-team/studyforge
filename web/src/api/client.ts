@@ -69,7 +69,7 @@ export const reportItem = (quizId: string | undefined, index: number, reason: st
 }
 
 // Not in the contract; body shape is a gap. Demo mode saves to localStorage in the page instead.
-export const saveAnswers = (quizId: string | undefined, answers: string[], score: number, correct: boolean[]) => {
+export const saveAnswers = (quizId: string | undefined, answers: string[], score: number, correct: (boolean | null)[]) => {
   if (BASE && quizId) quiet(`/quizzes/${quizId}/answers`, { answers, score, correct })
 }
 
