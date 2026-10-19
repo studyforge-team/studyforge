@@ -1,5 +1,5 @@
 import * as mock from './mock'
-import type { Dashboard, ResultBody, SolveStart, Step, UploadKind, UploadRead } from './types'
+import type { Dashboard, Quiz, QuizAttemptsResponse, QuizOpts, ResultBody, SolveStart, SolvesResponse, Step, UploadKind, UploadRead } from './types'
 
 const BASE = import.meta.env.VITE_API_URL as string | undefined
 
@@ -17,6 +17,12 @@ async function post<T>(path: string, body: unknown | FormData, onSlow?: () => vo
   } finally {
     clearTimeout(t)
   }
+}
+
+async function get<T>(path: string): Promise<T> {
+  const r = await fetch(`${BASE}/api/v1${path}`)
+  if (!r.ok) throw new Error(`Server error (HTTP ${r.status})`)
+  return (await r.json()) as T
 }
 
 export const startSolve = (question: string, onSlow?: () => void, uploadId?: string): Promise<SolveStart> =>
@@ -40,4 +46,37 @@ export async function getDashboard(): Promise<Dashboard> {
   const r = await fetch(`${BASE}/api/v1/dashboard`)
   if (!r.ok) throw new Error(`Server error (HTTP ${r.status})`)
   return (await r.json()) as Dashboard
+}
+
+// T1/T3: getQuiz accepts a topic string (backward compat) or a full QuizOpts object.
+export function getQuiz(opts: string | QuizOpts, onSlow?: () => void): Promise<Quiz> {
+  const body: QuizOpts = typeof opts === 'string' ? { topic: opts } : opts
+  if (!BASE) return mock.getQuiz(body)
+  return post<Quiz>('/quizzes', body, onSlow)
+}
+
+export function saveAnswers(
+  quizId: string,
+  answers: (number | string | null)[],
+  score: number,
+  correct: (boolean | null)[],
+): Promise<{ recorded: number }> {
+  if (!BASE) return Promise.resolve({ recorded: 0 })
+  return post(`/quizzes/${quizId}/answers`, { answers, score, correct })
+}
+
+// T4: per-topic quiz attempt history
+export async function getQuizAttempts(): Promise<QuizAttemptsResponse> {
+  if (!BASE) return { topics: [] }
+  return get<QuizAttemptsResponse>('/quiz-attempts')
+}
+
+// T5: paginated solve history
+export async function getSolves(before?: string | null, q?: string | null): Promise<SolvesResponse> {
+  if (!BASE) return { items: [], next: null }
+  const params = new URLSearchParams()
+  if (before) params.set('before', before)
+  if (q) params.set('q', q)
+  const qs = params.toString()
+  return get<SolvesResponse>(`/solves${qs ? `?${qs}` : ''}`)
 }
