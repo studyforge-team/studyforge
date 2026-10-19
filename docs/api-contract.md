@@ -59,3 +59,81 @@ adopted as typed. Conventions the backend follows (branch `s2-agent-loop`):
 > upload read; (8) a quiz item report endpoint; (9) the canonical result shape;
 > (10) CSP and bearer token for the deployed build. Details and status in
 > `docs/api-contract.md`. Please reply with objections by the next check-in.
+
+## 4. POST /api/v1/quizzes (built)
+
+Generates and stores a new practice quiz for an engineering topic, optionally grounded in uploaded notes.
+
+- **Request**: `POST /api/v1/quizzes` (Pydantic `extra="forbid"`)
+  - `topic: string` (1–80 chars, required)
+  - `n_items: integer` (default 5, allowed 3..20)
+  - `kinds: "mcq" | "blank" | "mixed"` (default "mcq")
+  - `marks_per_q: 1 | 2 | 4` (default 1)
+  - `upload_id?: string | null` (optional upload ID owned by user)
+- **Response 200**:
+  - `id: string` (UUID hex)
+  - `title: string`
+  - `items: QuizItem[]`
+  - `topic: string`
+  - `marks_per_q: number`
+  - `total_marks: number` (n * marks_per_q)
+  - `suggested_minutes: number` (n * (2 if kinds == "mcq" else 3))
+- **Errors**:
+  - `404`: upload not found or not owned by user
+  - `422`: validation error (topic length, invalid kinds, extra fields)
+  - `429`: daily spend cap exceeded
+  - `502`: LLM generation failure
+  - `503`: quiz not available (no model configured)
+
+## 5. GET /api/v1/quiz-attempts (built)
+
+Returns per-topic attempt history for the signed-in user, grouped by topic. Topics sorted by their most recent attempt (newest first). Attempts sorted oldest first within each topic (max 50 per topic).
+
+- **Request**: `GET /api/v1/quiz-attempts`
+- **Response 200**:
+  ```json
+  {
+    "topics": [
+      {
+        "topic": "Thermodynamics",
+        "attempts": [
+          {
+            "quiz_id": "ab12...",
+            "score": 4.0,
+            "total": 5.0,
+            "marks_per_q": 1.0,
+            "created_at": "2026-10-18T10:00:00Z"
+          }
+        ]
+      }
+    ]
+  }
+  ```
+
+*Note on existing handler*: `POST /api/v1/quizzes/{quiz_id}/answers` now also atomically records an attempt row into `app.quiz_attempts`. The response shape remains `{"recorded": n}`.
+
+## 6. GET /api/v1/solves (built)
+
+Paginated history of solved questions for the authenticated user (like a chat list).
+
+- **Request**: `GET /api/v1/solves?before=<ISO datetime>&q=<search string, max 80 chars>`
+  - `before`: optional ISO 8601 timestamp cursor.
+  - `q`: optional case-insensitive substring search on question text.
+- **Response 200**:
+  ```json
+  {
+    "items": [
+      {
+        "id": "s1",
+        "question": "CSTR first-order reaction...",
+        "status": "final",
+        "updated_at": "2026-10-18T12:00:00Z"
+      }
+    ],
+    "next": "2026-10-17T18:00:00Z"
+  }
+  ```
+  - 20 items per page, ordered by `updated_at DESC`.
+  - `next`: ISO timestamp of the last item to pass as `before` on the next page, or `null` if no more pages.
+  - **Security**: Never returns `state`, full figures or raw answers in the list.
+
