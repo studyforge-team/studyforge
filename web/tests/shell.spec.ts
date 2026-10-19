@@ -43,6 +43,14 @@ test('settings page renders and is titled', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Sign out' })).toHaveCount(0) // signed out
 })
 
+test('Settings is in the menu for a signed-out visitor and reaches the theme choice', async ({ page }) => {
+  await page.goto('/')
+  const nav = await openMenu(page)
+  await nav.getByRole('link', { name: 'Settings' }).click()
+  await expect(page).toHaveURL(/#settings$/)
+  await expect(page.getByLabel('Dark')).toBeVisible()
+})
+
 test('theme: Dark persists across reload, Light removes it, System follows the OS', async ({ page }) => {
   const dark = () => page.evaluate(() => document.documentElement.classList.contains('dark'))
   await page.emulateMedia({ colorScheme: 'light' })

@@ -8,7 +8,7 @@ const demo = !import.meta.env.VITE_API_URL // same switch as api/client.ts
 const link = 'flex min-h-11 items-center rounded-lg px-3 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground aria-[current=page]:bg-tint aria-[current=page]:font-semibold aria-[current=page]:text-primary'
 const icon = { width: 20, height: 20, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', 'aria-hidden': true } as const
 // pages outside the menu still get their own title, so the top bar never says "Today" on them
-const extra = [['#settings', 'Settings'], ['#privacy', 'Your data'], ['#prep/', 'Prep pack']]
+const extra = [['#privacy', 'Your data'], ['#prep/', 'Prep pack']]
 const links: [string, string, (h: string) => boolean][] = [
   ['#notices', 'Notices', (h) => h === '#notices'],
   ['#solve', 'Ask', (h) => h === '#solve'],
@@ -18,6 +18,7 @@ const links: [string, string, (h: string) => boolean][] = [
   ['#time-to-finish', 'Time to Finish', (h) => h === '#time-to-finish'],
   ['#chemlab', 'ChemLab', (h) => h.startsWith('#chemlab')],
   ['#oa', 'OA Prep', (h) => h === '#oa'],
+  ['#settings', 'Settings', (h) => h === '#settings'], // in the menu for everyone, so the theme is reachable signed out too
 ]
 const other = (h: string) => links.some(([, , m]) => m(h)) || extra.some(([k]) => h.startsWith(k)) // not Today
 
