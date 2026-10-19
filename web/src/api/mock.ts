@@ -104,3 +104,40 @@ export async function getDashboard(): Promise<Dashboard> {
     ],
   }
 }
+
+import type { Quiz, QuizOpts } from './types'
+
+// T1/T3: getQuiz mock — returns a static quiz regardless of opts.
+// Demo mode shows the form but ignores the options.
+export async function getQuiz(_opts: QuizOpts): Promise<Quiz> {
+  await wait()
+  return {
+    id: 'mock-quiz',
+    title: 'Reactor basics (demo)',
+    topic: _opts.topic || 'Reactor basics',
+    marks_per_q: _opts.marks_per_q ?? 1,
+    suggested_minutes: (_opts.n_items ?? 5) * 2,
+    total_marks: (_opts.n_items ?? 5) * (_opts.marks_per_q ?? 1),
+    items: [
+      {
+        type: 'mcq',
+        topic: 'CSTR',
+        stem: 'For a first-order reaction in a CSTR, the Damköhler number Da = kτ represents what?',
+        options: [
+          'The ratio of reaction rate to convective transport rate',
+          'The activation energy divided by RT',
+          'The ratio of heat generation to heat removal',
+          'The ratio of feed to product flow rates',
+        ],
+        correct_index: 0,
+        misconceptions: {
+          '1': 'That is the Arrhenius exponent, not Da.',
+          '2': 'That is the heat generation ratio in energy balance.',
+          '3': 'That is the recycle ratio, not Da.',
+        },
+        explanation: 'Da = kτ is the dimensionless ratio of the reaction rate constant to the residence time inverse.',
+      },
+    ],
+  }
+}
+

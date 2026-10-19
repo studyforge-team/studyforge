@@ -23,3 +23,97 @@ export type WeakTopic = { topic: string; attempts: number; correct: number }
 export type RecentSolve = { id: string; question: string; status: string; created_at: string }
 export type Reminder = { id: string; title: string; due_at_utc: string; sent_at: string | null; channel: 'app' | 'push' } // push = phone notification (D1b); Telegram dropped 10 Oct
 export type Dashboard = { tasks: Task[]; weak_topics: WeakTopic[]; recent_solves: RecentSolve[]; reminders: Reminder[] }
+
+// ── Quiz types (T1/T2/T3) ─────────────────────────────────────────────────────
+export type MCQItem = {
+  type: 'mcq'
+  topic: string
+  stem: string
+  options: string[]
+  correct_index: number
+  misconceptions: Record<string, string>
+  explanation: string
+  source?: string | null
+  tags?: string[]
+}
+
+export type NumericalItem = {
+  type: 'numerical'
+  topic: string
+  stem: string
+  key_code: string
+  unit: string
+  tolerance_rel?: number
+  worked_solution: string
+  source?: string | null
+  tags?: string[]
+}
+
+export type BlankItem = {
+  type: 'blank'
+  topic: string
+  stem: string
+  answers: string[]
+  explanation: string
+  source?: string | null
+  tags?: string[]
+}
+
+export type SubjectiveItem = {
+  type: 'subjective'
+  topic: string
+  stem: string
+  rubric: string[]
+  source?: string | null
+  tags?: string[]
+}
+
+export type QuizItem = MCQItem | NumericalItem | BlankItem | SubjectiveItem
+
+export type Quiz = {
+  id?: string
+  title: string
+  items: QuizItem[]
+  topic?: string
+  marks_per_q?: number
+  total_marks?: number
+  suggested_minutes?: number
+}
+
+export type QuizOpts = {
+  topic: string
+  n_items?: number
+  kinds?: 'mcq' | 'blank' | 'mixed'
+  marks_per_q?: 1 | 2 | 4
+  upload_id?: string
+}
+
+// ── T4: Quiz attempts ──────────────────────────────────────────────────────────
+export type QuizAttempt = {
+  quiz_id: string
+  score: number
+  total: number
+  marks_per_q: number
+  created_at: string
+}
+
+export type TopicAttempts = {
+  topic: string
+  attempts: QuizAttempt[]
+}
+
+export type QuizAttemptsResponse = { topics: TopicAttempts[] }
+
+// ── T5: Solve history ─────────────────────────────────────────────────────────
+export type SolveItem = {
+  id: string
+  question: string
+  status: string
+  updated_at: string
+}
+
+export type SolvesResponse = {
+  items: SolveItem[]
+  next: string | null
+}
+
