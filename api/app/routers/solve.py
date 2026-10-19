@@ -42,6 +42,14 @@ def dev_user() -> str:
     return "dev-user"
 
 
+async def spend_context(user: str = Depends(current_user)) -> None:
+    """Dependency that enforces the daily spend cap for model routes.
+
+    Override in ``main.py`` with a real implementation once the cost log is
+    wired up.  The default allows all requests (no-op).
+    """
+
+
 DepsDep = Annotated[Deps, Depends(get_deps)]
 UserDep = Annotated[str, Depends(current_user)]
 
