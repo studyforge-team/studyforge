@@ -31,7 +31,7 @@ export default function AnswerCard({ a, ran = false }: { a: Final; ran?: boolean
         <Markdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>{a.answer_md}</Markdown>
       </div>
       {a.figures.map((f, i) => (
-        <figure key={i} className="break-inside-avoid rounded-lg border bg-white p-2">
+        <figure key={i} className="break-inside-avoid rounded-lg border bg-white p-2 dark:border-input">
           <img src={f} alt={`Figure ${i + 1}`} className="mx-auto max-w-full" />
           <figcaption className="mt-1 text-center text-xs text-muted-foreground">Figure {i + 1}</figcaption>
         </figure>

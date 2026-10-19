@@ -11,6 +11,7 @@ import Privacy from './pages/Privacy'
 import Notices from './pages/Notices'
 import CheckIn from './pages/CheckIn'
 import PrepPack from './pages/PrepPack'
+import Settings from './pages/Settings'
 
 const CHECKIN = /^#prep\/[0-9a-f]+\?(.*&)?checkin=(\d+)/
 const PREP = /^#prep\/([0-9a-f]{16})$/ // D5: the link in reminders
@@ -67,6 +68,8 @@ export default function App() {
         <Privacy />
       ) : hash === '#time-to-finish' ? (
         <TimeToFinish />
+      ) : hash === '#settings' ? (
+        <Settings />
       ) : hash === '#notices' ? (
         <Notices />
       ) : hash.startsWith('#chemlab') ? (

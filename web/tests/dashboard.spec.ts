@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { openMenu } from './menu.ts'
 
 const noOverflow = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)
 
@@ -14,10 +15,12 @@ for (const vp of [{ width: 375, height: 812 }, { width: 1280, height: 800 }]) {
     await expect(item).toContainText('Phone notification')
     await expect(inbox).toContainText('Scheduled')
     expect(await noOverflow(page)).toBe(true)
-    const nav = page.getByRole('navigation', { name: 'Main' })
+    const nav = await openMenu(page)
     await expect(nav.getByRole('link', { name: 'Today' })).toHaveAttribute('aria-current', 'page')
+    await page.keyboard.press('Escape')
     await page.getByRole('button', { name: 'Ask a question' }).click()
     await expect(page.getByLabel('Your question')).toBeVisible()
+    await openMenu(page)
     await expect(nav.getByRole('link', { name: 'Ask' })).toHaveAttribute('aria-current', 'page')
     await nav.getByRole('link', { name: 'Today' }).click()
     await expect(page.getByRole('heading', { name: 'What do I do today?' })).toBeVisible()

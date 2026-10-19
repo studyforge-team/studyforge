@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { openMenu } from './menu.ts'
 
 // Fixed "today" so deadline maths is checkable: Tue 13 Oct 2026, local time.
 test.beforeEach(async ({ page }) => {
@@ -8,10 +9,11 @@ test.beforeEach(async ({ page }) => {
 test('Time to Finish is reachable from the main navigation', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 })
   await page.goto('/')
-  await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Time to Finish' }).click()
+  await (await openMenu(page)).getByRole('link', { name: 'Time to Finish' }).click()
   await expect(page.getByRole('heading', { name: 'Time to Finish', level: 1 })).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Time to Finish' })).toHaveAttribute('aria-current', 'page')
-  await expect(page.getByRole('link', { name: 'Today' })).not.toHaveAttribute('aria-current', 'page')
+  const nav = await openMenu(page)
+  await expect(nav.getByRole('link', { name: 'Time to Finish' })).toHaveAttribute('aria-current', 'page')
+  await expect(nav.getByRole('link', { name: 'Today' })).not.toHaveAttribute('aria-current', 'page')
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
 })
 
