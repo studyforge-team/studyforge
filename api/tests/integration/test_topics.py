@@ -86,6 +86,12 @@ async def _exercise(sent: list[str]) -> None:
     # wrong length of `correct` -> 422, nothing recorded
     bad = await call("POST", f"/api/v1/quizzes/{qid}/answers", json=body | {"correct": [True]})
     assert bad.status_code == 422 and await count("A") == 2
+    # a skipped item (null) is not recorded; recorded counts the rest
+    qid2 = await PgQuizStore(engine).save("A", Quiz(title="t", items=[_item("Pumps"), _item("Valves")]))
+    r = await call("POST", f"/api/v1/quizzes/{qid2}/answers", json=body | {"correct": [None, True]})
+    assert r.json() == {"recorded": 1} and await count("A") == 3
+    async with engine.connect() as c:
+        assert (await c.execute(text("select item from app.topic_results where ref=:r"), {"r": qid2})).scalars().all() == [1]
 
     # (c) another user's quiz (or an unknown id) is a 404 and changes nothing
     other = await call("POST", f"/api/v1/quizzes/{qid}/answers", "B", json=body | {"correct": [False, False]})
@@ -106,11 +112,11 @@ async def _exercise(sent: list[str]) -> None:
     assert r.status_code == 200
     assert await weak() == [{"topic": "heat EXCHANGERS", "attempts": 3, "correct": 1}]  # 1/3 < 0.7, newest spelling
     # a check-in without a topic records nothing
-    assert await count("A") == 4
+    assert await count("A") == 5
 
     # (e) export carries the rows; DELETE /me removes them
     exported = (await call("GET", "/api/v1/me/export")).json()
-    assert len(exported["topic_results"]) == 4 and {t["user_id"] for t in exported["topic_results"]} == {"A"}
+    assert len(exported["topic_results"]) == 5 and {t["user_id"] for t in exported["topic_results"]} == {"A"}
     assert (await call("DELETE", "/api/v1/me")).status_code == 204
     assert sent == ["https://proj.supabase.co/auth/v1/admin/users/A"]
     assert await count("A") == 0
