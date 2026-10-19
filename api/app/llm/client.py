@@ -124,7 +124,17 @@ class LLMClient:
     ) -> tuple[T, LLMResult]:
         """Reasoning off, reasoning text stripped, validated, repaired at most once."""
         convo = _with_schema(messages, schema)
-        first = await self._complete(role, convo, deadline, solve_id, False, {})
+        # Token Factory enforces json_schema (probed live on the solver model).
+        fmt = {
+            "response_format": {
+                "type": "json_schema",
+                "json_schema": {
+                    "name": schema.__name__,
+                    "schema": schema.model_json_schema(),
+                },
+            }
+        }
+        first = await self._complete(role, convo, deadline, solve_id, False, fmt)
         try:
             return _validate(schema, first.text), first
         except ValueError as err:
@@ -137,7 +147,7 @@ class LLMClient:
                     f"({str(err)[:500]}). Reply with only the corrected JSON object.",
                 },
             ]
-        second = await self._complete(role, repair, deadline, solve_id, False, {})
+        second = await self._complete(role, repair, deadline, solve_id, False, fmt)
         total = replace(
             second,
             cost_usd=first.cost_usd + second.cost_usd,

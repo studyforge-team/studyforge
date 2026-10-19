@@ -14,8 +14,10 @@ from app.agent.quiz_gen import (
     InMemoryQuizStore,
     QuizGenerationFailed,
     QuizService,
+    _Loose,
     generate_quiz,
 )
+from app.llm.errors import JSONRepairFailed
 
 FIXTURE = Path(__file__).parents[3] / "app" / "agent" / "fixtures" / "quiz_mock.json"
 
@@ -83,16 +85,19 @@ def quiz_of(*items: dict[str, Any]) -> dict[str, Any]:
     return {"title": "T", "items": list(items)}
 
 
+THREE = quiz_of(mcq("q1"), mcq("q2"), mcq("q3"))
+
+
 def run(coro: Any) -> Any:
     return asyncio.run(coro)
 
 
 def test_prompt_has_rules_and_schema_in_system_message() -> None:
-    llm = FakeLLM(quiz_of(mcq("q1")))
+    llm = FakeLLM(THREE)
     run(generate_quiz(llm, "entropy", 3, deadline=12.5))
     call = llm.calls[0]
     assert call["role"] == "solver"
-    assert call["schema"] is Quiz
+    assert call["schema"] is _Loose
     assert call["deadline"] == 12.5
     system = call["messages"][0]
     assert system["role"] == "system"
@@ -111,7 +116,7 @@ def test_prompt_has_rules_and_schema_in_system_message() -> None:
 
 
 def test_user_message_has_request_and_quoted_truncated_notes() -> None:
-    llm = FakeLLM(quiz_of(mcq("q1")))
+    llm = FakeLLM(THREE)
     notes = ["x" * 5000] + [f"note {i}" for i in range(1, 8)]
     run(generate_quiz(llm, "entropy", 3, notes=notes, difficulty="hard"))
     user = llm.calls[0]["messages"][-1]
@@ -126,14 +131,14 @@ def test_user_message_has_request_and_quoted_truncated_notes() -> None:
 
 
 def test_no_notes_still_sends_empty_list() -> None:
-    llm = FakeLLM(quiz_of(mcq("q1")))
+    llm = FakeLLM(THREE)
     run(generate_quiz(llm, "t", 2))
     assert llm.calls[0]["messages"][-1]["content"].rstrip().endswith("[]")
 
 
 @pytest.mark.parametrize(("asked", "sent"), [(0, 1), (-4, 1), (3, 3), (99, 10)])
 def test_n_items_clamped(asked: int, sent: int) -> None:
-    llm = FakeLLM(quiz_of(mcq("q1")))
+    llm = FakeLLM(THREE)
     run(generate_quiz(llm, "t", asked))
     assert f"n_items: {sent}\n" in llm.calls[0]["messages"][-1]["content"]
 
@@ -154,13 +159,66 @@ def test_subjective_and_dupes_dropped_extra_trimmed() -> None:
 def test_empty_topic_items_dropped() -> None:
     bad = mcq("blank")
     bad["topic"] = " "
-    quiz = run(generate_quiz(FakeLLM(quiz_of(bad, mcq("ok"))), "t", 5))
-    assert [i.stem for i in quiz.items] == ["ok"]
+    quiz = run(
+        generate_quiz(FakeLLM(quiz_of(bad, mcq("ok"), mcq("ok2"), mcq("ok3"))), "t", 5)
+    )
+    assert [i.stem for i in quiz.items] == ["ok", "ok2", "ok3"]
 
 
 def test_nothing_left_raises() -> None:
     with pytest.raises(QuizGenerationFailed):
         run(generate_quiz(FakeLLM(quiz_of(subj("a"), subj("b"))), "t", 3))
+
+
+class Seq(FakeLLM):
+    """Returns the given replies in order (the last one repeats)."""
+
+    def __init__(self, *replies: dict[str, Any]) -> None:
+        super().__init__()
+        self.replies = list(replies)
+
+    async def chat_json(
+        self, role: str, messages: list[Any], schema: type[Any], **kw: Any
+    ) -> Any:
+        self.calls.append({"messages": list(messages)})
+        data = self.replies.pop(0) if len(self.replies) > 1 else self.replies[0]
+        return schema.model_validate(data), None
+
+
+def test_bad_item_dropped_quiz_returned() -> None:
+    data = quiz_of(mcq("a"), {"topic": "x"}, mcq("b"), mcq("c"))
+    llm = Seq(data)
+    quiz = run(generate_quiz(llm, "t", 5))
+    assert [i.stem for i in quiz.items] == ["a", "b", "c"]
+    assert len(llm.calls) == 1
+
+
+def test_too_few_retries_once_and_merges() -> None:
+    llm = Seq(quiz_of(mcq("a"), {"topic": "x"}), quiz_of(mcq("b"), mcq("c")))
+    quiz = run(generate_quiz(llm, "t", 5))
+    assert [i.stem for i in quiz.items] == ["a", "b", "c"]
+    assert len(llm.calls) == 2
+    assert "Only 1 items were valid" in llm.calls[1]["messages"][-1]["content"]
+
+
+def test_still_too_few_raises() -> None:
+    llm = Seq(quiz_of(mcq("a"), {"topic": "x"}))
+    with pytest.raises(QuizGenerationFailed):
+        run(generate_quiz(llm, "t", 5))
+    assert len(llm.calls) == 2
+
+
+def test_json_repair_failure_is_retried() -> None:
+    class Flaky(Seq):
+        async def chat_json(
+            self, role: str, messages: list[Any], schema: type[Any], **kw: Any
+        ) -> Any:
+            if not self.calls:
+                self.calls.append({"messages": list(messages)})
+                raise JSONRepairFailed("not json", "")
+            return await super().chat_json(role, messages, schema, **kw)
+
+    assert len(run(generate_quiz(Flaky(THREE), "t", 3)).items) == 3
 
 
 def test_fixture_survives_except_subjective() -> None:

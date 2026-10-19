@@ -15,7 +15,10 @@ import uuid
 from collections.abc import Awaitable, Callable, Sequence
 from typing import Any, Literal, Protocol
 
+from pydantic import BaseModel, TypeAdapter, ValidationError
+
 from app.agent.quiz import Quiz, QuizItem, quiz_json_schema
+from app.llm.errors import JSONRepairFailed
 
 log = logging.getLogger(__name__)
 
@@ -36,8 +39,10 @@ Rules for every question:
 
 Multiple choice (type "mcq"):
 - Exactly 4 options and exactly one correct option (correct_index, 0 to 3).
+- "misconceptions" has one key for EACH of the 3 wrong indices and no key for correct_index.
 - Every wrong option must come from a specific, common misconception. Explain each one in
-  "misconceptions" (keys are the wrong option indices, as strings).
+  "misconceptions" (keys are the wrong option indices as digit strings,
+  e.g. "0" or "2", never words like "one").
 - "explanation" teaches the concept, not just the answer.
 
 Numerical (type "numerical"):
@@ -49,9 +54,26 @@ Numerical (type "numerical"):
             "values": {"name": {"value": float(...), "unit": "..."}}}
   Both units must equal the item's "unit".
 - "worked_solution" must not contain any computed number (integers 0 to 10 are fine).
+  Write formulas in words or with spaced symbols and no digit glued to a letter
+  ("v = sqrt(two g h)", not "2gh" or "v^2").
   Use the placeholders {answer}, {check} and {name} (any key of result["values"]) and the
   browser fills them in from the computed result.
+- Physical constants and unit offsets (R = 0.0821, 273 K, g = 9.81, ...) are numbers too: never
+  type them in "worked_solution". Put them in result["values"] and cite them by placeholder,
+  e.g. values {"R": {"value": 0.0821, "unit": "L atm/(mol K)"}} and the text
+  "Use PV = nRT with R = {R}, so T = {T_K} K." (not "R = 0.0821" or "add 273").
+  Placeholders are plain names like {R} or {T_K}, never {values[...]} or {values.R}.
 """
+
+
+class _Loose(BaseModel):
+    """Whole-reply shape; each item is validated on its own so one bad item cannot sink a quiz."""
+
+    title: str = ""
+    items: list[dict[str, Any]] = []
+
+
+_ITEM: TypeAdapter[QuizItem] = TypeAdapter(QuizItem)
 
 
 class QuizGenerationFailed(Exception):
@@ -128,13 +150,42 @@ async def generate_quiz(
     deadline: float | None = None,
 ) -> Quiz:
     n = max(1, min(MAX_ITEMS, n_items))
-    quiz, _ = await llm.chat_json(
-        "solver", _messages(topic, n, difficulty, notes), Quiz, deadline=deadline
-    )
-    items = _tidy(quiz.items, n)
-    if not items:
-        raise QuizGenerationFailed(f"no usable questions on {topic!r}")
-    return Quiz(title=quiz.title, items=items)
+    messages = _messages(topic, n, difficulty, notes)
+    need = min(3, n)
+    items: list[QuizItem] = []
+    title = ""
+    for attempt in range(2):  # one retry that shows the model what was rejected
+        reasons: list[str] = []
+        try:
+            raw, _ = await llm.chat_json("solver", messages, _Loose, deadline=deadline)
+        except JSONRepairFailed as err:
+            raw = _Loose()
+            reasons.append(str(err)[:300])
+        title = title or raw.title
+        for i, data in enumerate(raw.items):
+            try:
+                items.append(_ITEM.validate_python(data))
+            except ValidationError as err:
+                # error text only: it quotes the model's input, never an answer key
+                reasons.append(f"item {i}: {err.errors()[0]['msg'][:200]}")
+        # counts only: a repair error can quote the raw reply, answer keys included
+        log.info(
+            "quiz attempt %d: %d valid, %d rejected", attempt, len(items), len(reasons)
+        )
+        items = _tidy(items, n)
+        if len(items) >= need:
+            break
+        messages = [
+            *messages,
+            {
+                "role": "user",
+                "content": f"Only {len(items)} items were valid. Rejected: {reasons}. "
+                "Write a new, complete quiz that fixes this.",
+            },
+        ]
+    if len(items) < need:
+        raise QuizGenerationFailed(f"only {len(items)} usable questions on {topic!r}")
+    return Quiz(title=title or topic, items=items)
 
 
 class QuizService:

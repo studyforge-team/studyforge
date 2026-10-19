@@ -139,6 +139,8 @@ def stage_smoke(a: argparse.Namespace) -> Outcome:
 
 async def _quiz_valid(llm: LLMClient, topic: str, runner: NodeRunner | None) -> bool:
     quiz = await generate_quiz(llm, topic, 5)
+    if len(quiz.items) < 3:
+        return False
     for item in quiz.items:
         if isinstance(item, NumericalItem) and runner is not None:
             res = await runner.run(item.key_code, 30)
