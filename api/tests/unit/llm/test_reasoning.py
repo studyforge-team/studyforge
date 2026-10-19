@@ -37,3 +37,32 @@ def test_extract_json(text: str) -> None:
 def test_extract_json_fails_without_json() -> None:
     with pytest.raises(ValueError):
         extract_json("no json here")
+
+
+def test_fix_latex_escapes() -> None:
+    from app.llm.reasoning import extract_json
+    from app.llm.reasoning import fix_latex_escapes as fx
+
+    bs = chr(92)  # one backslash
+    assert fx("\x08egin{aligned}") == bs + "begin{aligned}"
+    assert fx("\x0crac{1}{2}") == bs + "frac{1}{2}"
+    assert fx("2\times") == "2" + bs + "times"
+    assert fx("line one\nThe end") == "line one\nThe end"
+    assert fx("$\nabla f$") == "$" + bs + "nabla f$"
+    assert fx({"a": ["\x08ar", {"b": "\theta"}]}) == {"a": [bs + "bar", {"b": bs + "theta"}]}
+    assert fx(bs + "begin x") == bs + "begin x"
+    assert extract_json('{"s": "' + bs + "begin{aligned}" + '"}')["s"] == bs + "begin{aligned}"
+
+
+def test_fix_latex_escapes_never_touches_code_or_plain_prose() -> None:
+    import json
+
+    from app.llm.reasoning import fix_latex_escapes as fx
+
+    code = "import math\nu = 3.0\ni = 0\ne = 2\nresult = {'u': u, 'i': i, 'e': e}"
+    args = fx(json.loads(json.dumps({"code": code, "key_code": code, "answer_md": "where\nu is speed"})))
+    assert args["code"] == code and args["key_code"] == code  # still valid Python
+    compile(args["code"], "<code>", "exec")
+    assert args["answer_md"] == "where\nu is speed"  # no math in it: a real line break
+    assert fx("$x\nu = 1$") == "$x" + chr(92) + "nu = 1$"  # inside math it is \nu again
+    assert fx("2\times") == "2" + chr(92) + "times"  # tab rule still on in text

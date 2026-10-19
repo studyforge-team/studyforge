@@ -13,6 +13,8 @@ from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from app.llm.reasoning import fix_latex_escapes
+
 _PLACEHOLDER = re.compile(r"\{([^{}]*)\}")
 # A digit-led token not glued to a preceding word character (so C_A0 and x2 are ignored).
 _NUMBER_TOKEN = re.compile(r"(?<!\w)\d[\w.,]*")
@@ -128,7 +130,7 @@ class Quiz(_Strict):
 def parse_quiz(data: dict[str, Any] | str) -> Quiz:
     """Validate a quiz given as JSON text or an already-decoded dict."""
     if isinstance(data, str):
-        data = json.loads(data)
+        data = fix_latex_escapes(json.loads(data))
     return Quiz.model_validate(data)
 
 
