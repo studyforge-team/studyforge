@@ -2,27 +2,29 @@
 # `id: null` = not confirmed yet. G10 fills every id and price from GET /v1/models;
 # until then a null model is skipped in its role's chain.
 # Prices are USD per 1M tokens.
+# G10 (19 Oct 2026): IDs copied from GET /v1/models, prices from the Token Factory prices page
+# (tokenfactory.nebius.com/organization/prices, eu-north1, before tax, non-batch).
 
 base_url: https://api.tokenfactory.nebius.com/v1/
 api_key_env: TF_API_KEY
 
 models:
   nano:
-    id: null  # G10: exact Nemotron Nano ID
-    input_usd_per_m: null
-    output_usd_per_m: null
+    id: nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B
+    input_usd_per_m: 0.06
+    output_usd_per_m: 0.24
   super:
-    id: nvidia/nemotron-3-super-120b-a12b  # from the role handbook; G10 confirms
-    input_usd_per_m: null
-    output_usd_per_m: null
+    id: nvidia/nemotron-3-super-120b-a12b
+    input_usd_per_m: 0.30
+    output_usd_per_m: 0.90
   ultra:
-    id: null  # only if listed
-    input_usd_per_m: null
-    output_usd_per_m: null
+    id: nvidia/Nemotron-3-Ultra-550b-a55b
+    input_usd_per_m: 1.00
+    output_usd_per_m: 3.00
   vision:
-    id: null  # G10: NVIDIA vision model on Token Factory
-    input_usd_per_m: null
-    output_usd_per_m: null
+    id: nvidia/Nemotron-3.5-Super-VL
+    input_usd_per_m: 0.30
+    output_usd_per_m: 0.90
 
 # models: tried in order (fallback chain). reasoning: thinking on/off for the call;
 # leave it out to send no thinking flag (vision, until G10 shows the model accepts it).

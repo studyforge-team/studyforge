@@ -6,18 +6,25 @@ from app.llm.errors import ModelUnavailable
 from app.llm.registry import Registry, load_registry
 
 
-def test_repo_config_loads_and_skips_unconfirmed_models() -> None:
-    reg = load_registry()  # repo-root config/models.yaml
+def test_repo_config_has_confirmed_ids_and_prices() -> None:
+    reg = load_registry()  # repo-root config/models.yaml, filled by G10 (19 Oct)
     assert [m.id for m in reg.chain("solver")] == ["nvidia/nemotron-3-super-120b-a12b"]
-    # nano and ultra are null until G10, so their roles fall through to Super
-    assert [m.name for m in reg.chain("router")] == ["super"]
-    assert [m.name for m in reg.chain("cross_check")] == ["super"]
+    assert [m.name for m in reg.chain("router")] == ["nano", "super"]
+    assert [m.name for m in reg.chain("cross_check")] == ["ultra", "super"]
+    assert [m.name for m in reg.chain("vision")] == ["vision"]
+    # a null price would make SPEND_CAP_USD count the model's calls as $0
+    for role in ("router", "solver", "cross_check", "vision"):
+        for m in reg.chain(role):
+            assert m.input_usd_per_m and m.output_usd_per_m, m.name
 
 
-def test_role_with_no_confirmed_model_is_unavailable() -> None:
-    reg = load_registry()
+def test_role_with_no_confirmed_model_is_unavailable(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    src = Path(__file__).parents[4] / "config" / "models.yaml"
+    path = tmp_path / "m.yaml"
+    path.write_text(src.read_text().replace("id: nvidia/Nemotron-3.5-Super-VL", "id: null"))
+    monkeypatch.setenv("STUDYFORGE_MODELS_PATH", str(path))
     with pytest.raises(ModelUnavailable):
-        reg.chain("vision")
+        load_registry().chain("vision")
 
 
 def test_chain_order_follows_config(registry: Registry) -> None:
