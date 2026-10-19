@@ -14,6 +14,7 @@ from app.reminders import drain, sweep
 from app.routers import (
     checkins,
     dashboard,
+    history,
     me,
     notes,
     notices,
@@ -96,6 +97,7 @@ app.include_router(solve.router)
 app.dependency_overrides[checkins.get_engine] = db.shared_engine
 app.include_router(checkins.router)
 app.include_router(dashboard.router)
+app.include_router(history.router)  # T5; shares checkins.get_engine, solve.current_user
 app.include_router(quizzes.router)  # shares checkins.get_engine
 app.include_router(notes.router)  # shares checkins.get_engine, solve.current_user, uploads.get_storage
 app.dependency_overrides[prep.get_llm] = wiring.prep_llm

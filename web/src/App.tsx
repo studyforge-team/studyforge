@@ -28,6 +28,7 @@ class Boundary extends Component<{ children: ReactNode }, { bad: boolean }> {
 }
 
 const SelfTest = lazy(() => import('./SelfTest'))
+const History = lazy(() => import('./pages/History'))
 const ChemLab = lazy(() => import('./pages/ChemLab')) // keeps the sandbox page out of the main chunk
 
 export default function App() {
@@ -72,6 +73,10 @@ export default function App() {
         <Settings />
       ) : hash === '#notices' ? (
         <Notices />
+      ) : hash.startsWith('#history') ? (
+        <Suspense fallback={<p role="status" className="mx-auto max-w-3xl px-4 py-6 text-sm text-muted-foreground">Loading…</p>}>
+          <History key={hash} />
+        </Suspense>
       ) : hash.startsWith('#chemlab') ? (
         <Suspense
           fallback={
