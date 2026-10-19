@@ -10,6 +10,8 @@ import json
 from dataclasses import dataclass
 from typing import Any, Protocol
 
+from app.llm.reasoning import fix_latex_escapes
+
 TOOL_NAMES = (
     "run_python",
     "search_my_notes",
@@ -111,7 +113,7 @@ def parse_args(name: str, arguments: str) -> dict[str, Any]:
     if name not in TOOL_NAMES:
         raise ToolRefused(f"unknown tool '{name}'; allowed: {', '.join(TOOL_NAMES)}")
     try:
-        args = json.loads(arguments or "{}")
+        args = fix_latex_escapes(json.loads(arguments or "{}"))
     except json.JSONDecodeError as err:
         raise ToolRefused(f"{name}: arguments are not valid JSON ({err})") from err
     if not isinstance(args, dict):

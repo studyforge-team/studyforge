@@ -37,3 +37,18 @@ def test_extract_json(text: str) -> None:
 def test_extract_json_fails_without_json() -> None:
     with pytest.raises(ValueError):
         extract_json("no json here")
+
+
+def test_fix_latex_escapes() -> None:
+    from app.llm.reasoning import extract_json
+    from app.llm.reasoning import fix_latex_escapes as fx
+
+    bs = chr(92)  # one backslash
+    assert fx("\x08egin{aligned}") == bs + "begin{aligned}"
+    assert fx("\x0crac{1}{2}") == bs + "frac{1}{2}"
+    assert fx("2\times") == "2" + bs + "times"
+    assert fx("line one\nThe end") == "line one\nThe end"
+    assert fx("\nabla f") == bs + "nabla f"
+    assert fx({"a": ["\x08ar", {"b": "\theta"}]}) == {"a": [bs + "bar", {"b": bs + "theta"}]}
+    assert fx(bs + "begin x") == bs + "begin x"
+    assert extract_json('{"s": "' + bs + "begin{aligned}" + '"}')["s"] == bs + "begin{aligned}"
