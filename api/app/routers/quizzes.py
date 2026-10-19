@@ -21,7 +21,7 @@ class Answers(BaseModel):
     # items send free text, and a 422 here is swallowed by the web client (quiz results lost).
     answers: list[Annotated[str, Field(max_length=4000)]] = Field(max_length=20)
     score: float = Field(ge=0)  # float, not int: subjective items score fractionally
-    correct: list[bool] = Field(max_length=20)
+    correct: list[bool | None] = Field(max_length=20)  # None = skipped item, never seen: not recorded
 
 
 @router.post("/quizzes/{quiz_id}/answers", dependencies=[Depends(_need_db)])
@@ -38,6 +38,6 @@ async def save_answers(
         items = quiz["items"]
         if len(body.correct) != len(items):
             raise HTTPException(422, "correct must have one entry per quiz item")
-        await topics.record(conn, user, "quiz", quiz_id,
-                            [(i, it["topic"], c) for i, (it, c) in enumerate(zip(items, body.correct, strict=True))])
-    return {"recorded": len(items)}
+        seen = [(i, it["topic"], c) for i, (it, c) in enumerate(zip(items, body.correct, strict=True)) if c is not None]
+        await topics.record(conn, user, "quiz", quiz_id, seen)
+    return {"recorded": len(seen)}
