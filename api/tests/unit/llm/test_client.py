@@ -211,6 +211,9 @@ def test_chat_json_strips_reasoning_and_validates(registry: Registry) -> None:
     assert parsed == Answer(value=2.5, unit="m")
     # reasoning forced off for JSON calls even though solver has it on
     assert server.body(0)["chat_template_kwargs"]["enable_thinking"] is False
+    fmt = server.body(0)["response_format"]
+    assert fmt["type"] == "json_schema"
+    assert fmt["json_schema"]["schema"] == Answer.model_json_schema()
 
 
 def test_chat_json_repairs_once(registry: Registry) -> None:
