@@ -13,8 +13,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 import app.routers.checkins as checkins_mod
 import app.routers.dashboard as dashboard_mod
+import app.routers.me as me_mod
 import app.routers.prep as prep_mod
+import app.routers.progress as progress_mod
 import app.routers.quiz_new as quiz_new_mod
+import app.routers.quizzes as quizzes_mod
 import app.routers.solve as solve_mod
 import app.routers.uploads as uploads_mod
 
@@ -33,8 +36,11 @@ app.add_middleware(
 # ── Routers ───────────────────────────────────────────────────────────────────
 app.include_router(solve_mod.router)
 app.include_router(dashboard_mod.router)
+app.include_router(quizzes_mod.router)
 app.include_router(quiz_new_mod.router)
 app.include_router(uploads_mod.router)
+app.include_router(progress_mod.router)
+app.include_router(me_mod.router)
 app.include_router(prep_mod.router)
 
 # ── Dependency overrides when DATABASE_URL is set ─────────────────────────────
