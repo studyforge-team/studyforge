@@ -6,7 +6,7 @@ from typing import Any
 import pytest
 from pydantic import BaseModel
 
-from app.agent import loop
+from app.agent import guardrail, loop
 from app.agent.loop import Deps
 from app.agent.state import InMemoryStore, SolveNotFound
 from app.agent.steps import ResultBody
@@ -175,12 +175,14 @@ def disagreeing(answer: float = 0.6667) -> dict[str, Any]:
 def test_disagreeing_methods_trigger_one_cross_check_that_agrees() -> None:
     llm = calc(
         ("chat_tools", tool("run_python", code="a")),
+        ("chat_tools", tool("run_python", code="r")),
         ("chat_tools", tool("run_python", code="b")),
         ("chat_json", {"answer_md": "ok"}),
     )
-    steps = run(solve(deps(llm), {"result": disagreeing()}, {"result": GOOD}))
-    assert llm.calls[2][1] == "cross_check"
-    assert steps[2]["confidence"] == "medium"
+    bodies = [{"result": disagreeing()}, {"result": disagreeing()}, {"result": GOOD}]
+    steps = run(solve(deps(llm), *bodies))
+    assert [c[1] for c in llm.calls[1:4]] == ["solver", "solver", "cross_check"]
+    assert steps[-1]["confidence"] == "medium"
 
 
 def test_cross_check_that_disagrees_is_flagged_low() -> None:
@@ -191,11 +193,13 @@ def test_cross_check_that_disagrees_is_flagged_low() -> None:
     }
     llm = calc(
         ("chat_tools", tool("run_python", code="a")),
+        ("chat_tools", tool("run_python", code="r")),
         ("chat_tools", tool("run_python", code="b")),
         ("chat_json", {"answer_md": "ok"}),
     )
-    steps = run(solve(deps(llm), {"result": disagreeing()}, {"result": other}))
-    assert steps[2]["confidence"] == "low"
+    bodies = [{"result": disagreeing()}, {"result": disagreeing()}, {"result": other}]
+    steps = run(solve(deps(llm), *bodies))
+    assert steps[-1]["confidence"] == "low"
 
 
 def test_at_most_four_tool_steps() -> None:
@@ -350,3 +354,137 @@ def test_two_failed_checks_switch_to_the_cross_check_model() -> None:
     steps = run(solve(deps(llm), {"result": bad}, {"result": bad}, {"result": GOOD}))
     assert [c[1] for c in llm.calls[1:4]] == ["solver", "solver", "cross_check"]
     assert steps[-1]["confidence"] == "medium"
+
+
+# --- SV1: fail-safe guards (A, B, C, H) ---------------------------------------------
+
+
+def with_assumptions(*texts: str) -> dict[str, Any]:
+    return {**GOOD, "assumptions": list(texts)}
+
+
+def one_run(result: dict[str, Any], question: str) -> dict[str, Any]:
+    llm = calc(
+        ("chat_tools", tool("run_python", code="r")),
+        ("chat_json", {"answer_md": "X = 0.6667"}),
+    )
+    return run(solve(deps(llm), {"result": result}, question=question))[1]
+
+
+def test_a_numeric_assumption_caps_at_medium() -> None:
+    r = with_assumptions("water viscosity at 25 C = 0.00089 Pa s")
+    assert one_run(r, "Find Re")["confidence"] == "medium"
+
+
+def test_a_words_constants_and_given_numbers_keep_high() -> None:
+    r = with_assumptions("steady state", "g = 9.81 m/s^2", "T = 25 C as stated")
+    assert one_run(r, "Find Re at 25 C")["confidence"] == "high"
+
+
+def test_a_assumption_numbers_may_be_listed_in_the_answer() -> None:
+    r = with_assumptions("water viscosity at 25 C = 0.00089 Pa s")
+    assert loop.b8_guard("Assumed: mu = 0.00089 Pa s", r, "q") == []
+
+
+def test_b_first_disagreement_goes_to_repair_not_ultra_and_caps_medium() -> None:
+    llm = calc(
+        ("chat_tools", tool("run_python", code="a")),
+        ("chat_tools", tool("run_python", code="b")),
+        ("chat_json", {"answer_md": "ok"}),
+    )
+    steps = run(solve(deps(llm), {"result": disagreeing()}, {"result": GOOD}))
+    assert [c[1] for c in llm.calls[1:3]] == ["solver", "solver"]
+    assert "replace the check with an exact, independent method" in str(
+        llm.calls[2][2][-1]
+    )
+    assert steps[-1]["confidence"] == "medium"
+
+
+def test_b_cross_check_matching_first_answer_is_accepted_with_check_replaced() -> None:
+    again = {
+        **GOOD,
+        "answer": {"value": 0.6667, "unit": "-"},
+        "check": {"value": 0.1, "unit": "-"},
+    }
+    llm = calc(
+        ("chat_tools", tool("run_python", code="a")),
+        ("chat_tools", tool("run_python", code="r")),
+        ("chat_tools", tool("run_python", code="b")),
+        ("chat_json", {"answer_md": "ok"}),
+    )
+    d = deps(llm)
+    bodies = [{"result": disagreeing()}, {"result": disagreeing()}, {"result": again}]
+    steps = run(solve(d, *bodies))
+    assert steps[-1]["confidence"] == "medium"
+    assert steps[-1]["numbers"]["check"] == 0.6667  # the first answer, not 0.1
+    assert "independent re-solve" in llm.calls[-1][2][-1]["content"]
+
+
+def test_b_cross_check_failure_has_its_own_message() -> None:
+    llm = calc(
+        ("chat_tools", tool("run_python", code="a")),
+        ("chat_tools", tool("run_python", code="r")),
+        ("chat_tools", tool("run_python", code="b")),
+    )
+    bodies = [
+        {"result": disagreeing()},
+        {"result": disagreeing()},
+        {"result": disagreeing(0.2)},
+    ]
+    final = run(solve(deps(llm), *bodies))[-1]
+    assert final["confidence"] == "low" and final["numbers"] == {}
+    assert "90 seconds" not in final["answer_md"] and "re-check" in final["answer_md"]
+
+
+def flagged_tokens(answer: str, result: dict[str, Any]) -> list[str]:
+    return [
+        f.text
+        for f in guardrail.check(
+            answer, guardrail.allowed_numbers(result, "")
+        ).unsupported
+    ]
+
+
+def test_c_prefixed_unit_accepted_bare_scale_shift_flagged() -> None:
+    r = {"M": {"value": 15000.0}, "L": {"value": 0.05}, "Re": {"value": 1.2}}
+    assert flagged_tokens("M = 15 kN m and L = 50 mm", r) == []
+    assert flagged_tokens("Re = 1200", r) == ["1200"]
+
+
+def test_c_flagged_tokens_are_stored_in_the_flag() -> None:
+    llm = calc(
+        ("chat_tools", tool("run_python", code="r")),
+        ("chat_json", {"answer_md": "X = 0.7"}),
+    )
+    d = deps(llm, regenerate_on_flag=False)
+    sid, _ = run(loop.start("q", d, user_id=USER))
+    run(loop.on_result(sid, USER, ResultBody(result=GOOD), d))
+    assert d.store.states[sid].flags == ["unsupported_numbers: 0.7"]  # type: ignore[attr-defined]
+
+
+def pick(**given: float) -> dict[str, Any]:
+    return {
+        "template": "pipe",
+        "inputs": {k: {"value": v, "unit": u} for k, (v, u) in given.items()},
+    }
+
+
+PIPE = {"pipe": {
+    "L": {"default": 100.0, "unit": "m", "min": 0.1, "max": 1e5},
+    "Q": {"default": 0.01, "unit": "m^3/s", "min": 1e-7, "max": 10.0},
+}}  # fmt: skip
+
+
+def test_h_template_with_a_defaulted_input_falls_through_to_the_solver() -> None:
+    llm = calc(
+        ("chat_json", pick(Q=(0.02, "m^3/s"))),
+        ("chat_tools", tool("run_python", code="solver")),
+    )
+    step = run(loop.start("q", deps(llm, templates=PIPE), user_id=USER))[1]
+    assert step["code"] == "solver"
+
+
+def test_h_template_with_every_input_given_is_still_used() -> None:
+    llm = calc(("chat_json", pick(Q=(0.02, "m^3/s"), L=(50.0, "m"))))
+    step = run(loop.start("q", deps(llm, templates=PIPE), user_id=USER))[1]
+    assert step["code"].startswith("from chemlab.pipe import run")

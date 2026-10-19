@@ -44,6 +44,8 @@ def pfr_pick() -> dict[str, Any]:
             "V": {"value": 200, "unit": "L"},
             "v0": {"value": 1, "unit": "L/s"},
             "n": {"value": 1, "unit": "-"},
+            "CA0": {"value": 1000, "unit": "mol/m^3"},
+            "D": {"value": 0.1, "unit": "m"},
         },
     }
 
@@ -70,7 +72,16 @@ def test_template_question_runs_the_template_once() -> None:
 def test_steady_states_reach_the_explanation_and_the_guardrail() -> None:
     llm = FakeLLM(
         ("chat_json", {"kind": "calc"}),
-        ("chat_json", {"template": "cstr", "inputs": {}}),  # the defaults: 3 states
+        (
+            "chat_json",
+            {
+                "template": "cstr",
+                "inputs": {
+                    n: {"value": v["default"], "unit": v["unit"]}
+                    for n, v in cstr.SPEC.items()
+                },
+            },
+        ),  # every input given, at the defaults: 3 states
         ("chat_json", {"answer_md": "Three steady states: 301.3 K, 348.6 K, 391.3 K."}),
     )
     d = deps(llm)
