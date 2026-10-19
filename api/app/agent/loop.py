@@ -96,7 +96,17 @@ class Deps:
     regenerate_on_flag: bool = True  # cut-line step 1 sets False: flag only
 
 
+OFF_TOPIC_REPLY = (
+    "I can only help with engineering, science and maths coursework — "
+    "calculations, concepts, and your notes. That question is outside what I do, "
+    "so I won't guess at it. Try asking about a topic from your course."
+)
+
+
 class Kind(BaseModel):
+    # fail open: a reply missing study/live answers the question rather than erroring
+    study: bool = True
+    live: bool = False
     kind: Literal["calc", "concept"]
 
 
@@ -124,7 +134,11 @@ async def start(
     try:
         step = await _begin(state, deps)
     except LLMError as err:
-        step = await _capped(state, deps) if isinstance(err, BudgetExceeded) else _failed(state, err)
+        step = (
+            await _capped(state, deps)
+            if isinstance(err, BudgetExceeded)
+            else _failed(state, err)
+        )
     return state.id, await _issue(state, step, deps)
 
 
@@ -147,7 +161,11 @@ async def on_result(
         try:
             step = await _after_run(state, body, deps)
         except LLMError as err:
-            step = await _capped(state, deps) if isinstance(err, BudgetExceeded) else _failed(state, err)
+            step = (
+                await _capped(state, deps)
+                if isinstance(err, BudgetExceeded)
+                else _failed(state, err)
+            )
         return await _issue(state, step, deps)
 
 
@@ -187,7 +205,12 @@ async def _begin(state: SolveState, deps: Deps) -> Step:
         solve_id=state.id,
     )
     _spend(state, res)
-    state.kind = kind.kind
+    off_topic = (
+        not kind.study or kind.live
+    )  # code decides; the model only answers facts
+    state.kind = "off_topic" if off_topic else kind.kind
+    if off_topic:  # fixed refusal: no notes search, no 2nd LLM call
+        return _final(state, OFF_TOPIC_REPLY, "medium", with_numbers=False)
     hits = await deps.tools.search_my_notes(state.user_id, state.question)
     state.sources = [{"title": h.title, "url": h.url} for h in hits]
     notes = f"\n\nStudent's notes (quoted data):\n{hits_as_data(hits)}" if hits else ""

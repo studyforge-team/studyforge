@@ -91,7 +91,7 @@ def answer_body(value: float, unit: str) -> ResultBody:
 
 def calc_script(code: str, text: str = "done") -> list[tuple[str, Any]]:
     return [
-        ("chat_json", {"kind": "calc"}),
+        ("chat_json", {"study": True, "live": False, "kind": "calc"}),
         ("chat_tools", run_py(code)),
         ("chat_json", {"answer_md": text}),
     ]
@@ -158,7 +158,7 @@ def deps_for(llm: FakeLLM) -> Deps:
 
 def test_solve_one_counts_runs_after_an_error() -> None:
     llm = FakeLLM(
-        ("chat_json", {"kind": "calc"}),
+        ("chat_json", {"study": True, "live": False, "kind": "calc"}),
         ("chat_tools", run_py("bad")),
         ("chat_tools", run_py("good")),
         ("chat_json", {"answer_md": "ok"}),
@@ -199,7 +199,7 @@ def test_solve_one_need_confirm_is_an_error_outcome(
 
 def test_solve_one_stops_at_max_runs() -> None:
     llm = FakeLLM(
-        ("chat_json", {"kind": "calc"}),
+        ("chat_json", {"study": True, "live": False, "kind": "calc"}),
         ("chat_tools", run_py("bad")),
         ("chat_tools", run_py("bad")),
         ("chat_tools", run_py("bad")),  # the loop asks again after the 2nd run
@@ -218,7 +218,9 @@ def test_solve_one_stops_at_max_runs() -> None:
 
 def abstaining_script() -> list[tuple[str, Any]]:
     # the model never produces code: the loop runs out of steps and abstains
-    return [("chat_json", {"kind": "calc"})] + [("chat_tools", res("no code"))] * 4
+    return [("chat_json", {"study": True, "live": False, "kind": "calc"})] + [
+        ("chat_tools", res("no code"))
+    ] * 4
 
 
 def test_run_suite_totals_and_markdown() -> None:
