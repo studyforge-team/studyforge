@@ -115,8 +115,39 @@ class SubjectiveItem(_Item):
         return v
 
 
+class BlankItem(_Item):
+    """Fill-in-the-blank question (T2).
+
+    ``stem`` must contain ``"____"`` as the blank placeholder.
+    ``answers`` holds all acceptable answers (case-insensitive comparison
+    with whitespace normalisation is done on the client side).
+    """
+
+    type: Literal["blank"]
+    answers: list[str] = Field(min_length=1, max_length=5)
+    explanation: str
+
+    @field_validator("stem")
+    @classmethod
+    def _stem_has_blank(cls, v: str) -> str:
+        if "____" not in v:
+            raise ValueError('stem must contain "____" as the blank placeholder')
+        return v
+
+    @field_validator("answers")
+    @classmethod
+    def _answers_ok(cls, v: list[str]) -> list[str]:
+        for a in v:
+            if not (1 <= len(a) <= 60):
+                raise ValueError("each answer must be 1–60 characters")
+            if not a.strip():
+                raise ValueError("answers must be non-empty")
+        return v
+
+
 QuizItem = Annotated[
-    MCQItem | NumericalItem | SubjectiveItem, Field(discriminator="type")
+    MCQItem | NumericalItem | SubjectiveItem | BlankItem,
+    Field(discriminator="type"),
 ]
 
 
