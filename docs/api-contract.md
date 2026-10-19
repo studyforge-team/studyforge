@@ -49,6 +49,7 @@ adopted as typed. Conventions the backend follows (branch `s2-agent-loop`):
 | 8 | Quiz: `POST /api/v1/quizzes/{id}/report {item_index, reason}` | The browser drops a numerical item whose key script fails or whose two methods disagree, and reports it | Not built (quiz storage needs A4) |
 | 9 | Canonical sandbox result `{answer: {value, unit}, check: {value, unit, method}, values: {name: {value, unit}}, assumptions: [str]}` | Shared by the solver prompt, verify, B8 and P4's eval (T4) | Built |
 | 10 | Page CSP: add the API and Supabase origins to `connect-src` and `img-src` (§3.6); send the bearer token on API calls | Today a deployed build cannot reach the API or show Storage images | Frontend (P3) |
+| 11 | D8: `POST /api/v1/quizzes/{id}/answers {answers, score, correct}`: `correct` has one entry per stored item; an entry may be `null` for an item the student skipped (never saw), and it is not recorded | The browser skips numerical items whose key fails the double-check | Built |
 
 ## 3. Team note (to post with the PR)
 
