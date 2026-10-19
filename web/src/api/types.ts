@@ -105,15 +105,14 @@ export type TopicAttempts = {
 export type QuizAttemptsResponse = { topics: TopicAttempts[] }
 
 // ── T5: Solve history ─────────────────────────────────────────────────────────
+// T5: GET /api/v1/solves
 export type SolveItem = {
   id: string
   question: string
   status: string
-  updated_at: string
+  updated_at: string | null
 }
-
 export type SolvesResponse = {
   items: SolveItem[]
   next: string | null
 }
-

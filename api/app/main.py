@@ -1,8 +1,4 @@
-"""FastAPI application factory.
-
-Registers all routers and overrides the dependency stubs with real
-implementations when environment variables are present.
-"""
+"""FastAPI application factory for StudyForge."""
 
 from __future__ import annotations
 
@@ -13,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 import app.routers.checkins as checkins_mod
 import app.routers.dashboard as dashboard_mod
+import app.routers.history as history_mod
 import app.routers.me as me_mod
 import app.routers.prep as prep_mod
 import app.routers.progress as progress_mod
@@ -40,6 +37,7 @@ app.include_router(quizzes_mod.router)
 app.include_router(quiz_new_mod.router)
 app.include_router(uploads_mod.router)
 app.include_router(progress_mod.router)
+app.include_router(history_mod.router)
 app.include_router(me_mod.router)
 app.include_router(prep_mod.router)
 
