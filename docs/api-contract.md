@@ -159,3 +159,25 @@ POST /api/v1/pdf/read   multipart: file (PDF, 10 MB max)
 Team note: "TE and PY add `POST /api/v1/pdf/read` (additive, nothing existing changes). It returns
 a PDF's page count, word count and text, and stores nothing. TE uses the page count; PY uses the
 text of past papers. Shape in `docs/api-contract.md` section 7."
+
+## 8. Quiz progress (T4): additive, one new endpoint
+
+```
+GET /api/v1/quiz-attempts
+  -> 200 { topics: [ { topic: string,
+                       attempts: [ { quiz_id: string, score: number, total: number,
+                                     marks_per_q: number, created_at: string } ] } ] }
+```
+
+- Signed in only; only the caller's own attempts. Attempts are oldest first, at most 50 per topic
+  (the newest 50). Topics are sorted by their latest attempt, newest first.
+- `score` is marks scored, `total` is the number of answered (non-skipped) questions, `marks_per_q`
+  is marks per question (1 unless the quiz sets it).
+- `POST /api/v1/quizzes/{quiz_id}/answers` now also stores one attempt per save (topic = the
+  quiz's topic, else its title). Its request and response are unchanged (`{recorded: n}`).
+- Errors (`{detail: string}`): 401 not signed in; 503 no database.
+- Covered by `GET /me/export` and `DELETE /me` like every per-user table.
+
+Team note: "T4 adds `GET /api/v1/quiz-attempts` (additive) and a new table `app.quiz_attempts`
+(migration 0009). `save_answers` also stores an attempt; its response is unchanged. Shape in
+`docs/api-contract.md` section 8."
