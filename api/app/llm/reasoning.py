@@ -22,18 +22,25 @@ def strip_reasoning(text: str | None) -> str:
 
 # JSON turns an un-doubled LaTeX "\b \f \t \r \n" into a control char, eating the backslash.
 # Undo it: BS/FF always, TAB/CR before a letter, and newline only before a known LaTeX
-# command (the table holds what follows the lost "n") so real "\nThe" prose breaks survive.
+# command (the table holds what follows the lost "n") and only in text that holds math ($...$),
+# so real "\nThe" or "\nu = 3" prose line breaks survive.
 _NL_CMD = "u|abla|eq|e|i|otin|ot|onumber|ewline|gtr|less|mid"  # nu nabla neq ne ni ...
-_CTRL = re.compile(rf"[\x08\x0c]|[\t\r](?=[A-Za-z])|\n(?=(?:{_NL_CMD})(?![A-Za-z]))")
+_CTRL = re.compile(r"[\x08\x0c]|[\t\r](?=[A-Za-z])")
+_CTRL_NL = re.compile(rf"\n(?=(?:{_NL_CMD})(?![A-Za-z]))")
 _CTRL_FIX = {"\x08": "\\b", "\x0c": "\\f", "\t": "\\t", "\r": "\\r", "\n": "\\n"}
+# Python source is never touched: a real "u = 3\ni = 0" line break must stay a line break.
+_CODE_KEYS = frozenset({"code", "key_code"})
 
 
 def fix_latex_escapes(value: Any) -> Any:
-    """Repair LaTeX backslashes JSON decoded as control chars, recursively."""
+    """Repair LaTeX backslashes JSON decoded as control chars, recursively (never in code fields)."""
     if isinstance(value, str):
-        return _CTRL.sub(lambda m: _CTRL_FIX[m.group()], value)
+        out = _CTRL.sub(lambda m: _CTRL_FIX[m.group()], value)
+        if "$" in out:
+            out = _CTRL_NL.sub(lambda m: _CTRL_FIX[m.group()], out)
+        return out
     if isinstance(value, dict):
-        return {k: fix_latex_escapes(v) for k, v in value.items()}
+        return {k: v if k in _CODE_KEYS else fix_latex_escapes(v) for k, v in value.items()}
     if isinstance(value, list):
         return [fix_latex_escapes(v) for v in value]
     return value
