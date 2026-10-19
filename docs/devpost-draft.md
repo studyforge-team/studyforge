@@ -1,6 +1,6 @@
 # Devpost draft (ticket F8)
 
-Status: draft written from the code on the feature branches. The Nebius Token Factory model
+Status: draft written from the code on `main`. The Nebius Token Factory model
 has not been called yet, so every result, latency, cost and accuracy figure is a placeholder
 marked **TBD after Nebius integration**. Do not paste invented numbers here.
 
@@ -18,7 +18,7 @@ A study agent for engineers that can't make up numbers
 
 Language models are fluent and wrong with confidence, and in engineering a wrong number
 costs marks (or worse). We wanted a study helper that never states a number it did not
-compute. <!-- TODO(F8): add the team's real story; not in the repo -->
+compute. <!-- TODO(F8): team's own story, in their words -->
 
 ## What it does
 
@@ -28,14 +28,26 @@ compute. <!-- TODO(F8): add the team's real story; not in the repo -->
 - Gives plain-language answers for concept questions, with no computed numbers.
 - Reads a photo or scanned page of a question with a vision model; the transcript always goes
   to a confirm screen so a person fixes any misread digit before anything is solved.
-- ChemLab: tested reactor and distillation templates (CSTR, PFR, batch, McCabe-Thiele) the
-  agent can pick instead of improvising code.
+- ChemLab: eight tested templates (CSTR, PFR, batch, McCabe-Thiele distillation, heat
+  exchanger, flash, recycle with purge, pipe and pump) the agent can pick instead of
+  improvising code. The ChemLab page has a tab for each. Process flow diagrams for all eight,
+  engineering drawings for the CSTR, the distillation column, the shell-and-tube exchanger
+  and the PFR, and 3D views of the CSTR, column and exchanger.
 - Quizzes whose numerical answer keys are computed by sandboxed code, not written by the model.
-- A dashboard for deadlines and reminders.
-- Planned, not built yet: Telegram reminders, notes upload and search, cited web answers,
-  3D ChemLab models and engineering drawings. <!-- TODO(F8): update as tickets merge -->
+- A dashboard for deadlines and reminders, a notices inbox for pasted class messages,
+  phone reminders (web push) and a check-in an hour after each deadline that asks one
+  quiz question, plus weak-topic memory from quiz answers.
+- Prep packs: open a deadline and get 5 questions linked to the relevant page of your notes.
+- Notes and PDF handling: upload notes (full-text search on the server), and read a past
+  paper or a PDF's page count in Time to Finish and the PYQ Predictor.
+- Planned, not built yet: the agent's `search_my_notes` and `web_search` tools (the notes
+  search route exists; the tools still answer "not available"), so cited web answers are not
+  there yet. <!-- TODO(F8): update if web search lands -->
 
-Demo mode works today without a backend for one built-in CSTR sample.
+The live site is https://studyforge-ten-alpha.vercel.app. It runs in demo/mock mode until the
+Render and Vercel environment variables and the model key are set: the screens work and one
+built-in CSTR sample is really computed in the browser sandbox, but your own questions are
+not solved yet.
 
 ## How we built it
 
@@ -92,8 +104,19 @@ Measured results (accuracy on the problem set, latency, cost per solve):
   may not be used; the client strips reasoning, extracts JSON, and the loop accepts a fenced
   Python block as a fallback. How often this happens with the real model:
   **TBD after Nebius integration**.
-- **Free tiers only.** Everything must fit free hosting and cold starts.
-  <!-- TODO(F8): add real challenges the team hit during integration -->
+- **Model access arrived late.** Nebius access was delayed, so the whole loop was built and
+  tested against fakes and a record/replay transport instead of the live API. The model's
+  real behaviour is still to be measured: **TBD after Nebius integration**.
+- **pdfium is not thread-safe.** Reading notes, question photos and PDFs all use pypdfium2,
+  and pdfium must not run in two threads at once, even on different documents. One shared
+  lock now guards every PDF reader.
+- **A frozen API contract.** The solve contract could not change, so every new feature
+  (notices, phone reminders, prep packs, PDF reading) was added as a new optional endpoint,
+  each written up in `docs/api-contract.md`.
+- **Free tiers only.** Everything must fit free hosting and cold starts; a keep-alive ping
+  (a GitHub Actions schedule plus an external pinger) keeps the free Render backend awake,
+  and also drives reminder delivery.
+  <!-- TODO(F8): add the team's own integration challenges, in their words -->
 
 ## Accomplishments that we're proud of
 
@@ -113,14 +136,14 @@ error. Lessons about the models themselves: **TBD after Nebius integration**.
 
 ## What's next
 
-Connect the live backend and measure the golden problem set; notes upload and search; web
-search with citations; Telegram deadline reminders; prep packs; ChemLab 3D models and SVG
-drawings. <!-- TODO(F8): align with the final roadmap -->
+Connect the live backend and measure the golden problem set; connect notes search to the
+agent; web search with citations. (Telegram reminders were dropped; phone reminders use web push.)
+<!-- TODO(F8): align with the final roadmap -->
 
 ## Built with
 
-python, fastapi, pydantic, openai-sdk, nvidia-nemotron, nebius-token-factory, supabase,
-postgresql, react, typescript, vite, tailwindcss, pyodide, webassembly, numpy, scipy, sympy,
+python, fastapi, pydantic, sqlalchemy, alembic, openai-sdk, nvidia-nemotron,
+nebius-token-factory, supabase, postgresql, react, typescript, vite, tailwindcss, pyodide, webassembly, numpy, scipy, sympy,
 matplotlib, katex, mermaid, dompurify, playwright, vercel, render
 
 ## Track
@@ -134,4 +157,5 @@ header, so there is no feedback to report yet. <!-- TODO(F8): summarise real ent
 
 ## Links and media
 
-Repo: https://github.com/studyforge-team/studyforge. Demo URL, video, screenshots: **TBD**.
+Repo: https://github.com/studyforge-team/studyforge. Demo URL (demo/mock mode until the env
+vars and model key are set): https://studyforge-ten-alpha.vercel.app. Video, screenshots: **TBD**.
