@@ -30,10 +30,9 @@ compute. <!-- TODO(F8): team's own story, in their words -->
   to a confirm screen so a person fixes any misread digit before anything is solved.
 - ChemLab: eight tested templates (CSTR, PFR, batch, McCabe-Thiele distillation, heat
   exchanger, flash, recycle with purge, pipe and pump) the agent can pick instead of
-  improvising code. The ChemLab page has tabs for five of them today; the other three are in
-  the engine and their tabs are coming. Process flow diagrams for all eight, engineering
-  drawings for the CSTR, the distillation column and the shell-and-tube exchanger (PFR
-  drawing pending merge), and 3D views of the CSTR, column and exchanger.
+  improvising code. The ChemLab page has a tab for each. Process flow diagrams for all eight,
+  engineering drawings for the CSTR, the distillation column, the shell-and-tube exchanger
+  and the PFR, and 3D views of the CSTR, column and exchanger.
 - Quizzes whose numerical answer keys are computed by sandboxed code, not written by the model.
 - A dashboard for deadlines and reminders, a notices inbox for pasted class messages,
   phone reminders (web push) and a check-in an hour after each deadline that asks one
@@ -43,7 +42,7 @@ compute. <!-- TODO(F8): team's own story, in their words -->
   paper or a PDF's page count in Time to Finish and the PYQ Predictor.
 - Planned, not built yet: the agent's `search_my_notes` and `web_search` tools (the notes
   search route exists; the tools still answer "not available"), so cited web answers are not
-  there yet. <!-- TODO(F8): update as tickets merge (PFR drawing, ChemLab tabs, web search) -->
+  there yet. <!-- TODO(F8): update if web search lands -->
 
 The live site is https://studyforge-ten-alpha.vercel.app. It runs in demo/mock mode until the
 Render and Vercel environment variables and the model key are set: the screens work and one
@@ -138,8 +137,7 @@ error. Lessons about the models themselves: **TBD after Nebius integration**.
 ## What's next
 
 Connect the live backend and measure the golden problem set; connect notes search to the
-agent; web search with citations; the flash, recycle and pipe tabs and the PFR drawing on the
-ChemLab page. (Telegram reminders were dropped; phone reminders use web push.)
+agent; web search with citations. (Telegram reminders were dropped; phone reminders use web push.)
 <!-- TODO(F8): align with the final roadmap -->
 
 ## Built with

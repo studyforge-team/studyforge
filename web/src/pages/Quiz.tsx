@@ -119,6 +119,7 @@ export default function Quiz({ load, heading = 'Quiz', extra }: { load?: (onSlow
   const [i, setI] = useState(0)
   const [done, setDone] = useState<Done[]>([])
   const [id, setId] = useState<string>()
+  const [served, setServed] = useState(0) // item count of the quiz as served; the server wants one entry per item
   const loader = useRef(load) // the loader of the first render: a new function each render must not reload the quiz
 
   useEffect(() => {
@@ -145,7 +146,7 @@ export default function Quiz({ load, heading = 'Quiz', extra }: { load?: (onSlow
         }
         if (!live) return
         if (!out.length) throw new PlainError('No usable questions in this quiz.')
-        setId(quiz.id); setSkipped(skip); setItems(out)
+        setId(quiz.id); setServed(quiz.items.length); setSkipped(skip); setItems(out)
       } catch (e) {
         if (live) setError(friendly(e))
       }
@@ -158,7 +159,9 @@ export default function Quiz({ load, heading = 'Quiz', extra }: { load?: (onSlow
     setDone(all)
     if (all.length < items!.length) return setI(i + 1)
     const score = all.reduce((s, x) => s + x.score, 0)
-    saveAnswers(id, all.map((x) => x.answer), score, all.map((x) => x.score === 1))
+    const answers = Array<string>(served).fill(''), correct = Array<boolean | null>(served).fill(null) // null = skipped item
+    all.forEach((x, k) => { const at = items![k].idx; answers[at] = x.answer; correct[at] = x.score === 1 })
+    saveAnswers(id, answers, score, correct)
     try { localStorage.setItem('sf.quiz.last', JSON.stringify({ score, total: all.length, at: Date.now() })) } catch { /* private mode: results screen still works */ }
   }
 
