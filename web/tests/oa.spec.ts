@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { openMenu } from './menu.ts'
 
 const TWO_SUM = `def two_sum(nums, target):
     seen = {}
@@ -34,15 +35,14 @@ test('OA prep: correct, reordered, wrong and broken solutions', async ({ page })
 })
 
 for (const width of [320, 360, 375]) {
-  test(`no sideways scroll with all nav links at ${width}px`, async ({ page }) => {
+  test(`no sideways scroll with the menu closed and open at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 800 })
     for (const hash of ['#', '#oa', '#interview-bank', '#pyq-predictor', '#time-to-finish', '#chemlab']) {
       await page.goto('/' + hash)
-      await expect(page.getByRole('link', { name: 'OA Prep' })).toBeAttached()
-      await expect(page.getByRole('link', { name: 'Interview Bank' })).toBeAttached()
-      await expect(page.getByRole('link', { name: 'PYQ Predictor' })).toBeAttached()
-      await expect(page.getByRole('link', { name: 'Time to Finish' })).toBeAttached()
+      for (const name of ['OA Prep', 'Interview Bank', 'PYQ Predictor', 'Time to Finish']) await expect(page.getByRole('link', { name, includeHidden: true })).toBeAttached()
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), hash).toBe(true)
+      await openMenu(page)
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), hash + ' open').toBe(true)
     }
   })
 }
@@ -78,8 +78,8 @@ test('OA prep: an infinite loop is explained', async ({ page }) => {
 test('OA prep: drafts and results survive leaving the page', async ({ page }) => {
   await page.goto('/#oa')
   expect(await runTests(page, TWO_SUM)).toBe('3/3 sample tests passed')
-  await page.getByRole('link', { name: 'Quiz' }).click()
-  await page.getByRole('link', { name: 'OA Prep' }).click()
+  await (await openMenu(page)).getByRole('link', { name: 'Quiz' }).click()
+  await (await openMenu(page)).getByRole('link', { name: 'OA Prep' }).click()
   await expect(page.getByLabel('Your python solution')).toHaveValue(TWO_SUM)
   await expect(page.locator('main [role=status]')).toHaveText('3/3 sample tests passed')
   await expect(page.getByRole('button', { name: /Two Sum/ })).toHaveAttribute('aria-pressed', 'true')

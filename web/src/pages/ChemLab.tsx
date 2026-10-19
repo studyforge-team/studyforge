@@ -136,7 +136,7 @@ export default function ChemLab() {
     <section className="rounded-lg border bg-card p-4">
       <h2 className="text-base font-semibold">Process flow diagram</h2>
       {/* pfd() escapes all text and every other interpolated value is a number; no process values are drawn */}
-      <div className="mt-2 rounded-md bg-white [&>svg]:h-auto [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: flow }} />
+      <div className="mt-2 rounded-md border border-transparent bg-white dark:border-input [&>svg]:h-auto [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: flow }} />
       <Button className="mt-3 min-h-11" aria-label="Download SVG of the process flow diagram" onClick={() => {
         const a = document.createElement('a')
         a.href = URL.createObjectURL(new Blob([flow], { type: 'image/svg+xml' }))
@@ -148,7 +148,7 @@ export default function ChemLab() {
     <section className="rounded-lg border bg-card p-4">
       <h2 className="text-base font-semibold">Drawing (2D, first-angle)</h2>
       {/* the drawing functions escape all text and every other interpolated value is a number */}
-      <div className="mt-2 rounded-md bg-white [&>svg]:h-auto [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: sheet }} />
+      <div className="mt-2 rounded-md border border-transparent bg-white dark:border-input [&>svg]:h-auto [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: sheet }} />
       <Button className="mt-3 min-h-11" aria-label="Download SVG of the drawing" onClick={() => {
         const a = document.createElement('a')
         a.href = URL.createObjectURL(new Blob([sheet], { type: 'image/svg+xml' }))

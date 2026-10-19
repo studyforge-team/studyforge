@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { openMenu } from './menu.ts'
 import { paperText, predict } from '../src/lib/pyq.ts'
 
 // Three chemical engineering papers, oldest first, every question with marks.
@@ -83,11 +84,12 @@ test('PYQ predictor: add and remove papers, labels, results cleared on edit, dra
   await page.locator('#past-paper-2').pressSequentially(' edited')
   await expect(page.getByRole('table', { name: 'Topic frequency' })).toHaveCount(0)
 
-  await page.getByRole('link', { name: 'Quiz' }).click()
-  await page.getByRole('link', { name: 'PYQ Predictor' }).click()
+  await (await openMenu(page)).getByRole('link', { name: 'Quiz' }).click()
+  await (await openMenu(page)).getByRole('link', { name: 'PYQ Predictor' }).click()
   await expect(page.locator('#past-paper-1')).toHaveValue(P2019)
-  await expect(page.getByRole('link', { name: 'PYQ Predictor' })).toHaveAttribute('aria-current', 'page')
-  await expect(page.getByRole('link', { name: 'Today' })).not.toHaveAttribute('aria-current', 'page')
+  const nav = await openMenu(page)
+  await expect(nav.getByRole('link', { name: 'PYQ Predictor' })).toHaveAttribute('aria-current', 'page')
+  await expect(nav.getByRole('link', { name: 'Today' })).not.toHaveAttribute('aria-current', 'page')
 })
 
 test('PYQ predictor ignores paper headers and section labels, reads "marks: N", and does not call heat exchanger fluid fluid mechanics', async ({ page }) => {
