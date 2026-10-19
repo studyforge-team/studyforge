@@ -59,3 +59,29 @@ adopted as typed. Conventions the backend follows (branch `s2-agent-loop`):
 > upload read; (8) a quiz item report endpoint; (9) the canonical result shape;
 > (10) CSP and bearer token for the deployed build. Details and status in
 > `docs/api-contract.md`. Please reply with objections by the next check-in.
+
+## 4. GET /api/v1/solves (built)
+
+Paginated history of solved questions for the authenticated user (like a chat list).
+
+- **Request**: `GET /api/v1/solves?before=<ISO datetime>&q=<search string, max 80 chars>`
+  - `before`: optional ISO 8601 timestamp cursor.
+  - `q`: optional case-insensitive substring search on question text.
+- **Response 200**:
+  ```json
+  {
+    "items": [
+      {
+        "id": "s1",
+        "question": "CSTR first-order reaction...",
+        "status": "final",
+        "updated_at": "2026-10-18T12:00:00Z"
+      }
+    ],
+    "next": "2026-10-17T18:00:00Z"
+  }
+  ```
+  - 20 items per page, ordered by `updated_at DESC`.
+  - `next`: ISO timestamp of the last item to pass as `before` on the next page, or `null` if no more pages.
+  - **Security**: Never returns `state`, full figures or raw answers in the list.
+

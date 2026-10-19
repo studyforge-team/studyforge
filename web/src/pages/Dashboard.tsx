@@ -152,10 +152,15 @@ export default function Dashboard() {
             </li>
           ))}
         </Card>
-        {/* ponytail: no GET /solve/{id} in the contract yet, so recent solves are not links */}
+        {/* T5: Recent solves link to #history/<id> */}
         <Card title="Recent solves" empty="No solves yet. Ask your first question.">
           {data.recent_solves.map((s) => (
-            <li key={s.id} className="text-sm"><p className="truncate">{s.question}</p><p className="text-muted-foreground">{rel(s.created_at)}</p></li>
+            <li key={s.id} className="text-sm">
+              <a href={`#history/${s.id}`} className="block hover:underline">
+                <p className="truncate font-medium">{s.question}</p>
+                <p className="text-muted-foreground">{rel(s.created_at)}</p>
+              </a>
+            </li>
           ))}
         </Card>
         <div ref={inboxRef} role="region" aria-label="Reminders inbox">

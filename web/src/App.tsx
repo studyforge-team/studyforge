@@ -4,6 +4,7 @@ import Dashboard from './pages/Dashboard'
 import Solve from './pages/Solve'
 
 const SelfTest = lazy(() => import('./SelfTest'))
+const History = lazy(() => import('./pages/History'))
 
 export default function App() {
   const [hash, setHash] = useState(location.hash) // ponytail: hash routing, no router library
@@ -19,5 +20,17 @@ export default function App() {
       </Suspense>
     )
   }
-  return <Shell hash={hash}>{hash === '#solve' ? <Solve /> : <Dashboard />}</Shell>
+  return (
+    <Shell hash={hash}>
+      {hash.startsWith('#history') ? (
+        <Suspense fallback={null}>
+          <History />
+        </Suspense>
+      ) : hash === '#solve' ? (
+        <Solve />
+      ) : (
+        <Dashboard />
+      )}
+    </Shell>
+  )
 }

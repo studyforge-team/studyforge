@@ -23,3 +23,15 @@ export type WeakTopic = { topic: string; attempts: number; correct: number }
 export type RecentSolve = { id: string; question: string; status: string; created_at: string }
 export type Reminder = { id: string; title: string; due_at_utc: string; sent_at: string | null; channel: 'app' | 'push' } // push = phone notification (D1b); Telegram dropped 10 Oct
 export type Dashboard = { tasks: Task[]; weak_topics: WeakTopic[]; recent_solves: RecentSolve[]; reminders: Reminder[] }
+
+// T5: GET /api/v1/solves
+export type SolveItem = {
+  id: string
+  question: string
+  status: string
+  updated_at: string | null
+}
+export type SolvesResponse = {
+  items: SolveItem[]
+  next: string | null
+}

@@ -1,5 +1,5 @@
 import * as mock from './mock'
-import type { Dashboard, ResultBody, SolveStart, Step, UploadKind, UploadRead } from './types'
+import type { Dashboard, ResultBody, SolvesResponse, SolveStart, Step, UploadKind, UploadRead } from './types'
 
 const BASE = import.meta.env.VITE_API_URL as string | undefined
 
@@ -12,6 +12,17 @@ async function post<T>(path: string, body: unknown | FormData, onSlow?: () => vo
       // FormData: the browser sets the multipart Content-Type (with boundary) itself
       ...(body instanceof FormData ? { body } : { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
     })
+    if (!r.ok) throw new Error(`Server error (HTTP ${r.status})`)
+    return (await r.json()) as T
+  } finally {
+    clearTimeout(t)
+  }
+}
+
+async function get<T>(path: string, onSlow?: () => void): Promise<T> {
+  const t = setTimeout(() => onSlow?.(), 3000)
+  try {
+    const r = await fetch(`${BASE}/api/v1${path}`)
     if (!r.ok) throw new Error(`Server error (HTTP ${r.status})`)
     return (await r.json()) as T
   } finally {
@@ -40,4 +51,17 @@ export async function getDashboard(): Promise<Dashboard> {
   const r = await fetch(`${BASE}/api/v1/dashboard`)
   if (!r.ok) throw new Error(`Server error (HTTP ${r.status})`)
   return (await r.json()) as Dashboard
+}
+
+export async function getSolves(
+  before?: string | null,
+  q?: string | null,
+  onSlow?: () => void,
+): Promise<SolvesResponse> {
+  if (!BASE) return { items: [], next: null }
+  const params = new URLSearchParams()
+  if (before) params.set('before', before)
+  if (q) params.set('q', q)
+  const qs = params.toString() ? `?${params.toString()}` : ''
+  return get<SolvesResponse>(`/solves${qs}`, onSlow)
 }
