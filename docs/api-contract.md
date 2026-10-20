@@ -242,3 +242,20 @@ GET /api/v1/solves?before=<ISO datetime, optional>&q=<text, optional, max 80>
 Team note: "T5 adds `GET /api/v1/solves` (additive, nothing existing changes). It lists the
 student's past questions for the History page; tapping one uses the existing `GET /solve/{id}`.
 Shape in `docs/api-contract.md` section 10."
+
+## 11. Practice attempts (FO1)
+
+```
+POST /api/v1/practice-attempts
+  { topic: string (1..80), score: number (>= 0), total: integer (1..50), marks_per_q?: 1 | 2 | 4 (default 1) }
+  -> 200 { ok: true }
+```
+
+- Saves a self-marked practice result (company OA, interview practice) into `app.quiz_attempts`,
+  with `quiz_id = "practice:" + topic`. It then shows in `GET /api/v1/quiz-attempts` like a quiz.
+- `score` above `total` is stored as `total`. Signed in only; each student sees only their own.
+- Errors (`{detail: string}`): 401 not signed in; 422 bad input (e.g. `total` 0, extra fields);
+  503 no database.
+
+Team note: "FO1 adds `POST /api/v1/practice-attempts` (additive, no migration; it writes the
+existing `app.quiz_attempts`). Shape in `docs/api-contract.md` section 11."
