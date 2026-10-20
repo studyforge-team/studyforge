@@ -232,7 +232,7 @@ def _spend(state: SolveState, res: LLMResult) -> LLMResult:
 _INJECTION = re.compile(
     r"\b(?:ignore|disregard|forget)\b(?:\W+\w+){0,3}?\W+(?:all|any|your|the|previous|prior|above)\b"
     r"(?:\W+\w+){0,3}?\W+(?:rules|instructions|prompt|guidelines)\b"
-    r"|system prompt|you are now|jailbreak",
+    r"|system prompt|jailbreak",  # not "you are now": physics problems say "you are now standing..."
     re.IGNORECASE,
 )
 _DAN = re.compile(r"\bDAN\b")  # caps only: "Dan" is a name

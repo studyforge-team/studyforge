@@ -540,6 +540,8 @@ def test_prompt_injection_is_refused_with_no_llm_call(q: str) -> None:
         "Ignore friction losses and find the pump head for 0.02 m3/s lifted 30 m.",
         "What happens if you ignore heat losses in an energy balance?",
         "Answer only part (b): what is the Reynolds number for 1 m/s water in a 50 mm pipe?",
+        "You are now standing on a 10 m platform. How fast is a dropped ball at the ground?",
+        "Dan pumps 2 L/min into a tank. How long to fill 50 L?",
     ],
 )
 def test_real_questions_still_reach_the_router(q: str) -> None:
