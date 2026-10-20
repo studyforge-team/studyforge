@@ -61,6 +61,10 @@ def test_unsafe_shift_regressions() -> None:
         assert flags(ok, res) == []
     assert flags("4.514e+06 kJ", res) == ["4.514e+06"]
     assert flags("4514000 kJ", res) == ["4514000"]
+    assert flags("4514000 W", res) == ["4514000"]  # J is not W: the base must match
+    assert flags("4514000 m", res) == ["4514000"]
+    res = {"A": {"value": 3.14159, "unit": "mm^2"}}
+    assert flags("3.14159e-6 m", res) == ["3.14159e-6"]  # m is not m^2: the power must match
     res = {"n": {"value": 300, "unit": "mol/h"}}
     assert flags("3000 mol/h", res) == ["3000"]
     assert flags("0.3 mol/h", res) == ["0.3"]
