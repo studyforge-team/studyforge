@@ -1,4 +1,6 @@
 import base64
+import json
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -64,10 +66,12 @@ def test_verify_accepts_two_agreeing_methods() -> None:
         ({"check": OK["check"]}, "answer"),
         ({"answer": {"value": "2.0", "unit": "m"}, "check": OK["check"]}, "answer"),
         ({"answer": {"value": True, "unit": "m"}, "check": OK["check"]}, "answer"),
-        ({"answer": {"value": 2.0, "unit": ""}, "check": OK["check"]}, "answer"),
+        (
+            {"answer": {"value": float("nan"), "unit": "m"}, "check": OK["check"]},
+            "answer",
+        ),
         ({"answer": OK["answer"]}, "check"),
         ({**OK, "check": {"value": 2.0, "unit": "cm"}}, "unit"),
-        ({**OK, "values": {"v": {"value": "1"}}}, "values"),
     ],
 )
 def test_verify_rejects_bad_shapes(result: Any, reason: str) -> None:
@@ -78,6 +82,37 @@ def test_verify_rejects_bad_shapes(result: Any, reason: str) -> None:
 def test_verify_flags_disagreement() -> None:
     v = verify({**OK, "check": {"value": 2.1, "unit": "m"}})
     assert (v.ok, v.disagree) == (False, True)
+
+
+FIXTURES = json.loads(Path(__file__).with_name("sv4a_fixtures.json").read_text())
+
+
+@pytest.mark.parametrize(
+    "name", ["batch_time", "biot", "integral", "ode_numeric_tolerance", "prandtl"]
+)
+def test_sv4a_correct_results_pass(name: str) -> None:
+    assert verify(FIXTURES[name]).ok
+
+
+def test_sv4a_dimensionless_vs_unit_still_fails() -> None:
+    v = verify(FIXTURES["mach_bad_check_MUST_STILL_FAIL"])
+    assert not v.ok and "unit" in (v.reason or "")
+
+
+def test_helper_values_need_not_be_quantities() -> None:
+    assert verify({**OK, "values": {"s": "text", "flag": True}}).ok
+
+
+def test_agreement_is_half_a_percent() -> None:
+    assert verify({**OK, "check": {"value": 2.006, "unit": "m"}}).ok
+    v = verify({**OK, "check": {"value": 2.02, "unit": "m"}})
+    assert (v.ok, v.disagree) == (False, True)
+
+
+def test_flat_numbers_dimensionless_answer_key() -> None:
+    assert flat_numbers(FIXTURES["integral"])["answer"] == pytest.approx(
+        0.71828, abs=1e-5
+    )
 
 
 def test_flat_numbers_put_units_in_keys() -> None:

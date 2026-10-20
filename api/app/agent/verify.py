@@ -20,7 +20,7 @@ MAX_STDOUT = 64 * 1024
 MAX_RESULT_JSON = 16 * 1024 + 1024
 MAX_ERROR = 2000
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
-AGREE_REL = 1e-3  # the two methods must agree to 0.1 %
+AGREE_REL = 5e-3  # the two methods must agree to 0.5 % (= guardrail REL_TOL)
 AGREE_ABS = 1e-12
 
 
@@ -80,9 +80,10 @@ def _quantity(node: Any) -> tuple[float, str] | None:
     if not isinstance(node, dict):
         return None
     value, unit = _number(node.get("value")), node.get("unit")
-    if value is None or not isinstance(unit, str) or not unit.strip():
+    if value is None or not (unit is None or isinstance(unit, str)):
         return None
-    return value, unit.strip()
+    unit = (unit or "").strip()
+    return value, "-" if unit.lower() in ("", "dimensionless", "1") else unit
 
 
 def verify(result: Any) -> Verdict:
@@ -99,9 +100,6 @@ def verify(result: Any) -> Verdict:
         )
     if answer[1] != check[1]:
         return Verdict(False, f"answer unit '{answer[1]}' != check unit '{check[1]}'")
-    for name, node in (result.get("values") or {}).items():
-        if _quantity(node) is None:
-            return Verdict(False, f"result['values']['{name}'] must be {{value, unit}}")
     a, c = answer[0], check[0]
     if abs(a - c) > max(AGREE_REL * max(abs(a), abs(c)), AGREE_ABS):
         return Verdict(

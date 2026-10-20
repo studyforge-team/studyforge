@@ -1,6 +1,7 @@
 import asyncio
 import base64
 import json
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -117,6 +118,17 @@ def test_calc_happy_path() -> None:
     # notes reach the solver as quoted data; the run is reported on the tool call
     assert "quoted data" in llm.calls[1][2][0]["content"]
     assert "Lecture 4" in llm.calls[1][2][0]["content"]
+
+
+def test_dimensionless_result_with_helper_unit_goes_straight_to_explain() -> None:
+    fixture = json.loads(Path(__file__).with_name("sv4a_fixtures.json").read_text())
+    llm = calc(
+        ("chat_tools", tool("run_python", code="result = {}")),
+        ("chat_json", {"answer_md": "t = 46.05 min"}),
+    )
+    steps = run(solve(deps(llm), {"result": fixture["batch_time"]}))
+    assert steps[-1]["type"] == "final" and steps[-1]["confidence"] == "high"
+    assert [c[0] for c in llm.calls] == ["chat_json", "chat_tools", "chat_json"]
 
 
 def test_fenced_code_is_the_fallback() -> None:
