@@ -159,3 +159,86 @@ POST /api/v1/pdf/read   multipart: file (PDF, 10 MB max)
 Team note: "TE and PY add `POST /api/v1/pdf/read` (additive, nothing existing changes). It returns
 a PDF's page count, word count and text, and stores nothing. TE uses the page count; PY uses the
 text of past papers. Shape in `docs/api-contract.md` section 7."
+
+## 8. Make a quiz (T1 and T2): additive, one new endpoint, one new item type
+
+```
+POST /api/v1/quizzes   (signed in)
+  { topic: string,            // 1 to 80 characters, required
+    n_items?: 3..20,          // default 5; the generator writes at most 10
+    kinds?: "mcq" | "blank" | "mixed",   // default "mcq"
+    marks_per_q?: 1 | 2 | 4,  // default 1
+    upload_id?: string }      // one of the student's own uploads (question-... or notes-...)
+  -> 200 { id, title, items, topic, marks_per_q,
+           total_marks,        // items.length * marks_per_q
+           suggested_minutes } // items.length * (2 for "mcq", else 3)
+```
+
+- Unknown request fields are refused (422). `items` has the same shape as a prep-pack quiz.
+- With `upload_id`: a PDF's text layer (first 10 pages, 12,000 characters) is sent to the model as
+  quoted notes. A scan, handwriting or a photo (under 200 characters of text) is read with the
+  vision model on up to 3 pages instead. Nothing readable gives 422.
+- The quiz is stored like a prep pack's (`app.quizzes`, covered by export/delete) with `topic` and
+  `marks_per_q` added, so `POST /quizzes/{id}/answers` accepts it unchanged.
+- Model use counts against the student's own daily caps (same as `/solve`).
+- Errors: 401 not signed in; 404 no such upload (also another student's); 422 bad request or an
+  upload with no readable text; 429 the model budget is used up; 502 the model failed or wrote too
+  few usable questions (nothing stored, try again); 503 no database, no model, or an upload given
+  while storage is off (`{"detail": "quiz not available"}` when there is no model).
+
+New item type (T2), added to the quiz item union (existing types are unchanged):
+
+```
+{ type: "blank", topic, stem,   // stem contains the gap "____"
+  answers: string[],            // 1 to 5 accepted words or short phrases, 1 to 60 characters each
+  explanation: string, source?, tags? }
+```
+
+- The blank is a word or short phrase. A numerical answer is a `numerical` item, so it stays
+  sandbox-checked. Clients grade a blank by comparing lowercase, trimmed, space-collapsed text.
+
+Team note: "T1 adds `POST /api/v1/quizzes` (additive; the web client already calls it) and T2 adds the
+`blank` quiz item type. Shape in `docs/api-contract.md` section 8."
+
+## 9. Quiz progress (T4): additive, one new endpoint
+
+```
+GET /api/v1/quiz-attempts
+  -> 200 { topics: [ { topic: string,
+                       attempts: [ { quiz_id: string, score: number, total: number,
+                                     marks_per_q: number, created_at: string } ] } ] }
+```
+
+- Signed in only; only the caller's own attempts. Attempts are oldest first, at most 50 per topic
+  (the newest 50). Topics are sorted by their latest attempt, newest first.
+- `score` is marks scored, `total` is the number of answered (non-skipped) questions, `marks_per_q`
+  is marks per question (1 unless the quiz sets it).
+- `POST /api/v1/quizzes/{quiz_id}/answers` now also stores one attempt per save (topic = the
+  quiz's topic, else its title). Its request and response are unchanged (`{recorded: n}`).
+- Errors (`{detail: string}`): 401 not signed in; 503 no database.
+- Covered by `GET /me/export` and `DELETE /me` like every per-user table.
+
+Team note: "T4 adds `GET /api/v1/quiz-attempts` (additive) and a new table `app.quiz_attempts`
+(migration 0009). `save_answers` also stores an attempt; its response is unchanged. Shape in
+`docs/api-contract.md` section 9."
+
+## 10. History of solved questions (T5): additive, one new endpoint
+
+```
+GET /api/v1/solves?before=<ISO datetime, optional>&q=<text, optional, max 80>
+  -> 200 { items: [{ id, question, status, updated_at }],   // newest first, at most 20
+           next: string | null }                            // updated_at of the last item, or null
+```
+
+- Signed in only; the student's own solves only. Ordered by `updated_at` descending.
+- `question` is the first 200 characters. `status` is the solve's status (empty string if unknown).
+  The list never returns `state`, figures or answers; open one with the existing `GET /solve/{id}`.
+- `before`: only solves updated before this time (pass the previous page's `next`). A time without
+  a zone is read as UTC.
+- `q`: case-insensitive substring match on the question; `%` and `_` match themselves.
+- Errors (`{detail: string}`): 401 not signed in; 422 `q` over 80 characters or `before` not a time;
+  503 no database.
+
+Team note: "T5 adds `GET /api/v1/solves` (additive, nothing existing changes). It lists the
+student's past questions for the History page; tapping one uses the existing `GET /solve/{id}`.
+Shape in `docs/api-contract.md` section 10."
