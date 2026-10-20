@@ -12,6 +12,7 @@ const extra = [['#privacy', 'Your data'], ['#prep/', 'Prep pack']]
 const links: [string, string, (h: string) => boolean][] = [
   ['#notices', 'Notices', (h) => h === '#notices'],
   ['#solve', 'Ask', (h) => h === '#solve'],
+  ['#history', 'History', (h) => h.startsWith('#history')],
   ['#quiz', 'Quiz', (h) => h === '#quiz'],
   ['#interview-bank', 'Interview Bank', (h) => h === '#interview-bank'],
   ['#pyq-predictor', 'PYQ Predictor', (h) => h === '#pyq-predictor'],

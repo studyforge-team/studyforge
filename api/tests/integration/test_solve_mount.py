@@ -17,7 +17,9 @@ from app import auth, db, wiring
 from app.main import app
 from app.routers import solve
 
-pytestmark = pytest.mark.skipif(not os.environ.get("DATABASE_URL"), reason="needs DATABASE_URL")
+pytestmark = pytest.mark.skipif(
+    not os.environ.get("DATABASE_URL"), reason="needs DATABASE_URL"
+)
 # prod Deps now has templates, so each solve first makes a pick call; null falls through to the tool loop
 NO_TEMPLATE = {"template": None, "inputs": {}}
 CFG = Config(str(Path(__file__).parents[2] / "alembic.ini"))
@@ -28,7 +30,7 @@ async def _exercise(llm: FakeLLM, made: dict[str, Any]) -> None:
     app.dependency_overrides[solve.current_user] = lambda: who["u"]
     due = (datetime.now(UTC) + timedelta(days=10)).isoformat()
     llm.script += [
-        ("chat_json", {"kind": "calc"}),
+        ("chat_json", {"study": True, "live": False, "kind": "calc"}),
         ("chat_json", NO_TEMPLATE),
         ("chat_tools", tool("schedule_reminder", title="Thermo exam", due_at_utc=due)),
         ("chat_tools", tool("run_python", code="result = {}")),
@@ -45,13 +47,24 @@ async def _exercise(llm: FakeLLM, made: dict[str, Any]) -> None:
         assert (await c.get(f"/api/v1/solve/{sid}")).status_code == 404
 
         who["u"] = "A"  # the model's schedule_reminder call reaches D6
-        assert (await c.post("/api/v1/solve", json={"question": "Remind me"})).status_code == 200
+        assert (
+            await c.post("/api/v1/solve", json={"question": "Remind me"})
+        ).status_code == 200
     eng = db.shared_engine()
     async with eng.connect() as conn:
-        owner = (await conn.execute(text("select user_id from app.solves where id=:i"), {"i": sid})).scalar()
-        jobs = (await conn.execute(text("select count(*) from app.jobs where user_id='A'"))).scalar()
+        owner = (
+            await conn.execute(
+                text("select user_id from app.solves where id=:i"), {"i": sid}
+            )
+        ).scalar()
+        jobs = (
+            await conn.execute(text("select count(*) from app.jobs where user_id='A'"))
+        ).scalar()
     assert owner == "A" and jobs and jobs >= 1
-    assert type(made["recorder"]).__name__ == "PgCostRecorder" and made["budget"] is not None
+    assert (
+        type(made["recorder"]).__name__ == "PgCostRecorder"
+        and made["budget"] is not None
+    )
     await eng.dispose()
 
 

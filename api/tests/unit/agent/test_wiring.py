@@ -44,13 +44,15 @@ def pfr_pick() -> dict[str, Any]:
             "V": {"value": 200, "unit": "L"},
             "v0": {"value": 1, "unit": "L/s"},
             "n": {"value": 1, "unit": "-"},
+            "CA0": {"value": 1000, "unit": "mol/m^3"},
+            "D": {"value": 0.1, "unit": "m"},
         },
     }
 
 
 def test_template_question_runs_the_template_once() -> None:
     llm = FakeLLM(
-        ("chat_json", {"kind": "calc"}),
+        ("chat_json", {"study": True, "live": False, "kind": "calc"}),
         ("chat_json", pfr_pick()),
         ("chat_json", {"answer_md": "The conversion is X = 0.8647 (86.47 %)."}),
     )
@@ -69,8 +71,17 @@ def test_template_question_runs_the_template_once() -> None:
 
 def test_steady_states_reach_the_explanation_and_the_guardrail() -> None:
     llm = FakeLLM(
-        ("chat_json", {"kind": "calc"}),
-        ("chat_json", {"template": "cstr", "inputs": {}}),  # the defaults: 3 states
+        ("chat_json", {"study": True, "live": False, "kind": "calc"}),
+        (
+            "chat_json",
+            {
+                "template": "cstr",
+                "inputs": {
+                    n: {"value": v["default"], "unit": v["unit"]}
+                    for n, v in cstr.SPEC.items()
+                },
+            },
+        ),  # every input given, at the defaults: 3 states
         ("chat_json", {"answer_md": "Three steady states: 301.3 K, 348.6 K, 391.3 K."}),
     )
     d = deps(llm)
@@ -85,7 +96,7 @@ def test_template_that_cannot_answer_hands_over_to_the_solver() -> None:
     bad = pfr_pick()
     bad["inputs"]["V"] = {"value": 1e9, "unit": "m^3"}  # out of range -> no template
     llm = FakeLLM(
-        ("chat_json", {"kind": "calc"}),
+        ("chat_json", {"study": True, "live": False, "kind": "calc"}),
         ("chat_json", bad),
         ("chat_tools", tool("run_python", code="result = {}")),
     )
@@ -95,7 +106,7 @@ def test_template_that_cannot_answer_hands_over_to_the_solver() -> None:
 
 def test_template_error_result_falls_back_with_the_reason() -> None:
     llm = FakeLLM(
-        ("chat_json", {"kind": "calc"}),
+        ("chat_json", {"study": True, "live": False, "kind": "calc"}),
         ("chat_json", pfr_pick()),
         ("chat_tools", tool("run_python", code="result = {}")),
     )
@@ -110,7 +121,7 @@ def test_template_error_result_falls_back_with_the_reason() -> None:
 
 def test_guardrail_is_on_by_default_and_catches_an_invented_number() -> None:
     llm = FakeLLM(
-        ("chat_json", {"kind": "calc"}),
+        ("chat_json", {"study": True, "live": False, "kind": "calc"}),
         ("chat_tools", tool("run_python", code="r")),
         ("chat_json", {"answer_md": "X = 0.6667, so about 73 % reacts."}),
         ("chat_json", {"answer_md": "X = 0.6667."}),
@@ -182,7 +193,10 @@ def test_photo_question_goes_through_confirm_then_solves() -> None:
         return png(), "image/png"
 
     reply = '{"text": "Q", "latex": "", "figure_description": "", "confidence": "high"}'
-    llm = FakeLLM(("chat_json", {"kind": "concept"}), ("chat", res("Answer")))
+    llm = FakeLLM(
+        ("chat_json", {"study": True, "live": False, "kind": "concept"}),
+        ("chat", res("Answer")),
+    )
     d = deps(llm, read_upload=upload_reader(fetch, FakeVision(reply)))
     step = run(loop.start("", d, user_id=USER, upload_id="up1"))[1]
     assert step == {"type": "need_confirm", "extracted_text": "Q"}

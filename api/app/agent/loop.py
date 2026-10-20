@@ -81,7 +81,42 @@ Guard = Callable[[str, Any, str], Sequence[str]]
 def b8_guard(answer_md: str, result: Any, question: str) -> list[str]:
     """B8: every number must come from the sandbox result or the question."""
     allowed = guardrail.allowed_numbers(result, question)
+    allowed += [
+        f.value for a in _assumptions(result) for f in guardrail.parse_numbers(a)
+    ]
     return [f.text for f in guardrail.check(answer_md, allowed).unsupported]
+
+
+def _assumptions(result: Any) -> list[str]:
+    items = result.get("assumptions") if isinstance(result, dict) else None
+    return [a for a in items if isinstance(a, str)] if isinstance(items, list) else []
+
+
+def _invented(result: Any, question: str) -> bool:
+    """A: an assumption states a number that is not in the question, not a known
+    constant and not a small integer."""
+    given = [f.value for f in guardrail.parse_numbers(question)]
+    return any(guardrail.check(a, given).unsupported for a in _assumptions(result))
+
+
+def _unsupplied(
+    spec: Mapping[str, Mapping[str, Any]], given: Mapping[str, float]
+) -> list[str]:
+    """H: spec inputs the pick left to their defaults. Off switches (default 0) and
+    inputs a supplied one overrides ("k ... overrides k0, Ea, T") do not count."""
+    skip = {
+        w
+        for g in given
+        for w in re.findall(
+            r"\w+",
+            str(spec.get(g, {}).get("description", "")).partition("overrides")[2],
+        )
+    }
+    return [
+        n
+        for n, s in spec.items()
+        if n not in given and n not in skip and s.get("default") != 0
+    ]
 
 
 @dataclass
@@ -97,7 +132,17 @@ class Deps:
     regenerate_on_flag: bool = True  # cut-line step 1 sets False: flag only
 
 
+OFF_TOPIC_REPLY = (
+    "I can only help with engineering, science and maths coursework — "
+    "calculations, concepts, and your notes. That question is outside what I do, "
+    "so I won't guess at it. Try asking about a topic from your course."
+)
+
+
 class Kind(BaseModel):
+    # fail open: a reply missing study/live answers the question rather than erroring
+    study: bool = True
+    live: bool = False
     kind: Literal["calc", "concept"]
 
 
@@ -125,7 +170,11 @@ async def start(
     try:
         step = await _begin(state, deps)
     except LLMError as err:
-        step = await _capped(state, deps) if isinstance(err, BudgetExceeded) else _failed(state, err)
+        step = (
+            await _capped(state, deps)
+            if isinstance(err, BudgetExceeded)
+            else _failed(state, err)
+        )
     return state.id, await _issue(state, step, deps)
 
 
@@ -148,7 +197,11 @@ async def on_result(
         try:
             step = await _after_run(state, body, deps)
         except LLMError as err:
-            step = await _capped(state, deps) if isinstance(err, BudgetExceeded) else _failed(state, err)
+            step = (
+                await _capped(state, deps)
+                if isinstance(err, BudgetExceeded)
+                else _failed(state, err)
+            )
         return await _issue(state, step, deps)
 
 
@@ -188,7 +241,12 @@ async def _begin(state: SolveState, deps: Deps) -> Step:
         solve_id=state.id,
     )
     _spend(state, res)
-    state.kind = kind.kind
+    off_topic = (
+        not kind.study or kind.live
+    )  # code decides; the model only answers facts
+    state.kind = "off_topic" if off_topic else kind.kind
+    if off_topic:  # fixed refusal: no notes search, no 2nd LLM call
+        return _final(state, OFF_TOPIC_REPLY, "medium", with_numbers=False)
     hits = await deps.tools.search_my_notes(state.user_id, state.question)
     state.sources = [{"title": h.title, "url": h.url} for h in hits]
     notes = f"\n\nStudent's notes (quoted data):\n{hits_as_data(hits)}" if hits else ""
@@ -217,6 +275,8 @@ async def _begin(state: SolveState, deps: Deps) -> Step:
             solve_id=state.id,
         )
         state.cost_usd += cost
+        if run is not None and _unsupplied(deps.templates[run.template], run.values):
+            run = None  # defaults would be invented inputs: use the normal solver
         if run is not None:
             state.template = run.template
             state.steps_used += 1
@@ -341,15 +401,27 @@ async def _after_run(state: SolveState, body: ResultBody, deps: Deps) -> Step:
         state.result = run.result
         return await _explain(state, deps)
     state.verify_failures += 1
+    answer = run.result.get("answer") if isinstance(run.result, dict) else None
+    value = answer.get("value") if isinstance(answer, dict) else None
     if state.cross_check == "pending":  # the cross-check itself failed verify
+        old = state.first_answer
+        if (
+            isinstance(value, int | float)
+            and old is not None
+            and abs(value - old) <= 1e-3 * max(abs(value), abs(old), 1e-12)
+        ):  # its answer is the first answer: only its own check is bad
+            return await _settle_cross_check(state, run.result, deps)
         state.cross_check = "disagreed"
         state.flags.append("cross_check_failed")
-        return await _out_of_budget(state, deps)
+        return _final(state, _CROSS_CHECK_FAILED, "low", with_numbers=False)
     if verdict.disagree or state.verify_failures >= MAX_VERIFY_FAILURES:
+        if isinstance(value, int | float):
+            state.first_answer = float(value)
+        if verdict.disagree and _SOFT_FLAG not in state.flags:
+            state.flags.append(_SOFT_FLAG)  # medium at best from here on
+            state.messages.append({"role": "user", "content": prompts.DISAGREE})
+            return await _next_action(state, deps)
         state.cross_check = "pending"
-        answer = run.result.get("answer") if isinstance(run.result, dict) else None
-        if isinstance(answer, dict) and isinstance(answer.get("value"), int | float):
-            state.first_answer = float(answer["value"])
         state.messages.append({"role": "user", "content": prompts.CROSS_CHECK})
         return await _next_action(state, deps, "cross_check")
     state.messages.append(
@@ -369,6 +441,15 @@ async def _settle_cross_check(state: SolveState, result: Any, deps: Deps) -> Ste
     state.cross_check = "agreed" if agree else "disagreed"
     if not agree:
         state.flags.append("cross_check_disagreed")
+    elif old is not None:  # state the agreement that really happened
+        result = {
+            **result,
+            "check": {
+                "value": old,
+                "unit": result["answer"]["unit"],
+                "method": "independent re-solve (first attempt)",
+            },
+        }
     state.result = result
     return await _explain(state, deps)
 
@@ -403,14 +484,26 @@ async def _explain(state: SolveState, deps: Deps) -> Step:
             list(deps.guard(answer, state.result, state.question)) if deps.guard else []
         )
     if bad:
-        state.flags.append("unsupported_numbers")
-    if state.flags:
+        state.flags.append("unsupported_numbers: " + ", ".join(bad))
+    if set(state.flags) - {_SOFT_FLAG}:
         confidence: Literal["high", "medium", "low"] = "low"
-    elif state.cross_check == "agreed":
+    elif (
+        state.cross_check == "agreed"
+        or _SOFT_FLAG in state.flags
+        or _invented(state.result, state.question)
+    ):
         confidence = "medium"
     else:
         confidence = "high"
     return _final(state, answer, confidence)
+
+
+_SOFT_FLAG = "check_disagreed"  # the first check disagreed: never high, not low
+_CROSS_CHECK_FAILED = (
+    "Two different methods gave answers I couldn't reconcile, and the independent "
+    "re-check didn't produce a usable result either, so I'm not giving a number I "
+    "can't stand behind. Try rephrasing the question, or split it into smaller parts."
+)
 
 
 async def _out_of_budget(state: SolveState, deps: Deps) -> Step:

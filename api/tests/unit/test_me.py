@@ -88,7 +88,7 @@ def test_delete_ok_and_auth_404_is_success(setup: Any) -> None:
     eng, status = setup
     c = TestClient(app)
     assert c.delete("/api/v1/me").status_code == 204
-    assert len(eng.conn.stmts) == 8  # solves, quizzes, notices, jobs, topic_results, note_chunks, push_subscriptions deleted; llm_calls anonymised
+    assert len(eng.conn.stmts) == 9  # solves, quizzes, notices, jobs, topic_results, note_chunks, push_subscriptions, quiz_attempts deleted; llm_calls anonymised
     req = calls[0]
     assert req.method == "DELETE" and str(req.url) == f"{URL}/auth/v1/admin/users/A"
     assert req.headers["apikey"] == "svc" and req.headers["authorization"] == "Bearer svc"

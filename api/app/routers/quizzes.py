@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from app import topics
-from app.db import quizzes
+from app.db import quiz_attempts, quizzes
 from app.routers.checkins import get_engine
 from app.routers.dashboard import _need_db
 from app.routers.solve import current_user
@@ -40,4 +40,8 @@ async def save_answers(
             raise HTTPException(422, "correct must have one entry per quiz item")
         seen = [(i, it["topic"], c) for i, (it, c) in enumerate(zip(items, body.correct, strict=True)) if c is not None]
         await topics.record(conn, user, "quiz", quiz_id, seen)
+        await conn.execute(quiz_attempts.insert().values(  # T4: one row per save, for the progress graph
+            user_id=user, quiz_id=quiz_id, topic=str(quiz.get("topic") or quiz.get("title") or "Quiz")[:80],
+            score=body.score, total=float(sum(c is not None for c in body.correct)),
+            marks_per_q=float(quiz.get("marks_per_q") or 1)))
     return {"recorded": len(seen)}
