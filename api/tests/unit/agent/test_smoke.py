@@ -84,7 +84,7 @@ def answer_body(value: float, unit: str) -> ResultBody:
     return ResultBody(
         result={
             "answer": {"value": value, "unit": unit},
-            "check": {"value": value, "unit": unit, "method": "numeric"},
+            "check": {"value": value * 1.0001, "unit": unit, "method": "numeric"},
         }
     )
 
