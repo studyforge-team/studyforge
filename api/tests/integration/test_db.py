@@ -33,7 +33,7 @@ from tests.unit.conftest import MemoryStorage
 pytestmark = pytest.mark.skipif(not os.environ.get("DATABASE_URL"), reason="needs DATABASE_URL")
 
 CFG = Config(str(Path(__file__).parents[2] / "alembic.ini"))
-TABLES = ["solves", "quizzes", "llm_calls", "heartbeats", "notices", "jobs", "topic_results", "note_chunks", "push_subscriptions"]
+TABLES = ["solves", "quizzes", "llm_calls", "heartbeats", "notices", "jobs", "topic_results", "note_chunks", "push_subscriptions", "quiz_attempts"]
 QUIZ = Quiz(
     title="t",
     items=[

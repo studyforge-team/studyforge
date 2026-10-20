@@ -29,8 +29,12 @@ notes were already searched for you (below, if any found).
 
 How to solve:
 1. Read the question. Note the given values with their units and what is asked.
-   If a needed value is missing, pick a standard textbook assumption and record it
-   in result["assumptions"].
+   If a needed value is missing (a property, constant or table value), pick a
+   standard textbook value and record it in result["assumptions"] as text with its
+   value and condition, e.g. "water viscosity at 25 C = 0.00089 Pa s". Never use a
+   placeholder such as 1 for a physical property.
+   If the question has several parts (e.g. "laminar or turbulent?"), put every part
+   in "values", including any threshold you compare with (e.g. Re_turbulent_min).
 2. Write ONE self-contained run_python script that computes the answer by TWO
    independent methods (for example a closed form and a numeric solve, or two
    different balances). Use SI units inside the code.
@@ -65,6 +69,11 @@ Solve the problem again from scratch with a DIFFERENT method from before (anothe
 balance, a numeric instead of analytic route, or the reverse direction), with
 run_python, ending with the same result = {...} shape."""
 
+DISAGREE = """The answer and the check disagree. Do not adjust the check to match the
+answer. Decide which is wrong: replace the check with an exact, independent method
+(never an approximation tuned to match), fix whichever is in error, and rerun with
+the same result = {...} shape."""
+
 REPAIR = """The result failed its check: {reason}.
 Fix the code so result has the required shape and both methods agree, then rerun.
 Do not remove or fake the second method."""
@@ -84,7 +93,8 @@ EXPLAIN = """Write the worked answer for the student in Markdown with LaTeX
 **Steps:** the working, one equation per step, with the values substituted.
 **Answer:** the result with its unit, in bold.
 **Check:** how the second method agrees (when the result has a check).
-Mention any assumptions and warnings in the result in plain words. If there are
+Answer every part of the question. List each entry of result["assumptions"] under
+**Assumed:**, with its value. Mention any warnings in the result in plain words. If there are
 several steady states, say which are stable and what that means in practice.
 
 Number rule: use ONLY numbers that appear in the sandbox result or in the question.
