@@ -1,0 +1,33 @@
+{
+ "prop_water_heating": {
+  "numbers": {
+   "answer (J)": 1255200,
+   "check (J)": 1255200,
+   "mass (kg)": 5,
+   "specific_heat_capacity (J/(kg·K))": 4184,
+   "temperature_change (K)": 60
+  },
+  "answer_md": "**Given:** mass = 5 kg, specific heat capacity = 4184 J/(kg·K), temperature change = 60 K.\n\n**Method:** Use the formula Q = m × c × ΔT.\n\n**Steps:**\nQ = 5 kg × 4184 J/(kg·K)\nProduct = 209200 J/K   \nQ = Product × 60 K\nQ = 1255200 J\n\n**Answer:** **1255200 J**\n\n**Check:** Rearranged multiplication confirms 1255200 J.\n\n**Assumed:** Specific heat capacity of liquid water taken as 4184 J/(kg·K) (constant over temperature range)\n\nNo warnings were indicated."
+ },
+ "border_current_density": {
+  "numbers": {
+   "answer (A/m^2)": 3183098.861837907,
+   "check (A/m^2)": 3183098.861837907,
+   "current (A)": 10,
+   "diameter (mm)": 2,
+   "radius (mm)": 1,
+   "area (mm^2)": 3.141592653589793
+  },
+  "answer_md": "**Given:**\n- Current $ I = 10 \\text{ A} $\n- Diameter $ d = 2 \\text{ mm} $\n\n**Method:**\nThe current density $ J $ is defined as $ J = I / A $, where $ A $ is the cross-sectional area of the wire.\n\n**Steps:**\n- Radius $ r = d / 2 = 1 \\text{ mm} $\n- Cross-sectional area $ A = \\pi r^2 = \\pi (1 \\text{ mm})^2 $. According to the provided data, $ A = 3.141592653589793 \\text{ mm}^2 $\n- To obtain $ A $ in square meters, divide by $ 1{,}000{,}000 $ because $ 1 \\text{ mm}^2 = 10^{-6} \\text{ m}^2 $. Thus, $ A = 3.141592653589793 \\times 10^{-6} \\text{ m}^2 $ using the given area value.\n- Current density $ J = I / A = 10 \\text{ A} / (3.141592653589793 \\cdot 10^{-6} \\text{ m}^2) = 3183098.861837907 \\text{ A/m}^2 $, obtained directly via division.\n\n**Answer:** The current density is **3183098.861837907 A/m²**. \n\n**Assumed:**\n- Wire has a circular cross‑section.\n- Current is uniformly distributed over the cross‑section.\n\n**Check:** The alternative expression $ J = 4I / (\\pi d^2) $ yields the same numerical value when evaluated with the given current and diameter, confirming consistency.}"
+ },
+ "h_tiny_photon": {
+  "numbers": {
+   "answer (J)": 3.972891714297857e-19,
+   "check (J)": 3.972891714297857e-19,
+   "Planck constant (J·s)": 6.62607015e-34,
+   "speed of light (m/s)": 299792458,
+   "wavelength (nm)": 500
+  },
+  "answer_md": "**Given**: Planck constant $h = 6.62607015 \\times 10^{-34}\\ \\mathrm{J\\cdot s}$, speed of light $c = 299792458\\ \\mathrm{m/s}$, wavelength $\\lambda = 500\\ \\mathrm{nm}$.\\n\n**Method**: Compute $E = h c / \\lambda$, first expressing $\\lambda$ in metres by multiplying by the conversion factor from nanometres to metres.\\n\n**Steps**: Wavelength in metres $=$ $(500)\\ \\mathrm{nm} \\times (10^{-9}\\ \\mathrm{m/nm})$.$\\nE = (6.62607015 \\times 10^{-34}\\ \\mathrm{J\\cdot s}) (299792458\\ \\mathrm{m/s}) / [(500) \\times (10^{-9})\\ \\mathrm{m}]$.$\\n= 3.972891714297857 \\times 10^{-19}\\ \\mathrm{J}$\\n\n**Answer**: **$3.972891714297857 \\times 10^{-19}\\ \\mathrm{J}$**\\n\n**Check**: Direct evaluation of $h c / \\lambda$ gives $3.972891714297857 \\times 10^{-19}\\ \\mathrm{J}$, agreeing with the result."
+ }
+}

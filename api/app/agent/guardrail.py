@@ -15,7 +15,7 @@ SMALL_INT_MAX = 10
 CONSTANTS: tuple[float, ...] = (
     8.314, 8.314462618, 9.81, 9.80665, 6.02214076e23, 1.380649e-23,
     96485.33212, 5.670374419e-8, 299792458, 6.62607015e-34, 273.15,
-    101325, 1.01325, 0.08206,
+    101325, 1.01325, 0.08206, math.pi,
 )  # fmt: skip
 
 
@@ -105,32 +105,78 @@ def allowed_numbers(result: object, question: str) -> list[float]:
 
 def _close(a: float, b: float) -> bool:
     a, b = abs(a), abs(b)
-    if a < ABS_TOL or b < ABS_TOL:
+    if a == 0 or b == 0:
         return abs(a - b) < ABS_TOL
     return abs(a - b) <= REL_TOL * b
 
 
-# SI-prefixed unit right after a number: "15 kN·m", "50 mm" (not "5 mol", "3 min";
-# no Pa: "101.3 kPa" for 101325 Pa is the unit slip test_kpa_pa_slip_caught pins)
-_PREFIXED = re.compile(r"\s*[kMGmμµn](?:mol|[NWJmgLsAVK]|Hz)")
-_SHIFTS = [10.0**e for e in (-9, -6, -3, 3, 6, 9)]
+_PREFIX = {"n": -9, "μ": -6, "µ": -6, "u": -6, "m": -3, "c": -2, "k": 3, "M": 6, "G": 9}
+_UNIT_RE = re.compile(
+    r"([nμµucmkMG]?)(mol|Pa|Hz|[mgsLJWNAV])(?:\^\s*\{?([23])\}?|([23])|([²³]))?"
+)
 
 
-def _fits(f: Flagged, answer_md: str, pool: Sequence[float]) -> bool:
+def parse_unit(u: str) -> tuple[str, int, int] | None:
+    """'kJ' -> ('J', 3, 1); 'mm^2' -> ('m', -3, 2); None if not a single SI unit."""
+    m = _UNIT_RE.fullmatch(u.strip())
+    if not m:
+        return None
+    power = int(m[3] or m[4] or ("²³".index(m[5]) + 2 if m[5] else 1))
+    return m[2], _PREFIX.get(m[1], 0), power
+
+
+# unit right after a number: "209200 J", r"3.1 \, \mathrm{m^2}", "5 mm^2"
+_AFTER_UNIT = re.compile(
+    r"\s*(?:\\[,; ]\s*)?(?:\\(?:text|mathrm)\{\s*)?"
+    r"([A-Za-zμµ]+)\}?((?:\^\s*\{?[23]\}?|[23²³])?)(?![/·\\^A-Za-zμµ0-9²³])"
+)
+_AFTER_PCT = re.compile(r"\s*\\?%")
+_TEN = re.compile(rf"10\s*(?:{_EXP})")
+
+
+def percents(text: str) -> list[float]:
+    """Fractions for numbers written with % in ``text`` (80% -> 0.8)."""
+    return [
+        f.value / 100
+        for f in parse_numbers(text)
+        if _AFTER_PCT.match(text, f.start + len(f.text))
+    ]
+
+
+def _fits(
+    f: Flagged, answer_md: str, pool: Sequence[float], quantities: Sequence[tuple[float, str]]
+) -> bool:
     if any(_close(f.value, a) for a in pool):
         return True
-    return bool(_PREFIXED.match(answer_md, f.start + len(f.text))) and any(
-        _close(f.value, a * k) for a in pool for k in _SHIFTS
-    )
+    end = f.start + len(f.text)
+    if _TEN.fullmatch(f.text) and abs(round(math.log10(f.value))) <= 12:
+        return True  # bare power of ten: a conversion factor, not a result
+    if _AFTER_PCT.match(answer_md, end) and any(_close(f.value / 100, a) for a in pool):
+        return True
+    m = _AFTER_UNIT.match(answer_md, end)
+    uw = parse_unit(m[1] + m[2]) if m else None
+    if uw is None:
+        return False
+    for v, u in quantities:
+        up = parse_unit(u)
+        same = up and up[0] == uw[0] and up[2] == uw[2]
+        if up and same and _close(f.value, v * 10.0 ** ((up[1] - uw[1]) * up[2])):
+            return True
+    return False
 
 
-def check(answer_md: str, allowed: Sequence[float]) -> GuardrailReport:
-    """Flag every number in ``answer_md`` not within 0.5% of an allowed value."""
+def check(
+    answer_md: str,
+    allowed: Sequence[float],
+    quantities: Sequence[tuple[float, str]] = (),
+) -> GuardrailReport:
+    """Flag every number in ``answer_md`` not within 0.5% of an allowed value (or a
+    unit conversion of one of ``quantities`` = [(value, unit)])."""
     pool = [*allowed, *CONSTANTS]
     bad = [
         f
         for f in parse_numbers(answer_md)
         if not (f.value.is_integer() and abs(f.value) <= SMALL_INT_MAX)
-        and not _fits(f, answer_md, pool)
+        and not _fits(f, answer_md, pool, quantities)
     ]
     return GuardrailReport(ok=not bad, unsupported=bad)

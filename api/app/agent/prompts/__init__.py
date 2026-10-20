@@ -92,7 +92,9 @@ EXPLAIN = """Write the worked answer for the student in Markdown with LaTeX
 ($...$ inline, $$...$$ display). Structure:
 **Given:** the data used, with units.
 **Method:** which equations or balance, in one or two sentences.
-**Steps:** the working, one equation per step, with the values substituted.
+**Steps:** the working, one equation per step. Substitute only values that appear in
+the result or the question; if a step's intermediate value is not in the result, write
+that step symbolically, with no number.
 **Answer:** the result with its unit, in bold.
 **Check:** how the second method agrees (when the result has a check).
 Answer every part of the question. Only when result["assumptions"] is non-empty, list
