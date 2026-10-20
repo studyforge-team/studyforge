@@ -23,6 +23,7 @@ from pydantic import BaseModel
 
 from app.agent import guardrail, prompts
 from app.agent.chemlab_pick import pick_template
+from app.agent.markup import tidy_markdown
 from app.agent.state import SolveNotFound, SolveState, StateStore
 from app.agent.steps import (
     Final,
@@ -559,7 +560,7 @@ def _final(
         else {}
     )
     return Final(
-        answer_md=answer_md,
+        answer_md=tidy_markdown(answer_md),
         numbers=numbers,
         figures=state.figures if with_numbers else [],
         diagram_mermaid=state.diagram,
