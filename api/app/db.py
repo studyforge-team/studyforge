@@ -15,6 +15,7 @@ from sqlalchemy import (
     Computed,
     DateTime,
     Double,
+    Float,
     Identity,
     Index,
     Integer,
@@ -108,6 +109,20 @@ topic_results = Table(
     Column("created_at", DateTime(timezone=True), nullable=False, server_default=_now),
     UniqueConstraint("user_id", "source", "ref", "item", name="uq_topic_results_once"),
     Index("ix_topic_results_user_created", "user_id", "created_at"),
+)
+
+
+quiz_attempts = Table(  # T4: one row per saved quiz result, for the per-topic progress graph
+    "quiz_attempts", metadata,
+    Column("id", BigInteger, Identity(), primary_key=True),
+    Column("user_id", Text, nullable=False),
+    Column("quiz_id", Text, nullable=False),
+    Column("topic", Text, nullable=False),
+    Column("score", Float(24), nullable=False),
+    Column("total", Float(24), nullable=False),
+    Column("marks_per_q", Float(24), nullable=False, server_default="1"),
+    Column("created_at", DateTime(timezone=True), nullable=False, server_default=_now),
+    Index("ix_quiz_attempts_user_topic", "user_id", "topic", "created_at"),
 )
 
 
