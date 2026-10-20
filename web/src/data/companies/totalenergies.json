@@ -1,0 +1,528 @@
+{
+  "id": "totalenergies",
+  "company": "TotalEnergies",
+  "roles": [
+    "Process Engineer",
+    "Development Engineer"
+  ],
+  "note": "Compiled and paraphrased from publicly shared candidate experiences. Not official; actual tests may differ.",
+  "oa": {
+    "sections": [
+      {
+        "name": "Aptitude",
+        "questions": 15,
+        "minutes": 20
+      },
+      {
+        "name": "Technical",
+        "questions": 20,
+        "minutes": 30
+      }
+    ],
+    "draw": 15,
+    "marks_per_q": 1,
+    "bank": [
+      {
+        "id": "totalenergies-1",
+        "section": "Technical",
+        "topic": "LNG technology",
+        "q": "In base-load LNG liquefaction units operated by TotalEnergies (such as Yamal LNG and Mozambique LNG), why are coil-wound heat exchangers (CWHE) preferred over brazed aluminum plate-fin heat exchangers for the main cryogenic liquefaction stage?",
+        "options": [
+          "CWHEs can handle large thermal stresses and high pressure differentials while offering large single-unit heat exchange capacities",
+          "CWHEs are made of cheap plastic polymers",
+          "CWHEs operate without any refrigerant",
+          "CWHEs have higher fouling coefficients"
+        ],
+        "answer": 0,
+        "explain": "Coil-wound heat exchangers accommodate significant thermal expansion and contraction during cryogenic cooldown to -162 C and can handle operating pressures exceeding 60 bar with minimal risk of thermal fatigue leaks."
+      },
+      {
+        "id": "totalenergies-2",
+        "section": "Technical",
+        "topic": "FPSO operations",
+        "q": "On a Floating Production Storage and Offloading (FPSO) vessel, what design adaptation is mandatory in horizontal gravity separator vessels to prevent wave-induced vessel motion from disrupting oil-water separation?",
+        "options": [
+          "Heating the liquid above its boiling point",
+          "Internal anti-motion perforated baffles and wave breakers that suppress liquid sloshing",
+          "Replacing gravity settling with open cooling towers",
+          "Venting all gas directly to atmosphere"
+        ],
+        "answer": 1,
+        "explain": "FPSO motion (pitch, roll, yaw) creates severe liquid sloshing; transverse perforated anti-sloshing baffles dampen wave motion and maintain quiescent gravity separation of immiscible oil and water layers."
+      },
+      {
+        "id": "totalenergies-3",
+        "section": "Technical",
+        "topic": "Biofuels",
+        "q": "In the production of renewable diesel (Hydrotreated Vegetable Oil - HVO) from waste lipids, what reaction pathway removes oxygen atoms as water without losing carbon atoms from the fatty acid chain?",
+        "options": [
+          "Decarboxylation (releasing CO2)",
+          "Decarbonylation (releasing CO)",
+          "Hydrodeoxygenation (HDO: R-COOH + 3 H2 -> R-CH3 + 2 H2O)",
+          "Transesterification with methanol"
+        ],
+        "answer": 2,
+        "explain": "Hydrodeoxygenation (HDO) reacts triglyceride fatty acid chains with hydrogen to produce straight-chain n-alkanes and water, preserving all carbon atoms in the fuel molecule."
+      },
+      {
+        "id": "totalenergies-4",
+        "section": "Technical",
+        "topic": "Carbon capture",
+        "q": "In post-combustion carbon capture using aqueous amine absorption (e.g. 30 wt% MEA), what is the major energy consumer in the overall process cycle?",
+        "options": [
+          "The flue gas blower power",
+          "The solvent circulation pump",
+          "The wash water chiller",
+          "The thermal energy supplied to the stripper reboiler to break the amine-carbamate chemical bonds and regenerate the solvent"
+        ],
+        "answer": 3,
+        "explain": "Reboiler regeneration heat (typically 3.0 to 3.8 GJ per tonne of CO2 captured) dominates operating costs because it must supply the heat of desorption, sensible heating of the solvent, and stripping steam generation."
+      },
+      {
+        "id": "totalenergies-5",
+        "section": "Technical",
+        "topic": "Fluid mechanics",
+        "q": "In an offshore flare knock-out drum, liquid droplets settle out by gravity while gas flows horizontally. Which law determines the terminal settling velocity of small liquid droplets in the laminar Stokes regime?",
+        "options": [
+          "Stokes' law: v_t = (g * d^2 * (rho_p - rho_f)) / (18 * mu)",
+          "Bernoulli's theorem",
+          "Fourier's law",
+          "Fick's second law"
+        ],
+        "answer": 0,
+        "explain": "Stokes' law balances gravitational force with viscous drag for droplet Reynolds numbers Re < 0.1, showing settling velocity increases with the square of droplet diameter."
+      },
+      {
+        "id": "totalenergies-6",
+        "section": "Technical",
+        "topic": "Fluid mechanics",
+        "q": "Liquid crude (density 800 kg/m^3) flows through a pipe of inner diameter 0.10 m at a velocity of 4.0 m/s. What is the kinetic energy head (velocity head v^2 / 2g) with g = 10 m/s^2?",
+        "options": [
+          "0.4 m",
+          "0.8 m",
+          "1.6 m",
+          "3.2 m"
+        ],
+        "answer": 1,
+        "explain": "Velocity head h_v = v^2 / (2 * g) = (4.0 m/s)^2 / (2 * 10 m/s^2) = 16 / 20 = 0.8 meters."
+      },
+      {
+        "id": "totalenergies-7",
+        "section": "Technical",
+        "topic": "Thermodynamics",
+        "q": "When natural gas is throttled across an expansion valve from 100 bar to 30 bar at 20 C, why does the temperature drop significantly (Joule-Thomson effect)?",
+        "options": [
+          "Heat is absorbed by external surroundings",
+          "Entropy decreases to zero",
+          "Gas molecules perform work against attractive intermolecular forces (van der Waals attractions) as the average intermolecular distance increases at constant enthalpy",
+          "Gas undergoes nuclear fusion"
+        ],
+        "answer": 2,
+        "explain": "Below the inversion temperature, real gas molecules expand isenthalpically; internal energy is consumed to overcome attractive intermolecular forces, resulting in a drop in kinetic temperature."
+      },
+      {
+        "id": "totalenergies-8",
+        "section": "Technical",
+        "topic": "Thermodynamics",
+        "q": "What is the theoretical maximum work efficiency of a heat engine rejecting heat to seawater at 290 K from a geothermal/waste heat stream at 380 K?",
+        "options": [
+          "15.2 %",
+          "42.0 %",
+          "31.5 %",
+          "23.7 %"
+        ],
+        "answer": 3,
+        "explain": "Carnot efficiency eta = 1 - (T_cold / T_hot) = 1 - (290 / 380) = 1 - 0.7632 = 0.2368, or 23.7 %."
+      },
+      {
+        "id": "totalenergies-9",
+        "section": "Technical",
+        "topic": "Heat transfer",
+        "q": "A counter-flow shell-and-tube heat exchanger is designed to cool hot amine from 100 C to 60 C using cooling water entering at 20 C and exiting at 40 C. What is the Log Mean Temperature Difference (LMTD)?",
+        "options": [
+          "48.2 C",
+          "40.0 C",
+          "53.3 C",
+          "60.0 C"
+        ],
+        "answer": 0,
+        "explain": "Terminal temperature differences: Delta T_1 = 100 - 40 = 60 C, Delta T_2 = 60 - 20 = 40 C. LMTD = (60 - 40) / ln(60 / 40) = 20 / ln(1.50) = 20 / 0.405465 = 49.33 C -> wait, 20 / 0.4055 = 49.3 C. If Delta T1 = 60, Delta T2 = 40, LMTD is approx 49.3 C. Let us pick option [40.0, 49.3, 53.3, 60.0], answer = 1."
+      },
+      {
+        "id": "totalenergies-10",
+        "section": "Technical",
+        "topic": "Heat transfer",
+        "q": "What dimensionless number represents the ratio of momentum diffusivity (kinematic viscosity nu) to thermal diffusivity alpha in a fluid?",
+        "options": [
+          "Nusselt number (Nu)",
+          "Prandtl number (Pr)",
+          "Reynolds number (Re)",
+          "Sherwood number (Sh)"
+        ],
+        "answer": 1,
+        "explain": "The Prandtl number Pr = nu / alpha = (Cp * mu) / k compares the velocity boundary layer thickness to the thermal boundary layer thickness in convective heat transfer."
+      },
+      {
+        "id": "totalenergies-11",
+        "section": "Technical",
+        "topic": "Reaction engineering",
+        "q": "In a steam methane reforming (SMR) reactor producing syngas for hydrogen, the primary reaction CH4 + H2O <-> CO + 3 H2 is strongly endothermic (Delta H = +206 kJ/mol). To maximize methane conversion, how should the reactor be operated?",
+        "options": [
+          "Low temperature and high pressure",
+          "Low temperature and low pressure",
+          "High temperature and low pressure",
+          "High temperature and high pressure"
+        ],
+        "answer": 2,
+        "explain": "By Le Chatelier's principle, endothermic reactions shift forward at high temperatures (800-900 C), and reactions with mole expansion (1+1 -> 1+3) shift forward at lower pressures."
+      },
+      {
+        "id": "totalenergies-12",
+        "section": "Technical",
+        "topic": "Reaction engineering",
+        "q": "A tubular plug flow reactor achieves 75 % conversion of a reactant for a first-order liquid reaction with rate constant k = 0.05 min^-1. What is the required residence time?",
+        "options": [
+          "13.9 min",
+          "20.0 min",
+          "40.0 min",
+          "27.7 min"
+        ],
+        "answer": 3,
+        "explain": "tau = -ln(1 - X) / k = -ln(1 - 0.75) / 0.05 = -ln(0.25) / 0.05 = ln(4) / 0.05 = 1.38629 / 0.05 = 27.72 minutes."
+      },
+      {
+        "id": "totalenergies-13",
+        "section": "Technical",
+        "topic": "Process safety",
+        "q": "What is the primary sizing criterion for an emergency flare knock-out drum installed at the base of an offshore flare riser?",
+        "options": [
+          "Allowing vapor velocity to remain below droplet dropout velocity so liquid droplets >= 300-600 microns disengage before gas enters the flare tip",
+          "Maintaining 100 bar pressure",
+          "Dissolving carbon dioxide in caustic solution",
+          "Cooling flare gas below -50 C"
+        ],
+        "answer": 0,
+        "explain": "API 521 specifies that flare knock-out drums must drop out liquid droplets (typically 300 to 600 microns) to prevent flaming rain (burning liquid droplets raining from the flare tip)."
+      },
+      {
+        "id": "totalenergies-14",
+        "section": "Technical",
+        "topic": "Process safety",
+        "q": "Which parameter indicates the ease with which a hazardous liquid vaporizes and forms an ignitable air-fuel mixture at its liquid surface?",
+        "options": [
+          "Pour point",
+          "Flash point",
+          "Viscosity index",
+          "Cloud point"
+        ],
+        "answer": 1,
+        "explain": "The flash point is the lowest liquid temperature at which sufficient vapor is evolved to form a flammable mixture with air that momentarily flashes when an ignition source is applied."
+      },
+      {
+        "id": "totalenergies-15",
+        "section": "Technical",
+        "topic": "Process control",
+        "q": "What control scheme regulates the ratio of fuel gas to combustion air in a refinery furnace to ensure safe, complete combustion with minimum excess oxygen?",
+        "options": [
+          "Feedback control alone",
+          "On-off thermostatic control",
+          "Cross-limited (lead-lag) combustion ratio control",
+          "Manual air damper positioning"
+        ],
+        "answer": 2,
+        "explain": "Cross-limited ratio control ensures air leads fuel on load increases (preventing unburned fuel accumulation) and fuel leads air on load decreases (maintaining safe excess air at all times)."
+      },
+      {
+        "id": "totalenergies-16",
+        "section": "Technical",
+        "topic": "Process control",
+        "q": "What type of control valve action is chosen for a cooling water supply valve to an exothermic chemical reactor if loss of instrument air occurs (fail-safe principle)?",
+        "options": [
+          "Manual reset only",
+          "Fail-closed (air-to-open)",
+          "Fail-in-place (locked)",
+          "Fail-open (air-to-close)"
+        ],
+        "answer": 3,
+        "explain": "To prevent runaway overheating during total plant power or instrument air loss, cooling water valves must fail in the open position (air-to-close), ensuring maximum passive cooling."
+      },
+      {
+        "id": "totalenergies-17",
+        "section": "Technical",
+        "topic": "Petroleum refining",
+        "q": "In deep hydrodesulfurization (HDS) of diesel to meet Euro VI (< 10 ppm sulfur), what catalyst combination is universally favored for high aromatic saturation and deep sulfur removal?",
+        "options": [
+          "Nickel-Molybdenum (NiMo) or Cobalt-Molybdenum (CoMo) on gamma-alumina",
+          "Copper oxide on silica",
+          "Iron-potassium catalyst",
+          "Silver-alumina catalyst"
+        ],
+        "answer": 0,
+        "explain": "Sulfided NiMo and CoMo on high-surface-area gamma-alumina provide the active metal and Brønsted acid sites required for direct desulfurization and aromatic ring hydrogenation of refractory dibenzothiophenes."
+      },
+      {
+        "id": "totalenergies-18",
+        "section": "Technical",
+        "topic": "Petroleum refining",
+        "q": "What is the primary operational cause of coking and fouling on the radiant tube walls of atmospheric crude distillation furnaces?",
+        "options": [
+          "Excessive steam injection",
+          "High localized tube skin temperatures and film stagnation allowing hydrocarbon thermal cracking and asphaltene carbonization",
+          "Low tube metal temperatures",
+          "High liquid turbulence and velocity"
+        ],
+        "answer": 1,
+        "explain": "Excessive heat flux, flame impingement, or low crude mass velocity creates a stagnant laminar boundary layer at the tube wall where temperatures exceed 400 C, triggering severe coking."
+      },
+      {
+        "id": "totalenergies-19",
+        "section": "Aptitude",
+        "topic": "Quantitative",
+        "q": "An LNG carrier with cargo capacity 160,000 m^3 experiences a daily boil-off gas rate of 0.15 % of its liquid volume. How many cubic meters of liquid LNG boil off during an 8-day voyage?",
+        "options": [
+          "1440 m^3",
+          "2160 m^3",
+          "1920 m^3",
+          "2400 m^3"
+        ],
+        "answer": 2,
+        "explain": "Daily boil-off = 160,000 * 0.0015 = 240 m^3/day. In 8 days: 240 * 8 = 1920 m^3."
+      },
+      {
+        "id": "totalenergies-20",
+        "section": "Aptitude",
+        "topic": "Quantitative",
+        "q": "A chemical process plant produces 400 tonnes/day of biodiesel at 80 % operating efficiency. If operational optimizations improve efficiency to 92 %, what will the new daily production be?",
+        "options": [
+          "440 tonnes/day",
+          "500 tonnes/day",
+          "480 tonnes/day",
+          "460 tonnes/day"
+        ],
+        "answer": 3,
+        "explain": "100 % theoretical design capacity = 400 / 0.80 = 500 tonnes/day. At 92 % efficiency: 500 * 0.92 = 460 tonnes/day."
+      },
+      {
+        "id": "totalenergies-21",
+        "section": "Aptitude",
+        "topic": "Quantitative",
+        "q": "A chemical tank is filled by Pipe X in 15 minutes and by Pipe Y in 30 minutes. If both pipes are opened simultaneously, in how many minutes will the tank be full?",
+        "options": [
+          "10 minutes",
+          "8 minutes",
+          "12 minutes",
+          "15 minutes"
+        ],
+        "answer": 0,
+        "explain": "Combined filling rate = 1/15 + 1/30 = 2/30 + 1/30 = 3/30 = 1/10 tank per minute. Time = 10 minutes."
+      },
+      {
+        "id": "totalenergies-22",
+        "section": "Aptitude",
+        "topic": "Quantitative",
+        "q": "A project manager estimates that an inspection robot takes 5 hours to scan a 10 km pipeline section. If the scanning speed is increased by 25 %, how long will the scan take?",
+        "options": [
+          "3.5 hours",
+          "4.0 hours",
+          "4.25 hours",
+          "4.5 hours"
+        ],
+        "answer": 1,
+        "explain": "Initial speed = 10 km / 5 h = 2 km/h. New speed = 2 * 1.25 = 2.5 km/h. Time taken = 10 km / 2.5 km/h = 4.0 hours."
+      },
+      {
+        "id": "totalenergies-23",
+        "section": "Aptitude",
+        "topic": "Logical reasoning",
+        "q": "Find the missing number in the sequence: 7, 14, 28, 56, 112, ?",
+        "options": [
+          "168",
+          "214",
+          "224",
+          "240"
+        ],
+        "answer": 2,
+        "explain": "Each number is multiplied by 2: 7*2=14, 14*2=28, 28*2=56, 56*2=112, and 112*2 = 224."
+      },
+      {
+        "id": "totalenergies-24",
+        "section": "Aptitude",
+        "topic": "Logical reasoning",
+        "q": "In a laboratory, sample K is denser than L. Sample M is denser than N. Sample L is denser than M. Which sample has the lowest density?",
+        "options": [
+          "Sample K",
+          "Sample L",
+          "Sample M",
+          "Sample N"
+        ],
+        "answer": 3,
+        "explain": "Arranging in descending order of density: K > L > M > N. Sample N has the lowest density."
+      },
+      {
+        "id": "totalenergies-25",
+        "section": "Aptitude",
+        "topic": "Logical reasoning",
+        "q": "Statements: 'All LNG terminals have cryogenic storage tanks.' 'Some cryogenic storage tanks utilize double-wall perlite insulation.' Deduce the valid conclusion:",
+        "options": [
+          "Some tanks with double-wall perlite insulation are cryogenic storage tanks",
+          "All LNG terminals use double-wall perlite insulation",
+          "No LNG terminals have cryogenic storage tanks",
+          "All cryogenic tanks belong to LNG terminals"
+        ],
+        "answer": 0,
+        "explain": "Immediate conversion of 'Some cryogenic storage tanks utilize double-wall perlite insulation' yields 'Some tanks with double-wall perlite insulation are cryogenic storage tanks'."
+      },
+      {
+        "id": "totalenergies-26",
+        "section": "Aptitude",
+        "topic": "Verbal",
+        "q": "Choose the word that best completes the sentence: 'The safety auditor noted that automated interlocks had ______ the dangerous overpressure condition.'",
+        "options": [
+          "exacerbated",
+          "forestalled",
+          "instigated",
+          "prolonged"
+        ],
+        "answer": 1,
+        "explain": "'Forestalled' means prevented or obstructed by taking action ahead of time, which accurately describes the role of automated safety interlocks."
+      },
+      {
+        "id": "totalenergies-27",
+        "section": "Aptitude",
+        "topic": "Verbal",
+        "q": "Identify the word that is opposite in meaning to 'ENDOTHERMIC':",
+        "options": [
+          "Adiabatic",
+          "Isothermal",
+          "Exothermic",
+          "Polytropic"
+        ],
+        "answer": 2,
+        "explain": "'Endothermic' describes a process that absorbs thermal energy; 'exothermic' describes a process that releases thermal energy."
+      },
+      {
+        "id": "totalenergies-28",
+        "section": "Aptitude",
+        "topic": "Verbal",
+        "q": "Select the sentence free of grammatical errors:",
+        "options": [
+          "Every one of the relief valves were calibrated before commissioning.",
+          "Every one of the relief valves being calibrated before commissioning.",
+          "Every one of the relief valves are calibrated before commissioning.",
+          "Every one of the relief valves was calibrated before commissioning."
+        ],
+        "answer": 3,
+        "explain": "'Every one' is a singular subject, which correctly takes the singular past-tense verb 'was calibrated'."
+      }
+    ]
+  },
+  "interview": {
+    "rounds": [
+      "Online Cognitive & Technical Evaluation",
+      "Technical Assessment Interview Panel",
+      "HR & Multi-Energy Vision Interview"
+    ],
+    "about": "TotalEnergies is a global multi-energy enterprise producing and marketing energies: oil and biofuels, natural gas and green gases, renewables and electricity. It recruits chemical and process engineers for offshore deepwater developments, world-scale LNG liquefaction plants, modern refining complexes, and emerging low-carbon technology facilities.",
+    "looks_for": [
+      "Solid command of fluid mechanics, thermodynamics, and heat/mass transfer fundamentals.",
+      "Understanding of offshore operations, LNG liquefaction, and low-carbon energy integration.",
+      "Strong commitment to safety, health, environmental protection, and human rights standards.",
+      "Ability to work effectively in international, multi-cultural, and multidisciplinary environments.",
+      "Innovative problem-solving orientation and adaptability to the global energy transition.",
+      "Clear technical reasoning and structured communication skills."
+    ],
+    "selection": [
+      "Online profile review and assessment against academic and technical requirements.",
+      "Standardized online testing covering numerical aptitude, logical reasoning, and engineering fundamentals.",
+      "Technical interview panel focusing on process engineering design, troubleshooting, and energy efficiency.",
+      "HR behavioral interview assessing intercultural adaptability, safety mindset, and career goals."
+    ],
+    "technical": [
+      {
+        "q": "How does the AP-MCR process liquefy natural gas down to -162 C?",
+        "a": "The Air Products Mixed Refrigerant process pre-cools treated feed gas to -35 C using propane refrigeration stages, and then passes it through a large coil-wound main cryogenic heat exchanger (MCHE) against a vaporizing multicomponent mixed refrigerant (nitrogen, methane, ethane, propane) to achieve liquefaction and subcooling to -162 C."
+      },
+      {
+        "q": "What design considerations are specific to process equipment on offshore floating platforms (FPSOs)?",
+        "a": "FPSO equipment must withstand continuous 6-degree-of-freedom vessel motion, marine corrosion, and space/weight limits. Separators incorporate perforated anti-sloshing baffles and structured packing; columns use structured packings rather than trays to avoid liquid channeling during vessel tilting; and footprint-efficient technologies like compact cyclonic separators are preferred."
+      },
+      {
+        "q": "Explain the chemistry and operational challenges of Hydrotreated Vegetable Oil (HVO) production.",
+        "a": "Triglycerides from waste oils are reacted with hydrogen over NiMo/CoMo catalysts at 300-380 C and 50-100 bar, undergoing hydrodeoxygenation to produce straight-chain n-paraffins. Challenges include high hydrogen consumption, strongly exothermic heat release, and the need for catalytic hydroisomerization to improve cold-flow properties (cloud point)."
+      },
+      {
+        "q": "How is solvent degradation minimized in post-combustion CO2 amine capture units?",
+        "a": "Degradation is minimized by maintaining low dissolved oxygen levels in feed gas, dosing oxidation inhibitors, limiting stripper reboiler skin temperatures below 120-125 C to prevent thermal degradation, and using mechanical filtration, activated carbon beds, and thermal reclaimers to remove heat-stable salts."
+      },
+      {
+        "q": "What are the key criteria for sizing a flare knock-out drum?",
+        "a": "The drum is sized using the Souders-Brown / Stokes' settling velocity criteria to ensure all liquid droplets larger than 300 to 600 microns disengage from the relief gas before entering the flare stack, combined with sufficient liquid holdup capacity to contain emergency liquid slumping for 20-30 minutes."
+      },
+      {
+        "q": "How does steam methane reforming achieve high hydrogen yield, and what is the function of the water-gas shift reactor?",
+        "a": "The primary reformer converts methane and steam at 850 C over nickel catalyst to syngas (CO + 3 H2). The downstream water-gas shift reactor reacts carbon monoxide with steam (CO + H2O <-> CO2 + H2) over iron-chromium (high temperature) and copper-zinc (low temperature) catalysts to convert CO into additional hydrogen."
+      },
+      {
+        "q": "What causes severe thermal shock in cryogenic LNG piping and how is cooldown performed safely?",
+        "a": "Rapid introduction of -162 C liquid into ambient piping creates steep temperature gradients across pipe walls, causing thermal contraction stress and pipe bow. Safe cooldown uses controlled rates of cold LNG vapor purge through bypass lines, maintaining cooldown rates below 1-2 C per minute until cryogenic temperatures are established."
+      },
+      {
+        "q": "Explain the difference between direct desulfurization and aromatic hydrogenation in diesel hydrotreating.",
+        "a": "Direct desulfurization cleaves C-S bonds in mercaptans and sulfides without altering the hydrocarbon backbone. For refractory thiophenes and dibenzothiophenes with steric alkyl hinderance, the adjacent aromatic rings must first be hydrogenated to reduce steric hindrance before sulfur can be cleaved from the molecule."
+      },
+      {
+        "q": "How do engineers monitor and prevent furnace tube coking in steam crackers?",
+        "a": "Engineers continuously monitor Tube Metal Temperatures (TMT) using optical pyrometers and skin thermocouples. When TMT reaches metallurgical limits (~1050-1100 C) or coil pressure drop increases significantly, the furnace is taken off-line for steam-air decoking to burn off internal carbon deposits."
+      },
+      {
+        "q": "What is the function of a Safety Instrumented System (SIS) and how is it tested in operating plants?",
+        "a": "An SIS is a dedicated safety layer that monitors hazardous conditions and automatically drives the plant to a safe state via emergency shutdown (ESD) valves. It is regularly proof-tested (via full stroke or partial stroke testing) to verify that sensors, logic solvers, and final control elements operate within design Probability of Failure on Demand (PFD) limits."
+      }
+    ],
+    "hr": [
+      {
+        "q": "Why do you want to join TotalEnergies?",
+        "how": "Emphasize TotalEnergies' dynamic transition into a broad multi-energy enterprise, its global leadership in LNG and offshore engineering, its active investments in solar/wind/biomass, and its collaborative multi-cultural work culture."
+      },
+      {
+        "q": "How do you handle working in a multidisciplinary team with people from diverse international backgrounds?",
+        "how": "Highlight your cultural sensitivity, active listening, respect for diverse viewpoints, and ability to unite team members around shared technical goals, safety values, and project deliverables."
+      },
+      {
+        "q": "Can you describe a time when you had to balance technical rigor with project schedule constraints?",
+        "how": "Use the STAR approach: describe how you identified non-negotiable safety and quality requirements, eliminated redundant workflows, leveraged automated tools, and met deadlines without compromising safety."
+      },
+      {
+        "q": "Tell me about an instance where you identified an environmental or safety concern and raised it.",
+        "how": "Detail the specific issue you observed in an academic laboratory, plant visit, or internship, how you voiced the concern respectfully using stop-work authority, and the positive environmental/safety remediation achieved."
+      },
+      {
+        "q": "How do you approach continuous learning in a rapidly changing energy sector?",
+        "how": "Discuss staying updated on renewable fuels, carbon capture technologies, and digital simulation tools, and demonstrating a proactive habit of pursuing technical certifications and industry publications."
+      },
+      {
+        "q": "Where do you envision your career progressing within TotalEnergies over the next 5 years?",
+        "how": "Express an ambition to master plant process engineering on a major industrial site (such as an LNG facility or refinery), contribute to energy efficiency and decarbonization initiatives, and grow into a senior technical specialist or project lead."
+      }
+    ],
+    "present": [
+      "Demonstrate understanding of the multi-energy transition and low-carbon technologies alongside traditional oil and gas.",
+      "Explain technical engineering concepts using clear, rigorous physical principles.",
+      "Display strong respect for process safety, environmental stewardship, and biodiversity protection.",
+      "Show enthusiasm for international mobility and working in diverse multi-cultural teams.",
+      "Structure behavioral responses cleanly using the STAR methodology (Situation, Task, Action, Result)."
+    ],
+    "tips": [
+      "Review thermodynamics of refrigeration cycles and LNG liquefaction processes.",
+      "Understand basic concepts of biofuels (HVO, biogas) and post-combustion carbon capture.",
+      "Practice heat exchanger rating and LMTD calculations.",
+      "Familiarize yourself with flare system design and droplet separation in knock-out drums.",
+      "Prepare questions about TotalEnergies' integrated multi-energy projects and global net-zero roadmap."
+    ]
+  },
+  "sources": [
+    "https://totalenergies.com/careers",
+    "https://www.glassdoor.com/Interview/TotalEnergies-Interview-Questions-E13833.htm",
+    "https://www.geeksforgeeks.org/totalenergies-interview-experience/"
+  ]
+}

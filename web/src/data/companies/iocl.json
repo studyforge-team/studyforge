@@ -1,0 +1,528 @@
+{
+  "id": "iocl",
+  "company": "Indian Oil Corporation",
+  "roles": [
+    "Graduate Apprentice Engineer",
+    "Operations Officer"
+  ],
+  "note": "Compiled and paraphrased from publicly shared candidate experiences. Not official; actual tests may differ.",
+  "oa": {
+    "sections": [
+      {
+        "name": "Aptitude",
+        "questions": 15,
+        "minutes": 20
+      },
+      {
+        "name": "Technical",
+        "questions": 20,
+        "minutes": 30
+      }
+    ],
+    "draw": 15,
+    "marks_per_q": 1,
+    "bank": [
+      {
+        "id": "iocl-1",
+        "section": "Technical",
+        "topic": "Petroleum refining",
+        "q": "In a refinery Crude Distillation Unit (CDU), why is live superheated steam injected into the bottom of the main column below the stripping trays?",
+        "options": [
+          "To lower the partial pressure of hydrocarbons, vaporizing light diesel and kerosene fractions without raising furnace coil temperature",
+          "To react chemically with crude hydrocarbons to form alcohols",
+          "To cool the column bottoms down to ambient temperature",
+          "To generate high electrical conductivity in the crude oil"
+        ],
+        "answer": 0,
+        "explain": "Per Dalton's and Raoult's laws, injecting stripping steam reduces the hydrocarbon partial pressure, allowing vaporization of remaining volatile components at temperatures safely below the thermal coking threshold (~370 C)."
+      },
+      {
+        "id": "iocl-2",
+        "section": "Technical",
+        "topic": "Petroleum refining",
+        "q": "What is the primary function of side-strippers attached to the atmospheric distillation column in an IOCL refinery?",
+        "options": [
+          "To compress light overhead gases into LPG",
+          "To strip out lighter volatile ends from kerosene, light gas oil, and heavy gas oil side-draws to adjust product flash point",
+          "To hydrotreat diesel to 10 ppm sulfur",
+          "To regenerate spent cracking catalyst"
+        ],
+        "answer": 1,
+        "explain": "Side-strippers use steam or reboilers to vaporize dissolved low-boiling components back into the main tower, elevating the flash point of side-stream fuels (kerosene/diesel) to meet transport safety standards."
+      },
+      {
+        "id": "iocl-3",
+        "section": "Technical",
+        "topic": "Fuel specifications",
+        "q": "Under Indian Bharat Stage VI (BS-VI) clean fuel standards (equivalent to Euro VI), what is the maximum permissible sulfur content in commercial automotive petrol and diesel?",
+        "options": [
+          "150 ppm (wt)",
+          "50 ppm (wt)",
+          "10 ppm (wt)",
+          "350 ppm (wt)"
+        ],
+        "answer": 2,
+        "explain": "BS-VI mandates a maximum sulfur concentration of 10 mg/kg (10 ppm by weight) for both petrol and diesel, drastically lowering particulate emissions and protecting vehicle catalytic converters."
+      },
+      {
+        "id": "iocl-4",
+        "section": "Technical",
+        "topic": "Petroleum refining",
+        "q": "In Continuous Catalytic Reforming (CCR), what chemical transformation is predominantly responsible for the dramatic increase in the Research Octane Number (RON) of heavy naphtha?",
+        "options": [
+          "Polymerization of ethylene into high-density polyethylene",
+          "Cracking of vacuum gas oil into asphalt",
+          "Hydrodesulfurization of thiophenes",
+          "Dehydrogenation of naphthenes (such as methylcyclohexane) into aromatics (such as toluene) over platinum-tin catalyst"
+        ],
+        "answer": 3,
+        "explain": "Dehydrogenation of six-membered ring naphthenes into aromatics is highly endothermic and rapid, boosting low-octane naphtha (RON ~40-50) into high-octane reformate (RON 98-102) while co-producing hydrogen."
+      },
+      {
+        "id": "iocl-5",
+        "section": "Technical",
+        "topic": "Fluid mechanics",
+        "q": "Crude oil is pumped through a 500 mm inside diameter cross-country pipeline at an average velocity of 1.5 m/s. What is the volumetric flow rate?",
+        "options": [
+          "0.295 m^3/s",
+          "0.147 m^3/s",
+          "0.589 m^3/s",
+          "1.178 m^3/s"
+        ],
+        "answer": 0,
+        "explain": "A = pi * D^2 / 4 = 3.14159 * (0.50)^2 / 4 = 0.19635 m^2. Flow rate Q = A * v = 0.19635 m^2 * 1.5 m/s = 0.2945 m^3/s (0.295 m^3/s)."
+      },
+      {
+        "id": "iocl-6",
+        "section": "Technical",
+        "topic": "Fluid mechanics",
+        "q": "What chemical additive is injected into long-distance cross-country petroleum pipelines in minute concentrations (ppm levels) to dampen turbulent eddies and reduce pumping friction head loss?",
+        "options": [
+          "Concentrated caustic soda",
+          "Drag Reducing Agents (DRA) such as ultra-high molecular weight polyalphaolefins",
+          "Activated carbon slurry",
+          "Sulfuric acid"
+        ],
+        "answer": 1,
+        "explain": "Polymer Drag Reducing Agents (DRA) stretch and align with turbulent fluid shears near pipe walls, dampening turbulent vortex generation and reducing pressure drop by up to 50 % without changing fluid properties."
+      },
+      {
+        "id": "iocl-7",
+        "section": "Technical",
+        "topic": "Heat transfer",
+        "q": "In a shell-and-tube heat exchanger, what dimensionless parameter compares the convective heat transfer coefficient h at the wall to the conductive heat transfer through the fluid across characteristic length L?",
+        "options": [
+          "Reynolds number",
+          "Biot number",
+          "Nusselt number (Nu = h * L / k)",
+          "Schmidt number"
+        ],
+        "answer": 2,
+        "explain": "The Nusselt number Nu = h * L / k represents the enhancement of heat transfer across a fluid boundary layer relative to pure molecular conduction in the fluid."
+      },
+      {
+        "id": "iocl-8",
+        "section": "Technical",
+        "topic": "Heat transfer",
+        "q": "A heat exchanger cools 4.0 kg/s of furnace oil (Cp = 2.0 kJ/(kg*K)) by 25 K. What is the total rate of heat rejection from the oil?",
+        "options": [
+          "100 kW",
+          "150 kW",
+          "250 kW",
+          "200 kW"
+        ],
+        "answer": 3,
+        "explain": "Q = m_dot * Cp * Delta T = 4.0 kg/s * 2.0 kJ/(kg*K) * 25 K = 200 kW."
+      },
+      {
+        "id": "iocl-9",
+        "section": "Technical",
+        "topic": "Mass transfer",
+        "q": "In a packed absorption column, how is the total height of packing Z related to the Height of a Transfer Unit (HTU) and the Number of Transfer Units (NTU)?",
+        "options": [
+          "Z = HTU * NTU",
+          "Z = HTU / NTU",
+          "Z = NTU / HTU",
+          "Z = HTU + NTU"
+        ],
+        "answer": 0,
+        "explain": "Column packing height Z is given by Z = HTU * NTU, where HTU represents mass transfer efficiency per unit height and NTU represents the overall separation difficulty."
+      },
+      {
+        "id": "iocl-10",
+        "section": "Technical",
+        "topic": "Mass transfer",
+        "q": "In distillation column operation, what hydraulic condition occurs when vapor velocity is so high that liquid is carried upward into the tray above, degrading separation efficiency?",
+        "options": [
+          "Weeping",
+          "Entrainment flooding",
+          "Coning",
+          "Dumping"
+        ],
+        "answer": 1,
+        "explain": "Entrainment flooding occurs when high upward vapor velocity sweeps liquid droplets into the tray deck above, causing liquid accumulation, excessive differential pressure, and loss of fractionation."
+      },
+      {
+        "id": "iocl-11",
+        "section": "Technical",
+        "topic": "Thermodynamics",
+        "q": "For an ideal binary solution obeying Raoult's law, what is the vapor pressure of a solution containing 0.50 mole fraction of component A (pure vapor pressure P_A* = 120 kPa) and 0.50 mole fraction of component B (pure vapor pressure P_B* = 40 kPa)?",
+        "options": [
+          "60 kPa",
+          "100 kPa",
+          "80 kPa",
+          "120 kPa"
+        ],
+        "answer": 2,
+        "explain": "Total pressure P = x_A * P_A* + x_B * P_B* = (0.50 * 120 kPa) + (0.50 * 40 kPa) = 60 + 20 = 80 kPa."
+      },
+      {
+        "id": "iocl-12",
+        "section": "Technical",
+        "topic": "Thermodynamics",
+        "q": "What thermodynamic property remains strictly constant during an ideal Joule-Thomson throttling expansion through a porous plug or valve?",
+        "options": [
+          "Entropy",
+          "Helmholtz free energy",
+          "Gibbs free energy",
+          "Enthalpy"
+        ],
+        "answer": 3,
+        "explain": "In an adiabatic throttling process where no external shaft work is performed and kinetic energy changes are negligible, the fluid enthalpy remains constant (isenthalpic: Delta H = 0)."
+      },
+      {
+        "id": "iocl-13",
+        "section": "Technical",
+        "topic": "Reaction engineering",
+        "q": "For an irreversible first-order liquid reaction A -> B, what is the ratio of reactor volume required for a CSTR (V_CSTR) to a PFR (V_PFR) operating at 75 % conversion?",
+        "options": [
+          "2.16",
+          "1.5",
+          "3.0",
+          "4.33"
+        ],
+        "answer": 0,
+        "explain": "For first order: V_CSTR = v_0 * X / (k * (1 - X)) = v_0 * 0.75 / (k * 0.25) = 3 * (v_0 / k). For PFR: V_PFR = (v_0 / k) * ln(1 / (1 - X)) = (v_0 / k) * ln(4) = 1.3863 * (v_0 / k). Ratio V_CSTR / V_PFR = 3 / 1.3863 = 2.164 (2.16)."
+      },
+      {
+        "id": "iocl-14",
+        "section": "Technical",
+        "topic": "Reaction engineering",
+        "q": "In catalytic cracking, how does doubling the catalyst active surface area affect the reaction rate if the reaction is strictly reaction-kinetics controlled (negligible mass transfer resistance)?",
+        "options": [
+          "Quadruples the reaction rate",
+          "Doubles the reaction rate",
+          "Halves the reaction rate",
+          "No change in reaction rate"
+        ],
+        "answer": 1,
+        "explain": "In the kinetically controlled regime, the rate of heterogeneous reaction is directly proportional to the available active catalytic surface area; doubling surface area doubles the reaction rate."
+      },
+      {
+        "id": "iocl-15",
+        "section": "Technical",
+        "topic": "Process safety",
+        "q": "In a petroleum refinery storage tank farm, what safety feature surrounds atmospheric crude storage tanks to contain accidental liquid spills or tank ruptures?",
+        "options": [
+          "High-velocity air blowers",
+          "Underground drainage sump alone",
+          "Secondary containment earthen or concrete dyke (bund wall)",
+          "Water sprinklers alone"
+        ],
+        "answer": 2,
+        "explain": "Dyke or bund walls provide secondary containment sized to hold the entire capacity of the largest tank in the enclosure plus adequate freeboard, preventing pool spread."
+      },
+      {
+        "id": "iocl-16",
+        "section": "Technical",
+        "topic": "Process safety",
+        "q": "What hazardous reaction can occur inside bitumen/asphalt storage tanks if liquid water comes into contact with hot bitumen above 100 C?",
+        "options": [
+          "Vacuum collapse",
+          "Rapid solidification into plastic",
+          "Nuclear fission",
+          "A boilover or slopover where rapidly flashing steam expands by 1600x, violently ejecting hot bitumen foam out of the tank roof"
+        ],
+        "answer": 3,
+        "explain": "Water expanding into steam at hot bitumen temperatures (> 150 C) increases in volume by ~1600 times, creating a violent frothing ejection known as a slopover/boilover."
+      },
+      {
+        "id": "iocl-17",
+        "section": "Technical",
+        "topic": "Pumps and compressors",
+        "q": "A refinery booster pump operates at 1450 RPM delivering 100 m^3/h. If a variable frequency drive (VFD) increases the pump speed to 2900 RPM, what is the new discharge capacity according to affinity laws?",
+        "options": [
+          "200 m^3/h",
+          "141 m^3/h",
+          "400 m^3/h",
+          "800 m^3/h"
+        ],
+        "answer": 0,
+        "explain": "Flow rate varies directly with rotational speed: Q2 = Q1 * (N2 / N1) = 100 * (2900 / 1450) = 100 * 2 = 200 m^3/h."
+      },
+      {
+        "id": "iocl-18",
+        "section": "Technical",
+        "topic": "Process control",
+        "q": "In a PID controller, what happens to the controller output if the proportional band (PB) is decreased toward zero?",
+        "options": [
+          "The controller output goes to zero",
+          "Controller gain K_c increases toward infinity, making the controller behave like an aggressive on-off switch and causing oscillatory instability",
+          "Integral time constant increases",
+          "Derivative filter resets"
+        ],
+        "answer": 1,
+        "explain": "Proportional band PB is inversely related to proportional gain: K_c = 100 / PB. Decreasing PB sharply elevates gain, magnifying small errors into large oscillations."
+      },
+      {
+        "id": "iocl-19",
+        "section": "Aptitude",
+        "topic": "Quantitative",
+        "q": "A pipeline tank with capacity 12,000 liters is filled by Inlet Pump A at 600 L/min and emptied by Discharge Pump B at 400 L/min. Starting from empty with both pumps operating, how many minutes will it take to fill the tank?",
+        "options": [
+          "40 minutes",
+          "50 minutes",
+          "60 minutes",
+          "80 minutes"
+        ],
+        "answer": 2,
+        "explain": "Net filling rate = 600 - 400 = 200 L/min. Time required = 12,000 L / 200 L/min = 60 minutes."
+      },
+      {
+        "id": "iocl-20",
+        "section": "Aptitude",
+        "topic": "Quantitative",
+        "q": "In an engineering aptitude test, a candidate scored 72 marks out of 90. What is the candidate's percentage score?",
+        "options": [
+          "75 %",
+          "85 %",
+          "82 %",
+          "80 %"
+        ],
+        "answer": 3,
+        "explain": "Percentage = (72 / 90) * 100 = (4 / 5) * 100 = 80 %."
+      },
+      {
+        "id": "iocl-21",
+        "section": "Aptitude",
+        "topic": "Quantitative",
+        "q": "A diesel blending batch mixes 500 liters of 45 Cetane diesel with 500 liters of 55 Cetane diesel. Assuming linear blending, what is the Cetane Number of the blended batch?",
+        "options": [
+          "50",
+          "48",
+          "52",
+          "54"
+        ],
+        "answer": 0,
+        "explain": "Blended Cetane = (500 * 45 + 500 * 55) / 1000 = (22500 + 27500) / 1000 = 50,000 / 1000 = 50."
+      },
+      {
+        "id": "iocl-22",
+        "section": "Aptitude",
+        "topic": "Quantitative",
+        "q": "An inspection crew travels 90 km to an oil depot at 45 km/h and returns at 30 km/h. What is the average speed of the round trip?",
+        "options": [
+          "34 km/h",
+          "36 km/h",
+          "37.5 km/h",
+          "40 km/h"
+        ],
+        "answer": 1,
+        "explain": "Outbound time = 90 / 45 = 2 h. Inbound time = 90 / 30 = 3 h. Total distance = 180 km, total time = 5 h. Average speed = 180 / 5 = 36 km/h (harmonic mean = 2 * 45 * 30 / (45 + 30) = 2700 / 75 = 36 km/h)."
+      },
+      {
+        "id": "iocl-23",
+        "section": "Aptitude",
+        "topic": "Logical reasoning",
+        "q": "Identify the next number in the refinery series: 6, 12, 24, 48, 96, ?",
+        "options": [
+          "144",
+          "180",
+          "192",
+          "216"
+        ],
+        "answer": 2,
+        "explain": "Each term is multiplied by 2: 6*2=12, 12*2=24, 24*2=48, 48*2=96, and 96*2 = 192."
+      },
+      {
+        "id": "iocl-24",
+        "section": "Aptitude",
+        "topic": "Logical reasoning",
+        "q": "Statements: 'All PSU refineries comply with CPCB emission norms.' 'Panipat is a PSU refinery.' Which conclusion logically follows?",
+        "options": [
+          "Panipat does not comply with CPCB emission norms",
+          "CPCB norms apply only to chemical fertilizer plants",
+          "Only Panipat complies with CPCB norms",
+          "Panipat complies with CPCB emission norms"
+        ],
+        "answer": 3,
+        "explain": "By standard deductive syllogism: All A are B, C is A, therefore C is B. Panipat complies with CPCB emission norms."
+      },
+      {
+        "id": "iocl-25",
+        "section": "Aptitude",
+        "topic": "Logical reasoning",
+        "q": "An engineer walks 4 km north from the control room to the tank farm, then 3 km east to the pump house. What is the shortest direct distance back to the control room?",
+        "options": [
+          "5 km",
+          "4 km",
+          "6 km",
+          "7 km"
+        ],
+        "answer": 0,
+        "explain": "Using the Pythagorean theorem: Distance = sqrt(4^2 + 3^2) = sqrt(16 + 9) = sqrt(25) = 5 km."
+      },
+      {
+        "id": "iocl-26",
+        "section": "Aptitude",
+        "topic": "Verbal",
+        "q": "Select the word that best fills the blank: 'The plant manager noted that the new hydrocracker unit was ______ on schedule, meeting all BS-VI fuel targets.'",
+        "options": [
+          "abolished",
+          "commissioned",
+          "demolished",
+          "curtailed"
+        ],
+        "answer": 1,
+        "explain": "'Commissioned' means formally brought into operational service, which perfectly matches bringing a new refinery process unit online."
+      },
+      {
+        "id": "iocl-27",
+        "section": "Aptitude",
+        "topic": "Verbal",
+        "q": "Choose the most appropriate synonym for the word 'PRECIPITATE' as used in chemical process operations:",
+        "options": [
+          "Vaporize into steam",
+          "Dissolve completely",
+          "Separate out as solid",
+          "Compress into liquid"
+        ],
+        "answer": 2,
+        "explain": "In chemical engineering, 'precipitate' means to cause a substance to separate out in solid form from a solution."
+      },
+      {
+        "id": "iocl-28",
+        "section": "Aptitude",
+        "topic": "Verbal",
+        "q": "Identify the sentence that uses correct grammatical punctuation:",
+        "options": [
+          "The technician, inspected the pump replaced the mechanical seal, and restarted the motor.",
+          "The technician inspected the pump replaced the mechanical seal and restarted the motor.",
+          "The technician inspected the pump, replaced the mechanical seal and, restarted the motor.",
+          "The technician inspected the pump, replaced the mechanical seal, and restarted the motor."
+        ],
+        "answer": 3,
+        "explain": "Option A correctly uses commas to separate items in a series (Oxford comma structure)."
+      }
+    ]
+  },
+  "interview": {
+    "rounds": [
+      "GATE Score Shortlisting",
+      "Group Discussion (GD) & Group Task (GT)",
+      "Personal Technical & HR Interview"
+    ],
+    "about": "Indian Oil Corporation Limited (IndianOil) is India's largest commercial state-owned oil and gas enterprise (Maharatna PSU), operating 11 refineries across India with a combined refining capacity exceeding 80 million metric tonnes per annum. IndianOil recruits chemical engineering graduates primarily through the GATE examination followed by rigorous Group Discussions, Group Tasks, and Personal Interviews for operational postings across refineries, petrochemical units, and pipeline networks.",
+    "looks_for": [
+      "Exceptional score and conceptual mastery in the Graduate Aptitude Test in Engineering (GATE) in Chemical Engineering.",
+      "Solid grasp of core chemical engineering fundamentals: fluid mechanics, heat transfer, distillation, and thermodynamics.",
+      "Familiarity with petroleum refining processes (CDU/VDU, FCC, Hydrocracker, Delayed Coker, Catalytic Reforming).",
+      "High emotional stability, collaborative teamwork, and articulate communication in Group Discussions and Group Tasks.",
+      "Readiness for rotational shift engineering postings at remote refinery sites (e.g., Paradip, Panipat, Barauni, Digboi).",
+      "Clear understanding of safety regulations, environmental compliance (CPCB, BS-VI), and national energy security."
+    ],
+    "selection": [
+      "Shortlisting of candidates based on GATE Chemical Engineering cutoff percentiles/scores.",
+      "Group Discussion (GD) on current energy transition, industrial policy, or techno-economic issues.",
+      "Group Task (GT) testing physical collaboration, prioritization, and practical problem-solving in a simulated team environment.",
+      "Comprehensive Personal Interview (PI) covering in-depth technical questions, final year projects, and behavioral fit."
+    ],
+    "technical": [
+      {
+        "q": "Explain the operational differences between an atmospheric distillation column (CDU) and a vacuum distillation column (VDU).",
+        "a": "The CDU operates at near-atmospheric pressure to separate crude oil into light cuts (naphtha, kerosene, diesel) up to ~370 C. The VDU operates at deep vacuum (15-30 mmHg) using steam ejectors to distill heavy atmospheric residue without thermal decomposition, recovering vacuum gas oils (HVGO/LVGO) while leaving heavy vacuum residue at the bottom."
+      },
+      {
+        "q": "What is the primary objective of Continuous Catalytic Reforming (CCR) in an IndianOil refinery?",
+        "a": "CCR upgrades low-octane heavy naphtha into high-octane motor gasoline reformate (RON 98-102) by converting naphthenes to aromatics and straight-chain paraffins to branched isomers over a platinum-tin catalyst. It also produces high-purity hydrogen, which is consumed in downstream hydrotreaters."
+      },
+      {
+        "q": "How does IndianOil achieve BS-VI compliance for automotive diesel?",
+        "a": "BS-VI compliance requires reducing diesel sulfur content to < 10 ppm. This is achieved in Diesel Hydrotreating (DHDT) or Hydrocracker units where diesel feeds react with hydrogen over CoMo or NiMo catalysts at high pressure (50-100 bar) and 340-380 C, converting organic sulfur into H2S while saturating polyaromatics."
+      },
+      {
+        "q": "What is the difference between Net Positive Suction Head available (NPSHa) and required (NPSHr)?",
+        "a": "NPSHa is a characteristic of the installation system, representing the total suction head over and above fluid vapor pressure at the pump inlet: NPSHa = (P_suction - P_vapor)/(rho*g) + v^2/2g. NPSHr is a manufacturer-specified requirement of the pump impeller. To prevent cavitation, NPSHa must exceed NPSHr by at least 0.5 to 1.0 meter."
+      },
+      {
+        "q": "What causes tray weeping in a distillation column and how is it corrected?",
+        "a": "Weeping occurs when upward vapor velocity through tray perforations is insufficient to support the liquid holdup, causing liquid to dump prematurely through the holes rather than flowing across the weir and down the downcomer. It is corrected by increasing column boilup/vapor traffic or decreasing column pressure."
+      },
+      {
+        "q": "How does a Delayed Coking Unit (DCU) convert vacuum residue into petroleum coke?",
+        "a": "Vacuum residue is heated rapidly in a coker furnace to 490-500 C and fed to large vertical coke drums where thermal cracking occurs under long residence time. Lighter cracked vapors exit overhead to a fractionator, while solid petroleum coke accumulates inside the drum until it is decoked using hydraulic high-pressure water cutters."
+      },
+      {
+        "q": "Explain the significance of the Fanning friction factor and Darcy friction factor in pipeline hydraulics.",
+        "a": "Both quantify frictional head loss in pipe flow. The Darcy friction factor f_D is four times the Fanning friction factor f_F (f_D = 4 * f_F). In laminar flow, f_D = 64/Re and f_F = 16/Re. Engineers must verify which definition a formula or correlation uses to avoid fourfold errors in head loss calculations."
+      },
+      {
+        "q": "What is the role of Drag Reducing Agents (DRA) in cross-country petroleum pipelines?",
+        "a": "DRAs are high-molecular-weight polymers injected into crude and product pipelines in low concentrations (5-50 ppm). They dampen turbulent eddies near pipe walls, reducing frictional pressure drop by 30-50 % and allowing increased pipeline throughput without exceeding maximum allowable operating pressure (MAOP)."
+      },
+      {
+        "q": "What is the function of the quench stream in a multi-bed hydrocracker reactor?",
+        "a": "Hydrocracking reactions are strongly exothermic. Cold hydrogen gas is injected as a quench stream between catalyst beds to control bed temperature, prevent runaway hot spots, protect catalyst activity, and maintain uniform axial temperature profiles."
+      },
+      {
+        "q": "What safety measures are implemented in refinery LPG storage mounded bullets?",
+        "a": "Mounded bullets are horizontal storage vessels buried under clean sand and earth. The mounding protects against external pool fire exposure, eliminates boiling liquid expanding vapor explosion (BLEVE) hazards, resists projectile impacts, and includes remote-operated emergency shut-off valves (ROSOVs) with gas detection."
+      }
+    ],
+    "hr": [
+      {
+        "q": "Why do you want to join IndianOil as a Maharatna PSU rather than a private corporate firm?",
+        "how": "Highlight IndianOil's role as the energy lifeline of India, the opportunity to handle nation-scale technical challenges, the world-class job security and structured training programs, and pride in contributing directly to national energy security."
+      },
+      {
+        "q": "Are you prepared for a plant posting in remote locations such as Digboi, Barauni, or Paradip?",
+        "how": "Express genuine enthusiasm for hands-on refinery operations, explaining that foundational plant experience in a major refinery is the best possible crucible for mastering chemical engineering unit operations and plant safety."
+      },
+      {
+        "q": "How did you perform in the Group Discussion and what was your strategy?",
+        "how": "Explain how you focused on initiating or structuring the discussion with factual data, encouraging quiet teammates to contribute, listening actively, and synthesizing diverse opinions into a constructive summary."
+      },
+      {
+        "q": "Tell me about a time during your B.Tech project when you encountered a major technical failure.",
+        "how": "Use the STAR approach: describe the technical bottleneck, your diagnostic steps from first principles, how you consulted your faculty advisor or technical literature, and the successful resolution."
+      },
+      {
+        "q": "How would you handle a disagreement with an experienced plant operator on shift?",
+        "how": "Emphasize mutual respect, valuing the technician's deep practical experience, cross-checking parameters with standard operating procedures (SOPs) and physical readings, and resolving discrepancies collaboratively with safety as the primary priority."
+      },
+      {
+        "q": "Where do you see yourself contributing within IndianOil over the next 5 to 7 years?",
+        "how": "Aspire to master refinery unit operations as a Shift In-charge, earn technical competency certifications, contribute to energy efficiency and BS-VI / green hydrogen projects, and advance into senior technical operations management."
+      }
+    ],
+    "present": [
+      "Demonstrate strong clarity on GATE Chemical Engineering fundamentals (unit operations, thermodynamics, kinetics).",
+      "Show familiarity with IndianOil's major refinery locations (Panipat, Mathura, Paradip, Koyali, Haldia, Barauni, Guwahati, Bongaigaon, Digboi).",
+      "Maintain composure, polite professional etiquette, and articulate speech in English or Hindi as requested.",
+      "Display a strong safety consciousness and pride in public sector contribution to the nation.",
+      "Structure behavioral and HR answers clearly using the STAR framework."
+    ],
+    "tips": [
+      "Be thoroughly prepared on your B.Tech final year project: design assumptions, mass balances, and equipment sizing.",
+      "Review fluid mechanics (Bernoulli, pump curves, NPSH) and heat transfer (LMTD, overall heat transfer coefficient).",
+      "Be ready to sketch and explain the process flow diagram of a Crude Distillation Unit (CDU) and FCC.",
+      "Understand current Indian energy dynamics: BS-VI fuel norms, ethanol blending (E20), and green hydrogen.",
+      "Practice participating actively in mock Group Discussions without interrupting aggressively."
+    ]
+  },
+  "sources": [
+    "https://iocl.com/people-careers",
+    "https://www.geeksforgeeks.org/indian-oil-corporation-limited-iocl-interview-experience/",
+    "https://www.ambitionbox.com/interviews/iocl-question-answers"
+  ]
+}

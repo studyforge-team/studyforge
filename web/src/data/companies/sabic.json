@@ -1,0 +1,528 @@
+{
+  "id": "sabic",
+  "company": "SABIC",
+  "roles": [
+    "Process Engineer",
+    "Technical Services Engineer"
+  ],
+  "note": "Compiled and paraphrased from publicly shared candidate experiences. Not official; actual tests may differ.",
+  "oa": {
+    "sections": [
+      {
+        "name": "Aptitude",
+        "questions": 15,
+        "minutes": 20
+      },
+      {
+        "name": "Technical",
+        "questions": 20,
+        "minutes": 30
+      }
+    ],
+    "draw": 15,
+    "marks_per_q": 1,
+    "bank": [
+      {
+        "id": "sabic-1",
+        "section": "Technical",
+        "topic": "Steam cracking",
+        "q": "In an ethylene steam cracking furnace, why is dilution steam co-fed with ethane or naphtha hydrocarbon feed into the radiant coils?",
+        "options": [
+          "To lower hydrocarbon partial pressure, favoring primary olefin formation over secondary bimolecular condensation, and to suppress coke deposition on tube walls",
+          "To react chemically with ethane to produce ethanol",
+          "To raise the operating pressure to 100 bar",
+          "To act as a homogeneous catalyst for olefin isomerization"
+        ],
+        "answer": 0,
+        "explain": "Steam lowers hydrocarbon partial pressure (Le Chatelier's principle shifts the equilibrium toward high-volume cracking products: C2H6 <-> C2H4 + H2) and gasifies deposited coke via the water-gas reaction (C + H2O -> CO + H2)."
+      },
+      {
+        "id": "sabic-2",
+        "section": "Technical",
+        "topic": "Petrochemical synthesis",
+        "q": "In the industrial synthesis of Methyl Tert-Butyl Ether (MTBE), what reactants are reacted over an acidic ion-exchange resin catalyst?",
+        "options": [
+          "Ethylene and ethanol",
+          "Isobutylene and methanol",
+          "Propylene and isopropanol",
+          "1-Butene and water"
+        ],
+        "answer": 1,
+        "explain": "MTBE is produced by the liquid-phase addition of methanol to isobutylene ((CH3)2C=CH2 + CH3OH <-> (CH3)3C-O-CH3) over strong acid cation-exchange resin catalysts (Amberlyst 15) at 50-80 C."
+      },
+      {
+        "id": "sabic-3",
+        "section": "Technical",
+        "topic": "Polymer engineering",
+        "q": "In the melt transesterification process for manufacturing optical-grade Polycarbonate, what are the primary monomers reacted under vacuum?",
+        "options": [
+          "Caprolactam and adipic acid",
+          "Ethylene glycol and terephthalic acid",
+          "Bisphenol-A (BPA) and diphenyl carbonate (DPC)",
+          "Hexamethylenediamine and sebacic acid"
+        ],
+        "answer": 2,
+        "explain": "The solvent-free melt transesterification route reacts Bisphenol-A with diphenyl carbonate in the presence of basic catalysts at 250-300 C under deep vacuum, distilling out byproduct phenol."
+      },
+      {
+        "id": "sabic-4",
+        "section": "Technical",
+        "topic": "Cryogenic separation",
+        "q": "In an ethylene plant cold fractionation train, why is the feed gas thoroughly dried to < 1 ppmv moisture in molecular sieve beds upstream of the chilling train and demethanizer?",
+        "options": [
+          "To prevent liquid water from boiling too vigorously in the reboiler",
+          "To prevent water from poisoning the downstream sulfur recovery catalyst",
+          "To avoid dilute sulfuric acid formation in the demethanizer reboiler",
+          "To prevent catastrophic solid hydrocarbon gas hydrate (clathrate) and ice formation that would freeze and plug cryogenic heat exchangers and columns operating down to -100 C"
+        ],
+        "answer": 3,
+        "explain": "At low temperatures (-30 C to -100 C) and high pressures (30-35 bar), water forms solid crystalline gas hydrates with methane and ethylene, choking piping and cold box exchangers."
+      },
+      {
+        "id": "sabic-5",
+        "section": "Technical",
+        "topic": "Selective hydrogenation",
+        "q": "In ethylene purification, why must trace acetylene (0.5 to 1.5 mol%) in the C2 stream be selectively hydrogenated to ethylene rather than ethane?",
+        "options": [
+          "Trace acetylene poisons Ziegler-Natta and metallocene polymerization catalysts in downstream polyethylene plants, requiring reduction to < 5 ppm without losing valuable ethylene to ethane",
+          "Acetylene creates severe foaming in the C2 splitter column",
+          "Acetylene reacts with cooling water to form corrosive acetic acid",
+          "Acetylene lowers the octane number of the product"
+        ],
+        "answer": 0,
+        "explain": "Acetylene strongly chemisorbs onto polyolefin coordination catalysts, deactivating active titanium/zirconium sites. Selective front-end or back-end catalytic hydrogenation over Pd-Ag/alumina converts acetylene to ethylene."
+      },
+      {
+        "id": "sabic-6",
+        "section": "Technical",
+        "topic": "Chemical kinetics",
+        "q": "A tubular cracking reactor achieves 60% conversion of ethane per pass at 800 C with a space time tau = 0.5 s. Assuming first-order kinetics (k = -ln(1 - X) / tau), what is the apparent reaction rate constant k?",
+        "options": [
+          "1.20 s^-1",
+          "1.83 s^-1",
+          "0.69 s^-1",
+          "2.45 s^-1"
+        ],
+        "answer": 1,
+        "explain": "For ideal plug flow: k * tau = -ln(1 - X). Here 1 - 0.60 = 0.40. -ln(0.40) = 0.9163. Therefore, k = 0.9163 / 0.5 s = 1.83 s^-1."
+      },
+      {
+        "id": "sabic-7",
+        "section": "Technical",
+        "topic": "Heat transfer",
+        "q": "In steam cracking, what is the purpose of the Transfer Line Exchanger (TLE) installed immediately downstream of the furnace radiant coils?",
+        "options": [
+          "To condense heavy fuel oil into tar pellets",
+          "To preheat combustion air for the furnace burners",
+          "To achieve rapid thermal quenching of cracked gas from ~850 C to < 400 C in milliseconds, halting secondary olefin-consuming reactions and generating valuable very high-pressure (VHP) steam",
+          "To strip carbon dioxide from cracked gas"
+        ],
+        "answer": 2,
+        "explain": "Radiant coil effluent contains highly reactive free radicals and olefins. Rapid quenching in a specialized shell-and-tube TLE 'freezes' the product distribution, while recovering immense heat as 100+ bar steam."
+      },
+      {
+        "id": "sabic-8",
+        "section": "Technical",
+        "topic": "Fluid mechanics",
+        "q": "In a quench water tower cooling cracked gas, what prevents flooding when both high gas flow and high recirculating water flow pass counter-currently through the column internals?",
+        "options": [
+          "Decreasing cooling water temperature to -20 C",
+          "Increasing the column top pressure to 200 bar",
+          "Injecting pure oxygen into the tower top",
+          "Maintaining the vapor superficial velocity below the Souders-Brown flooding limit and ensuring adequate tray downcomer clearance and open area"
+        ],
+        "answer": 3,
+        "explain": "Flooding occurs when upward vapor drag exceeds downward gravitational drainage of liquid. Columns are sized using the Souders-Brown factor to keep vapor velocity well below the flooding threshold."
+      },
+      {
+        "id": "sabic-9",
+        "section": "Technical",
+        "topic": "Thermodynamics",
+        "q": "What thermodynamic cycle is universally used to achieve refrigeration down to -100 C in ethylene plant fractionation sections?",
+        "options": [
+          "Multi-stage cascaded compression refrigeration cycles using propylene (for high/intermediate levels) and ethylene (for low cryogenic levels)",
+          "Simple ammonia absorption refrigeration using low-grade waste steam",
+          "Thermoelectric Peltier cooling modules installed on tray decks",
+          "Vortex tube air expansion"
+        ],
+        "answer": 0,
+        "explain": "Ethylene plants employ cascaded refrigeration: closed-loop propylene refrigerant chills down to -40 C and condenses high-pressure ethylene refrigerant, which then evaporates at staged suction pressures down to -100 C."
+      },
+      {
+        "id": "sabic-10",
+        "section": "Technical",
+        "topic": "Process safety",
+        "q": "What is the primary explosion hazard associated with ethylene oxide (EO) storage tanks and handling piping?",
+        "options": [
+          "It forms explosive metal acetylides with pure copper alloys",
+          "Ethylene oxide is an unstable, exothermic compound that can undergo pure vapor-phase autopolymerization and explosive decomposition even in the total absence of air or oxygen",
+          "It reacts spontaneously with nitrogen gas to form trinitrotoluene",
+          "It creates liquid vacuum shocks that crush storage tanks"
+        ],
+        "answer": 1,
+        "explain": "EO is thermodynamically unstable (highly strained 3-membered ring). Exposure to hot spots, rust, or contaminant bases can trigger self-accelerating runaway decomposition into CO, CH4, and H2 without any oxidant."
+      },
+      {
+        "id": "sabic-11",
+        "section": "Technical",
+        "topic": "Reaction engineering",
+        "q": "In a gas-phase fluidized bed reactor for polyethylene production (such as the UNIPOL process), how is the immense heat of polymerization (approx. 3.5 MJ/kg ethylene) removed from the reacting bed?",
+        "options": [
+          "By jacket cooling the outer reactor shell with ambient air fans",
+          "By installing thousands of internal cooling water coils inside the fluidizing bed",
+          "By circulating massive recycle gas volumes through an external cooler and injecting condensed liquid hydrocarbons (condensing mode cooling) directly into the bed for evaporative cooling",
+          "By continuously dumping crushed ice onto the distributor plate"
+        ],
+        "answer": 2,
+        "explain": "Recycle gas provides fluidization and heat removal. In 'condensing mode', inert hydrocarbons (isopentane) are condensed in the external recycle cooler and vaporize inside the bed, absorbing enormous latent heat."
+      },
+      {
+        "id": "sabic-12",
+        "section": "Technical",
+        "topic": "Distillation",
+        "q": "Why is the C2 Splitter (ethylene-ethane fractionator) one of the largest distillation columns in a petrochemical complex, often containing 100 to 140 trays?",
+        "options": [
+          "The trays must hold large inventories of liquid catalyst",
+          "Ethylene forms a homogeneous minimum-boiling azeotrope with ethane",
+          "Ethane reacts with column packing, requiring frequent bed wash stages",
+          "The relative volatility between ethylene and ethane is very close to 1 (alpha ~ 1.2 to 1.3 at standard operating pressures), requiring many theoretical stages and high reflux ratios to achieve polymer-grade purity (> 99.95%)"
+        ],
+        "answer": 3,
+        "explain": "Separating close-boiling components with low relative volatility requires numerous theoretical stages and high reflux ratios, resulting in tall columns and open-loop or closed-loop heat pump reboiler systems."
+      },
+      {
+        "id": "sabic-13",
+        "section": "Technical",
+        "topic": "Materials science",
+        "q": "Why are radiant cracking coils in pyrolysis furnaces constructed from centrifugally cast high-alloy steels (such as 25Cr-35Ni with micro-alloying additions of Nb, Ti, and W)?",
+        "options": [
+          "To resist severe high-temperature creep rupture, thermal shock during decoking, carburization from cracking hydrocarbons, and high-temperature oxidation up to 1100 C",
+          "To eliminate electrical conductivity through the pipe wall",
+          "Because cast alloy steels are transparent to infrared radiation",
+          "To allow magnetic separation of coke particles from the gas stream"
+        ],
+        "answer": 0,
+        "explain": "Radiant tubes operate at metal temperatures exceeding 1000 C under carburizing gas atmospheres. High nickel and chromium content provides creep strength and forms a protective chromia/alumina scale against coke carburization."
+      },
+      {
+        "id": "sabic-14",
+        "section": "Technical",
+        "topic": "Process control",
+        "q": "What advanced control strategy is commonly implemented on ethylene cracking furnaces to maximize olefin yield while respecting tube metal temperature (TMT) limits?",
+        "options": [
+          "Manual setpoint adjustments by field operators every 12 hours",
+          "Multivariable Model Predictive Control (MPC) adjusting fuel gas flows and feed rates dynamically against coil outlet temperature (COT) and maximum individual TMT constraints",
+          "Simple on/off bang-bang temperature thermostats",
+          "Pneumatic proportional-only analog regulators"
+        ],
+        "answer": 1,
+        "explain": "MPC optimizes cracking severity (COT or methane-to-propylene ratio) while handling complex multivariable interactions and respecting strict upper constraints on skin temperatures (TMTs) to prolong coil life."
+      },
+      {
+        "id": "sabic-15",
+        "section": "Technical",
+        "topic": "Mass transfer",
+        "q": "In the caustic wash tower of an ethylene plant, how are acid gases (CO2 and H2S) removed from the cracked gas prior to cryogenic chilling?",
+        "options": [
+          "Condensation with liquid nitrogen at -196 C",
+          "Adsorption onto granular activated carbon beds",
+          "Counter-current scrubbing with dilute aqueous sodium hydroxide (NaOH) in a multi-stage trayed or packed column, converting CO2 to carbonate/bicarbonate and H2S to sodium sulfide",
+          "Membrane permeation through silicone rubber sheets"
+        ],
+        "answer": 2,
+        "explain": "NaOH reacts irreversibly with CO2 (2 NaOH + CO2 -> Na2CO3 + H2O) and H2S (NaOH + H2S -> NaHS + H2O), removing acid gases down to < 1 ppm to protect cryogenic equipment and catalysts."
+      },
+      {
+        "id": "sabic-16",
+        "section": "Technical",
+        "topic": "Furnace decoking",
+        "q": "What chemical process is used during online furnace decoking to remove accumulated carbon deposits from radiant coil inner walls?",
+        "options": [
+          "Blasting high-pressure sand through the running furnace",
+          "Drilling through the coils with high-speed diamond mechanical bits",
+          "Washing with concentrated hydrochloric acid at ambient temperature",
+          "Controlled combustion and gasification using a mixture of steam and air at elevated temperatures (steam-air decoking)"
+        ],
+        "answer": 3,
+        "explain": "During decoking, hydrocarbon feed is removed and a mixture of steam and air is admitted. Coke burns (C + O2 -> CO2) and gasifies (C + H2O -> CO + H2) under strict temperature control to prevent coil overheating."
+      },
+      {
+        "id": "sabic-17",
+        "section": "Technical",
+        "topic": "Fluid mechanics",
+        "q": "What dimensionless number characterizes the ratio of inertial forces to viscous forces in a fluid flow system?",
+        "options": [
+          "Reynolds number (Re)",
+          "Prandtl number (Pr)",
+          "Nusselt number (Nu)",
+          "Schmidt number (Sc)"
+        ],
+        "answer": 0,
+        "explain": "The Reynolds number Re = rho * v * L / mu represents the ratio of convective inertial forces to molecular viscous shear forces."
+      },
+      {
+        "id": "sabic-18",
+        "section": "Technical",
+        "topic": "Process safety",
+        "q": "In petrochemical facilities, what is the primary protective function of a Safety Instrumented System (SIS) designed to IEC 61511 standards?",
+        "options": [
+          "To generate weekly profitability reports for executive management",
+          "To automatically take the process to a safe state when predetermined process operating limits are exceeded, operating independently from the Basic Process Control System (BPCS)",
+          "To automatically order replacement spare parts from vendors",
+          "To adjust lighting and air conditioning in the administrative offices"
+        ],
+        "answer": 1,
+        "explain": "An SIS is a dedicated safety layer consisting of safety sensors, logic solvers, and final elements (e.g. shutdown valves) designed to achieve a specific Safety Integrity Level (SIL) and prevent hazardous events."
+      },
+      {
+        "id": "sabic-19",
+        "section": "Aptitude",
+        "topic": "Quantitative aptitude",
+        "q": "An ethylene cracking furnace has a design throughput of 80 metric tons per hour of ethane feed. If the ethylene yield is 55 wt% and the furnace operates with an on-stream factor of 95%, how many metric tons of ethylene are produced in a 30-day month?",
+        "options": [
+          "28,500 metric tons",
+          "31,680 metric tons",
+          "30,096 metric tons",
+          "33,200 metric tons"
+        ],
+        "answer": 2,
+        "explain": "Ethylene rate = 80 tons/h * 0.55 = 44 tons/h. Hours in 30 days = 30 * 24 = 720 h. Operating hours = 720 * 0.95 = 684 h. Production = 44 * 684 = 30,096 metric tons."
+      },
+      {
+        "id": "sabic-20",
+        "section": "Aptitude",
+        "topic": "Quantitative aptitude",
+        "q": "A chemical storage sphere contains 1,200 metric tons of liquid propylene. If 15% is transferred to Polymer Plant 1 and 25% of the remainder is transferred to Polymer Plant 2, how many metric tons remain in the sphere?",
+        "options": [
+          "850 metric tons",
+          "720 metric tons",
+          "800 metric tons",
+          "765 metric tons"
+        ],
+        "answer": 3,
+        "explain": "After Plant 1: 1,200 * (1 - 0.15) = 1,200 * 0.85 = 1,020 tons. After Plant 2: 1,020 * (1 - 0.25) = 1,020 * 0.75 = 765 metric tons."
+      },
+      {
+        "id": "sabic-21",
+        "section": "Aptitude",
+        "topic": "Quantitative aptitude",
+        "q": "Two centrifugal pumps A and B fill an intermediate quench water tank. Pump A alone takes 4 hours, and Pump B alone takes 6 hours. If both pumps operate together, how many hours will they take to fill the tank?",
+        "options": [
+          "2.4 hours",
+          "2.0 hours",
+          "3.0 hours",
+          "2.8 hours"
+        ],
+        "answer": 0,
+        "explain": "Combined rate = 1/4 + 1/6 = (3 + 2)/12 = 5/12 per hour. Time = 12 / 5 = 2.4 hours (2 hours 24 minutes)."
+      },
+      {
+        "id": "sabic-22",
+        "section": "Aptitude",
+        "topic": "Quantitative aptitude",
+        "q": "A catalyst supplier offers bulk bags at $1,500 per bag. A discount of 8% is given for orders of 50 bags or more. What is the total cost for an order of 60 bags?",
+        "options": [
+          "$90,000",
+          "$82,800",
+          "$85,000",
+          "$81,200"
+        ],
+        "answer": 1,
+        "explain": "Base price = 60 * 1,500 = $90,000. Discount = 8% of 90,000 = $7,200. Total cost = 90,000 - 7,200 = $82,800."
+      },
+      {
+        "id": "sabic-23",
+        "section": "Aptitude",
+        "topic": "Logical reasoning",
+        "q": "Determine the next term in the alphanumeric instrumentation series: PT-101, PT-104, PT-109, PT-116, ?",
+        "options": [
+          "PT-127",
+          "PT-123",
+          "PT-125",
+          "PT-124"
+        ],
+        "answer": 2,
+        "explain": "Look at the numbers: 101, 104 (+3), 109 (+5), 116 (+7). The differences are consecutive odd numbers (+3, +5, +7, +9). Next number is 116 + 9 = 125. Thus, PT-125."
+      },
+      {
+        "id": "sabic-24",
+        "section": "Aptitude",
+        "topic": "Logical reasoning",
+        "q": "Statements: All olefins are unsaturated hydrocarbons. All polyethylenes are produced from olefins. Which deduction must be true?",
+        "options": [
+          "All hydrocarbons are olefins",
+          "All unsaturated hydrocarbons are polyethylenes",
+          "No olefin can be converted to polymer",
+          "All polyethylenes are produced from unsaturated hydrocarbons"
+        ],
+        "answer": 3,
+        "explain": "Polyethylenes are made from olefins, and all olefins belong to the set of unsaturated hydrocarbons. By syllogistic deduction, all polyethylenes are produced from unsaturated hydrocarbons."
+      },
+      {
+        "id": "sabic-25",
+        "section": "Aptitude",
+        "topic": "Logical reasoning",
+        "q": "Four engineers (Khalid, Fahad, Omar, and Tariq) are assigned to separate plant units: Cracker, Polymers, Aromatics, and Utilities. Khalid is not in Polymers or Utilities. Fahad is in Aromatics. Omar is not in Polymers. Which unit is Tariq assigned to?",
+        "options": [
+          "Polymers",
+          "Cracker",
+          "Utilities",
+          "Aromatics"
+        ],
+        "answer": 0,
+        "explain": "Fahad is in Aromatics. Remaining units: Cracker, Polymers, Utilities. Khalid is not in Polymers or Utilities, so Khalid is in Cracker. Remaining: Polymers and Utilities for Omar and Tariq. Omar is not in Polymers, so Omar is in Utilities. This leaves Tariq in Polymers."
+      },
+      {
+        "id": "sabic-26",
+        "section": "Aptitude",
+        "topic": "Data interpretation",
+        "q": "A petrochemical complex generates 500 MW of power: 60% from Combined Cycle Gas Turbines (CCGT), 25% from Steam Turbines, and 15% from Solar PV. How many MW are generated by the Steam Turbines?",
+        "options": [
+          "150 MW",
+          "125 MW",
+          "100 MW",
+          "75 MW"
+        ],
+        "answer": 1,
+        "explain": "Steam Turbine generation = 25% of 500 MW = 0.25 * 500 = 125 MW."
+      },
+      {
+        "id": "sabic-27",
+        "section": "Aptitude",
+        "topic": "Verbal reasoning",
+        "q": "Choose the word most opposite in meaning (antonym) to 'EXOTHERMIC':",
+        "options": [
+          "Isothermal",
+          "Adiabatic",
+          "Endothermic",
+          "Isobaric"
+        ],
+        "answer": 2,
+        "explain": "'Exothermic' refers to a process that releases thermal energy; 'endothermic' describes a process that absorbs thermal energy from its surroundings."
+      },
+      {
+        "id": "sabic-28",
+        "section": "Aptitude",
+        "topic": "Verbal reasoning",
+        "q": "Select the sentence with the most precise and grammatically correct phrasing for a technical inspection report:",
+        "options": [
+          "Due to it being too hot, the tube gave away entirely.",
+          "The pipe broken because it was super hot inside the furnace.",
+          "Having burst, the engineers looked at the cracking tube with sadness.",
+          "The metallurgical examination confirmed that the radiant cracking coil failed as a result of high-temperature creep rupture."
+        ],
+        "answer": 3,
+        "explain": "The first option uses precise engineering terminology, correct technical cause-effect syntax, and formal professional tone."
+      }
+    ]
+  },
+  "interview": {
+    "rounds": [
+      "Online assessment",
+      "Technical interview",
+      "HR interview"
+    ],
+    "about": "SABIC (Saudi Basic Industries Corporation) is a diversified global chemicals manufacturer headquartered in Riyadh, Saudi Arabia, producing petrochemicals, agri-nutrients, polymers, and metals. SABIC recruits chemical engineers for manufacturing plant operations, process technology licensing, plant reliability engineering, and technical marketing.",
+    "looks_for": [
+      "Deep comprehension of chemical engineering fundamentals: reaction engineering, thermodynamics, mass transfer, and fluid dynamics.",
+      "Strong awareness of industrial safety standards, process safety management (PSM), and operational hazard analysis (HAZOP).",
+      "Demonstrated capability in diagnosing plant operational upsets and engineering design optimization.",
+      "Global mindset, adaptability, and high collaborative skills across multinational engineering teams.",
+      "Commitment to sustainable chemistry, circular carbon economy, and energy-efficient operations.",
+      "Solid academic credentials and practical internship or project experience in chemical facilities."
+    ],
+    "selection": [
+      "Online standardized assessment covering cognitive ability, numerical reasoning, and chemical engineering fundamentals.",
+      "First-round behavioral and HR screening assessing values alignment, communication clarity, and teamwork.",
+      "Rigorous technical interview panel with senior SABIC plant managers and technical advisors covering process engineering and plant scenarios.",
+      "Final leadership interview evaluating leadership potential, agility, and professional career goals."
+    ],
+    "technical": [
+      {
+        "q": "Describe the chemical mechanisms and main operating variables of an ethane steam cracker.",
+        "a": "Ethane steam cracking proceeds via free-radical pyrolysis initiated by C-C bond homolysis to form methyl radicals, which propagate hydrogen abstraction to yield ethyl radicals that beta-scission into ethylene and hydrogen. Key variables are coil outlet temperature (COT, 820-850 C) determining conversion severity, residence time (0.1-0.5 s) minimizing secondary reactions, hydrocarbon partial pressure lowered by dilution steam (0.3-0.4 kg steam/kg ethane), and coil operating pressure."
+      },
+      {
+        "q": "What causes radiant coil coking in cracking furnaces and how does it affect operations?",
+        "a": "Coke forms by catalytic dehydrogenation of hydrocarbons over active nickel/iron tube metal sites and thermal condensation of heavy aromatics and polycyclic tar droplets onto tube walls. Coke forms an insulating layer that dramatically increases tube metal temperature (TMT) for the same process gas temperature and increases radiant coil pressure drop, ultimately forcing an operational shutdown for steam-air decoking."
+      },
+      {
+        "q": "Explain the role and operation of the Transfer Line Exchanger (TLE) in an olefins plant.",
+        "a": "The TLE is a specialized shell-and-tube heat exchanger located immediately at the radiant coil outlet. It rapidly quenches the cracked gas from ~850 C to below 400 C within milliseconds to halt secondary bimolecular reactions that consume ethylene and produce heavy tars. It simultaneously recovers immense high-grade heat by generating Very High Pressure (VHP) steam at 100-120 bar used to drive critical cracked gas compressor turbines."
+      },
+      {
+        "q": "How does a multi-stage cracked gas compressor system manage gas temperature to prevent fouling?",
+        "a": "Cracked gas contains reactive dienes (butadiene, cyclopentadiene) that thermally polymerize into sticky gums at temperatures above 100-105 C. The centrifugal compressor is split into 4 or 5 stages with interstage water wash coolers and knockout drums that maintain discharge gas temperatures strictly below 95-100 C, while continuous wash oil or water injection dissolves foulants before they adhere to impellers and diffusers."
+      },
+      {
+        "q": "Describe the chemistry and reaction conditions for industrial Methyl Tert-Butyl Ether (MTBE) synthesis.",
+        "a": "MTBE is formed via reversible exothermic addition of methanol to isobutylene: (CH3)2C=CH2 + CH3OH <-> (CH3)3C-O-CH3. The reaction is catalyzed by strongly acidic macroporous sulfonic acid cation-exchange resins (like Amberlyst 15) in liquid phase at 50-80 C and 10-15 bar. A slight excess of methanol (1.05-1.1:1 molar ratio) is used to suppress isobutylene oligomerization and maintain high conversion."
+      },
+      {
+        "q": "How is acetylene removed from cracked C2 streams in an ethylene manufacturing complex?",
+        "a": "Acetylene (0.5-2.0 mol%) is removed either by selective catalytic hydrogenation over noble metal catalysts (palladium supported on alumina with silver promoters) to convert it to ethylene (C2H2 + H2 -> C2H4) while avoiding over-hydrogenation to ethane, or by extractive distillation with polar solvents like dimethylformamide (DMF) or N-methylpyrrolidone (NMP)."
+      },
+      {
+        "q": "Explain how the UNIPOL gas-phase fluidized bed reactor produces polyethylene.",
+        "a": "Gaseous ethylene, comonomer (1-hexene or 1-butene), hydrogen (chain transfer agent), and nitrogen circulate upward through a fluidized bed of growing polymer particles at 85-100 C and 20-25 bar. Supported catalyst (Ziegler-Natta or chromium oxide) is continuously fed. The gas velocity suspends the particles while fluidizing the bed and removing the immense heat of reaction via an external cycle gas cooler before returning gas through a bottom distribution plate."
+      },
+      {
+        "q": "What design considerations are essential for handling and storing liquid ethylene at cryogenic conditions?",
+        "a": "Liquid ethylene is stored at -103 C and near atmospheric pressure in double-wall, refrigerated cryogenic tanks with inner tanks constructed of nickel steel (9% Ni) or stainless steel (SS304) to prevent low-temperature brittle fracture. High-performance expanded perlite insulation fills the annular space under dry nitrogen purges, and boil-off gas (BOG) compressors re-liquefy vaporized ethylene to maintain tank pressure."
+      },
+      {
+        "q": "How does a cascade refrigeration system function in an olefins plant?",
+        "a": "A cascaded system links two or three separate refrigerant loops. A high-temperature refrigerant (such as propylene) evaporates at staged pressures (-40 C, -20 C, +5 C) to condense and chill process streams and also condense high-pressure ethylene refrigerant. The liquefied ethylene then evaporates at lower temperatures (-60 C to -100 C) in the demethanizer and chilling train, discharging into an ethylene compressor whose hot discharge is condensed by the propylene loop."
+      },
+      {
+        "q": "Explain the difference between HAZOP (Hazard and Operability Study) and LOPA (Layer of Protection Analysis).",
+        "a": "HAZOP is a qualitative, multidisciplinary brainstorming methodology using guidewords (No, More, Less, As Well As) applied to process parameters to identify potential hazard scenarios, causes, and consequences. LOPA is a semi-quantitative risk assessment tool that evaluates the initiating event frequency of a scenario identified in HAZOP and quantifies the probability of failure on demand (PFD) of independent protection layers (IPLs) to determine if risk meets corporate tolerability criteria or if a Safety Instrumented Function (SIF) is required."
+      }
+    ],
+    "hr": [
+      {
+        "q": "Why do you want to start your chemical engineering career at SABIC?",
+        "how": "Highlight SABIC's position as a global petrochemical leader, its massive world-scale manufacturing assets, world-class sustainability initiatives like TRUCIRCLE, and its extensive technical career development frameworks."
+      },
+      {
+        "q": "Can you provide an example of demonstrating leadership during a challenging university project or internship?",
+        "how": "Use the STAR technique: describe the project scope and team dynamics, the specific operational or technical roadblock faced, the decisive actions you took to realign responsibilities and solve the technical obstacle, and the successful outcome delivered."
+      },
+      {
+        "q": "How do you maintain a safety-first mindset in everyday engineering activities?",
+        "how": "Explain that safety is an uncompromising core personal value rather than a checklist. Discuss proactive hazard identification, continuous situational awareness, and the personal willingness to exercise Stop-Work Authority whenever an unsafe condition arises."
+      },
+      {
+        "q": "Describe how you have collaborated effectively with team members from diverse cultural or professional backgrounds.",
+        "how": "Focus on active listening, mutual respect, open communication styles, and seeking diverse perspectives to achieve superior engineering decisions."
+      },
+      {
+        "q": "Tell me about a time when you received constructive criticism on your technical work. How did you react?",
+        "how": "Emphasize emotional maturity, openness to feedback, taking ownership of mistakes without defensiveness, and implementing concrete steps to enhance technical rigor and attention to detail."
+      },
+      {
+        "q": "Where do you envision your technical contribution at SABIC in the next 5 years?",
+        "how": "Express a strong ambition to master plant operations as a lead contact engineer on a world-scale petrochemical unit, lead plant turnaround optimization or debottlenecking studies, and contribute to SABIC's carbon neutrality roadmap."
+      }
+    ],
+    "present": [
+      "Demonstrate rock-solid chemical engineering fundamentals with clear physical logic and dimensional analysis.",
+      "Display an authentic, proactive dedication to Environmental, Health, and Safety (EH&S) excellence.",
+      "Articulate complex technical concepts in structured, concise, and professional English.",
+      "Present behavioral answers using the structured STAR framework (Situation, Task, Action, Result).",
+      "Convey high enthusiasm for world-scale petrochemical manufacturing facilities and continuous learning."
+    ],
+    "tips": [
+      "Review steam cracking chemistry, furnace radiant coil hydraulics, and decoking mechanisms thoroughly.",
+      "Understand basic petrochemical value chains: C2 (ethylene, PE, EO/MEG), C3 (propylene, PP, acrylonitrile), and C4s (MTBE, butadiene).",
+      "Familiarize yourself with process safety standards, particularly HAZOP methodology and Layer of Protection Analysis (LOPA).",
+      "Be ready to explain refrigeration cycles (propylene-ethylene cascades) and cryogenic distillation principles.",
+      "Review SABIC's core values (Inspire, Engage, Create, Deliver) and prepare thoughtful questions about major growth projects."
+    ]
+  },
+  "sources": [
+    "https://www.sabic.com/en/careers",
+    "https://www.glassdoor.com/Interview/SABIC-Interview-Questions-E3639.htm",
+    "https://www.geeksforgeeks.org/sabic-interview-experience/"
+  ]
+}

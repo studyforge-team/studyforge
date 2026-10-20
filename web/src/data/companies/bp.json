@@ -1,0 +1,528 @@
+{
+  "id": "bp",
+  "company": "BP",
+  "roles": [
+    "Process Engineer",
+    "Safety and Operational Risk Specialist"
+  ],
+  "note": "Compiled and paraphrased from publicly shared candidate experiences. Not official; actual tests may differ.",
+  "oa": {
+    "sections": [
+      {
+        "name": "Aptitude",
+        "questions": 15,
+        "minutes": 20
+      },
+      {
+        "name": "Technical",
+        "questions": 20,
+        "minutes": 30
+      }
+    ],
+    "draw": 15,
+    "marks_per_q": 1,
+    "bank": [
+      {
+        "id": "bp-1",
+        "section": "Technical",
+        "topic": "Process safety",
+        "q": "In BP's process safety and barrier management framework, what is the role of a Safety Critical Element (SCE)?",
+        "options": [
+          "Any physical equipment, instrument, or structure whose failure could cause a Major Accident Hazard (MAH), or whose purpose is to prevent or mitigate an MAH",
+          "A routine office sprinkler head",
+          "A laboratory bench timer",
+          "An inventory spreadsheet"
+        ],
+        "answer": 0,
+        "explain": "SCEs are vital safety hardware or software barriers (e.g., blowdown valves, blast walls, emergency shutdown logic solvers, firewater deluge systems) that prevent loss of primary containment or mitigate major consequences."
+      },
+      {
+        "id": "bp-2",
+        "section": "Technical",
+        "topic": "Refinery operations",
+        "q": "In a refinery Sour Water Stripper (SWS), what volatile toxic gases are stripped out of refinery condensate wastewater using low-pressure stripping steam?",
+        "options": [
+          "Pure oxygen and nitrogen",
+          "Hydrogen sulfide (H2S) and ammonia (NH3)",
+          "Methane and helium",
+          "Sulfur trioxide and chlorine"
+        ],
+        "answer": 1,
+        "explain": "Sour water from crude fractionators, FCC, and hydrotreaters contains dissolved ammonium bisulfide (NH4HS); steam stripping decomposes it and expels gaseous H2S and NH3 overhead to the Claus sulfur plant."
+      },
+      {
+        "id": "bp-3",
+        "section": "Technical",
+        "topic": "Hydrogen and CCUS",
+        "q": "In blue hydrogen production, how is carbon dioxide separated from high-pressure syngas following the water-gas shift reaction before the hydrogen enters the PSA unit?",
+        "options": [
+          "Condensation with liquid nitrogen",
+          "Filtration through sand beds",
+          "Physical absorption in chilled solvent (such as Rectisol cold methanol or Selexol DMEPG) or chemical amine scrubbing (aMDEA)",
+          "Precipitation as calcium sulfate"
+        ],
+        "answer": 2,
+        "explain": "At high syngas partial pressures, physical solvents (e.g. Selexol) or activated amines efficiently capture CO2, allowing regeneration by simple pressure flash without large thermal steam penalties."
+      },
+      {
+        "id": "bp-4",
+        "section": "Technical",
+        "topic": "Fluid mechanics",
+        "q": "A high-pressure centrifugal compressor operates with gas of molecular weight 20 g/mol at 300 K. What is the characteristic specific gas constant R_s (with universal gas constant R = 8314 J/(kmol*K))?",
+        "options": [
+          "208 J/(kg*K)",
+          "1662.8 J/(kg*K)",
+          "831.4 J/(kg*K)",
+          "415.7 J/(kg*K)"
+        ],
+        "answer": 3,
+        "explain": "Specific gas constant R_s = R / MW = 8314 J/(kmol*K) / 20 kg/kmol = 415.7 J/(kg*K)."
+      },
+      {
+        "id": "bp-5",
+        "section": "Technical",
+        "topic": "Fluid mechanics",
+        "q": "In centrifugal pump design, what phenomenon occurs when the local static pressure inside the impeller eye drops below the vapor pressure of the pumped liquid?",
+        "options": [
+          "Cavitation: rapid formation and violent collapse of vapor bubbles, causing pitting erosion, noise, and head loss",
+          "Compressor stall",
+          "Surge reversal",
+          "Thermal expansion"
+        ],
+        "answer": 0,
+        "explain": "Cavitation happens when NPSHa < NPSHr, causing localized boiling at the impeller blade inlet; high-pressure fluid downstream rapidly collapses these bubbles, creating destructive micro-jets that erode metal."
+      },
+      {
+        "id": "bp-6",
+        "section": "Technical",
+        "topic": "Heat transfer",
+        "q": "In heat exchanger design, what is the effect of an accumulation of fouling deposits (dirt, coke, scale) on the overall heat transfer coefficient U?",
+        "options": [
+          "It increases U exponentially",
+          "It adds conductive thermal resistance (R_f), significantly decreasing the overall heat transfer coefficient and requiring higher temperature driving forces",
+          "It has zero impact on heat transfer",
+          "It eliminates the need for cooling water"
+        ],
+        "answer": 1,
+        "explain": "Fouling resistance R_f enters the denominator of the overall heat transfer coefficient equation (1/U = 1/h_i + R_fi + x/k + R_fo + 1/h_o), directly reducing U over operating run-length."
+      },
+      {
+        "id": "bp-7",
+        "section": "Technical",
+        "topic": "Heat transfer",
+        "q": "A thermosiphon reboiler heats a process stream, transferring 400 kW across a surface area of 20 m^2 with an overall heat transfer coefficient U = 800 W/(m^2*K). What is the effective temperature difference?",
+        "options": [
+          "15 K",
+          "35 K",
+          "25 K",
+          "45 K"
+        ],
+        "answer": 2,
+        "explain": "Q = U * A * Delta T -> Delta T = Q / (U * A) = 400,000 W / (800 W/(m^2*K) * 20 m^2) = 400,000 / 16,000 = 25 K."
+      },
+      {
+        "id": "bp-8",
+        "section": "Technical",
+        "topic": "Mass transfer",
+        "q": "On a sieve tray distillation deck, what parameter represents the fractional area occupied by active vapor holes relative to total active tray area?",
+        "options": [
+          "Tray spacing",
+          "Downcomer clearance",
+          "Weir height",
+          "Fractional hole area (typically 5 to 15 % of active area)"
+        ],
+        "answer": 3,
+        "explain": "Fractional hole area (A_h / A_a) typically ranges between 5 % and 15 %; smaller areas increase vapor velocity (preventing weeping), while larger areas reduce dry tray pressure drop."
+      },
+      {
+        "id": "bp-9",
+        "section": "Technical",
+        "topic": "Mass transfer",
+        "q": "Which distillation tray malfunction is characterized by liquid falling directly through the tray perforations instead of traversing across the tray into the downcomer?",
+        "options": [
+          "Weeping",
+          "Flooding",
+          "Entrainment",
+          "Priming"
+        ],
+        "answer": 0,
+        "explain": "Weeping occurs at low vapor rates when upward vapor kinetic head is too weak to counterbalance liquid hydrostatic head on the deck, dumping liquid down through holes and destroying tray efficiency."
+      },
+      {
+        "id": "bp-10",
+        "section": "Technical",
+        "topic": "Thermodynamics",
+        "q": "For an ideal gas undergoing a reversible adiabatic (isentropic) expansion, what relation connects absolute temperature T and absolute pressure P with heat capacity ratio gamma?",
+        "options": [
+          "T * P = constant",
+          "T * P^((1 - gamma) / gamma) = constant",
+          "T / P = constant",
+          "T^gamma * P = constant"
+        ],
+        "answer": 1,
+        "explain": "From the isentropic relations: T2 / T1 = (P2 / P1)^((gamma - 1) / gamma), which rearranges to T * P^((1 - gamma) / gamma) = constant."
+      },
+      {
+        "id": "bp-11",
+        "section": "Technical",
+        "topic": "Thermodynamics",
+        "q": "What is the change in internal energy (Delta U) of a closed system undergoing an isothermal expansion of an ideal gas?",
+        "options": [
+          "Equal to work done",
+          "Equal to heat added",
+          "Zero",
+          "Infinity"
+        ],
+        "answer": 2,
+        "explain": "For an ideal gas, internal energy is a function of temperature alone (U = U(T)). Because the process is isothermal (Delta T = 0), Delta U is strictly zero (and Q = W)."
+      },
+      {
+        "id": "bp-12",
+        "section": "Technical",
+        "topic": "Reaction engineering",
+        "q": "In a continuous stirred tank reactor (CSTR) carrying out an irreversible reaction, why is the reactant concentration throughout the entire reactor vessel volume identical to the exit stream concentration?",
+        "options": [
+          "Because temperature is at absolute zero",
+          "Because the reaction stops at the outlet",
+          "Because fluid velocity is zero",
+          "Because perfect backmixing is assumed, instantaneous micro-mixing disperses feed immediately across the vessel"
+        ],
+        "answer": 3,
+        "explain": "An ideal CSTR assumes infinite dispersion and instantaneous micromixing, meaning composition and temperature are completely uniform everywhere in the tank and equal to the effluent."
+      },
+      {
+        "id": "bp-13",
+        "section": "Technical",
+        "topic": "Reaction engineering",
+        "q": "A liquid chemical reaction A -> B follows zero-order kinetics with rate constant k = 0.5 mol/(L*min). Starting with an initial concentration C_A0 = 5.0 mol/L, how many minutes will it take for complete conversion?",
+        "options": [
+          "10 minutes",
+          "5 minutes",
+          "15 minutes",
+          "20 minutes"
+        ],
+        "answer": 0,
+        "explain": "For zero-order kinetics: C_A = C_A0 - k * t. For complete conversion (C_A = 0): t = C_A0 / k = 5.0 mol/L / (0.5 mol/(L*min)) = 10 minutes."
+      },
+      {
+        "id": "bp-14",
+        "section": "Technical",
+        "topic": "Process safety",
+        "q": "According to API 521, what is the design equation for heat absorption Q (Btu/h) by a wetted pressure vessel exposed to an external open pool fire without water deluge?",
+        "options": [
+          "Q = U * A * Delta T",
+          "Q = 21,000 * F * (A_w)^0.82",
+          "Q = m * Cp * Delta T",
+          "Q = P * V"
+        ],
+        "answer": 1,
+        "explain": "API Standard 521 defines heat absorption from an external hydrocarbon pool fire as Q = 21,000 * F * (A_w)^0.82 in US customary units, where A_w is wetted area and F is the environment factor."
+      },
+      {
+        "id": "bp-15",
+        "section": "Technical",
+        "topic": "Process safety",
+        "q": "What is the difference between a conventional spring-loaded Pressure Relief Valve (PRV) and a balanced bellows PRV?",
+        "options": [
+          "A balanced bellows PRV can only be operated manually",
+          "A conventional PRV has no spring",
+          "A balanced bellows PRV isolates the spring bonnet from downstream backpressure, ensuring the set relief pressure is unaffected by variable flare header backpressure",
+          "A balanced bellows PRV operates only on vacuum"
+        ],
+        "answer": 2,
+        "explain": "Balanced bellows PRVs use metallic bellows with effective area equal to nozzle seat area to nullify the effect of superimposed or variable built-up backpressure in the discharge flare system."
+      },
+      {
+        "id": "bp-16",
+        "section": "Technical",
+        "topic": "Process control",
+        "q": "What is the primary function of a dead-time (Smith Predictor) compensator in process control loops?",
+        "options": [
+          "It resets alarms automatically",
+          "It turns off the controller during emergencies",
+          "It converts AC current to DC",
+          "It eliminates the destabilizing phase lag caused by transport dead time (delay) from the feedback loop, allowing aggressive controller tuning"
+        ],
+        "answer": 3,
+        "explain": "A Smith Predictor uses an internal process model without delay to predict the delay-free output, feeding it back to the controller to eliminate delay-induced instability."
+      },
+      {
+        "id": "bp-17",
+        "section": "Technical",
+        "topic": "Petroleum refining",
+        "q": "In refinery hydroprocessing units, what operational phenomenon known as 'catalyst bed channeling' causes severe localized hot spots?",
+        "options": [
+          "Non-uniform liquid-gas distribution over the catalyst bed causing high localized gas velocity, dry zones, and runaway local reaction rates",
+          "Excessive cooling water flow",
+          "Liquid freezing in the nozzles",
+          "Low reactor pressure"
+        ],
+        "answer": 0,
+        "explain": "Poor feed distribution across trickle-bed trays causes maldistribution (channeling), leaving regions starved of quench cooling and concentrating exothermic reaction in narrow paths, creating hot spots."
+      },
+      {
+        "id": "bp-18",
+        "section": "Technical",
+        "topic": "Petroleum refining",
+        "q": "What is the function of the vacuum flasher tower in heavy oil upgrading?",
+        "options": [
+          "Venting sulfur dioxide into air",
+          "Separating heavy vacuum gas oil from non-volatile vacuum residue at low absolute pressure to maximize cracking feedstocks without coking",
+          "Cooling lube oil with refrigerated brine",
+          "Cracking methane to acetylene"
+        ],
+        "answer": 1,
+        "explain": "A vacuum flasher operates at 15-20 mmHg to achieve maximum recovery of heavy gas oils from atmospheric bottoms, feeding downstream hydrocrackers while minimizing petcoke formation."
+      },
+      {
+        "id": "bp-19",
+        "section": "Aptitude",
+        "topic": "Quantitative",
+        "q": "A refinery sour water tank with volume 240 m^3 is filled by two stripper feed pumps in 4 hours. If Pump A alone fills the tank in 6 hours, how many hours would Pump B alone take to fill it?",
+        "options": [
+          "8 hours",
+          "10 hours",
+          "12 hours",
+          "16 hours"
+        ],
+        "answer": 2,
+        "explain": "Rate of (A + B) = 1/4 tank/h. Rate of A = 1/6 tank/h. Rate of B = 1/4 - 1/6 = 3/12 - 2/12 = 1/12 tank/h. Time for Pump B = 12 hours."
+      },
+      {
+        "id": "bp-20",
+        "section": "Aptitude",
+        "topic": "Quantitative",
+        "q": "A chemical plant inspection finds that 15 out of 250 control valves require stem packing replacement. What percentage of the valves require maintenance?",
+        "options": [
+          "4 %",
+          "10 %",
+          "8 %",
+          "6 %"
+        ],
+        "answer": 3,
+        "explain": "Percentage = (15 / 250) * 100 = (3 / 50) * 100 = 6 %."
+      },
+      {
+        "id": "bp-21",
+        "section": "Aptitude",
+        "topic": "Quantitative",
+        "q": "An engineer mixes 200 liters of 15 % methanol solution with 300 liters of 25 % methanol solution. What is the methanol percentage in the final blend?",
+        "options": [
+          "21 %",
+          "20 %",
+          "18 %",
+          "22 %"
+        ],
+        "answer": 0,
+        "explain": "Pure methanol = (200 * 0.15) + (300 * 0.25) = 30 + 75 = 105 liters. Total volume = 500 liters. Percentage = (105 / 500) * 100 = 21 %."
+      },
+      {
+        "id": "bp-22",
+        "section": "Aptitude",
+        "topic": "Quantitative",
+        "q": "A technician travels 80 km between two pumping stations. The first 40 km are covered at 40 km/h, and the remaining 40 km at 60 km/h. What is the average speed for the full journey?",
+        "options": [
+          "45 km/h",
+          "48 km/h",
+          "50 km/h",
+          "52 km/h"
+        ],
+        "answer": 1,
+        "explain": "Time 1 = 40 / 40 = 1 h. Time 2 = 40 / 60 = 2/3 h. Total time = 1 + 2/3 = 5/3 h. Total distance = 80 km. Average speed = 80 / (5/3) = 240 / 5 = 48 km/h."
+      },
+      {
+        "id": "bp-23",
+        "section": "Aptitude",
+        "topic": "Logical reasoning",
+        "q": "Find the missing number in the safety audit code series: 3, 9, 27, 81, ?",
+        "options": [
+          "162",
+          "216",
+          "243",
+          "324"
+        ],
+        "answer": 2,
+        "explain": "Each successive term is multiplied by 3: 3*3=9, 9*3=27, 27*3=81, and 81*3 = 243."
+      },
+      {
+        "id": "bp-24",
+        "section": "Aptitude",
+        "topic": "Logical reasoning",
+        "q": "Statements: 'All safety critical valves are inspected quarterly.' 'Valve V-101 is a safety critical valve.' Conclusion: 'Valve V-101 is inspected quarterly.'",
+        "options": [
+          "Contradictory",
+          "Invalid conclusion",
+          "Indeterminate",
+          "Valid conclusion"
+        ],
+        "answer": 3,
+        "explain": "Standard categorical syllogism: All A are B, C is A, therefore C is B. The deduction is completely valid."
+      },
+      {
+        "id": "bp-25",
+        "section": "Aptitude",
+        "topic": "Logical reasoning",
+        "q": "Five process units U1, U2, U3, U4, U5 are lined up in order of construction. U1 was built before U2. U3 was built after U4. U2 was built before U4. U5 was built last. Which unit was built third?",
+        "options": [
+          "Unit U4",
+          "Unit U2",
+          "Unit U3",
+          "Unit U1"
+        ],
+        "answer": 0,
+        "explain": "Sequence of construction: U1 -> U2 -> U4 -> U3 -> U5. The 1st is U1, 2nd is U2, 3rd is U4, 4th is U3, 5th is U5. The 3rd unit built was U4."
+      },
+      {
+        "id": "bp-26",
+        "section": "Aptitude",
+        "topic": "Verbal",
+        "q": "Select the word that best fills the blank: 'The operations team conducted an immediate turnaround to replace the ______ catalyst bed before pressure drop exceeded the maximum allowable limit.'",
+        "options": [
+          "pristine",
+          "spent",
+          "inert",
+          "effervescent"
+        ],
+        "answer": 1,
+        "explain": "'Spent' means exhausted or deactivated, which is the standard term for catalyst that has accumulated coke and lost activity."
+      },
+      {
+        "id": "bp-27",
+        "section": "Aptitude",
+        "topic": "Verbal",
+        "q": "Choose the most accurate synonym for the word 'MITIGATE':",
+        "options": [
+          "Aggregate",
+          "Exacerbate",
+          "Alleviate",
+          "Instigate"
+        ],
+        "answer": 2,
+        "explain": "'Mitigate' means to make less severe, serious, or painful; 'alleviate' is its exact synonym."
+      },
+      {
+        "id": "bp-28",
+        "section": "Aptitude",
+        "topic": "Verbal",
+        "q": "Identify the sentence that uses correct grammatical punctuation:",
+        "options": [
+          "Although the compressor tripped, the automated anti-surge valve opened, and prevented catastrophic damage.",
+          "Although the compressor tripped the automated anti-surge valve opened and prevented, catastrophic damage.",
+          "Although the compressor tripped the automated anti-surge valve, opened and prevented catastrophic damage.",
+          "Although the compressor tripped, the automated anti-surge valve opened and prevented catastrophic damage."
+        ],
+        "answer": 3,
+        "explain": "Option B correctly places a comma after the dependent introductory clause ('Although the compressor tripped,') without incorrectly inserting a comma between the compound predicates ('opened and prevented')."
+      }
+    ]
+  },
+  "interview": {
+    "rounds": [
+      "Online Cognitive & Behavioral Assessment",
+      "Technical Engineering Competency Interview",
+      "Values & Process Safety Leadership Panel"
+    ],
+    "about": "BP is an integrated energy business operating worldwide, exploring and producing hydrocarbons, operating complex refining and petrochemical facilities, and advancing renewable energy, offshore wind, and hydrogen/CCUS developments. BP recruits chemical engineers for core process engineering, process safety and risk management, operations technical support, and energy transition projects.",
+    "looks_for": [
+      "Unwavering dedication to process safety management, barrier integrity, and personal accountability.",
+      "Strong fundamentals in fluid mechanics, heat transfer, thermodynamics, and mass transfer operations.",
+      "Demonstrated ability to challenge unsafe practices and exercise Stop-Work Authority without hesitation.",
+      "Analytical ability to diagnose plant upsets and execute structured root-cause failure analyses (RCFA).",
+      "Excellent teamwork, active listening, and clear communication in multidisciplinary engineering teams.",
+      "Enthusiasm for low-carbon energy solutions and decarbonization."
+    ],
+    "selection": [
+      "Online application screening based on academic qualification in chemical engineering.",
+      "Standardized digital assessment assessing problem-solving, cognitive reasoning, and situational safety judgment.",
+      "Technical interview panel exploring fundamental engineering calculations, internship projects, and process safety.",
+      "Leadership and values interview evaluating resilience, ethical decision-making, and alignment with BP values."
+    ],
+    "technical": [
+      {
+        "q": "How does BP define and manage Safety Critical Elements (SCEs) on major process facilities?",
+        "a": "An SCE is any equipment, structure, or software barrier whose failure could lead directly to a Major Accident Hazard (MAH), or whose purpose is to prevent or mitigate an MAH. SCEs are managed through rigorous performance standards, dedicated maintenance schedules, continuous assurance audits, and strict management of change (MOC)."
+      },
+      {
+        "q": "What design considerations govern the sizing of pressure relief valves for fire scenarios under API 521?",
+        "a": "The wetted area of the vessel is determined. Heat input is computed as Q = 21,000 * F * A_w^0.82. The required relief rate is calculated by dividing heat absorption by the latent heat of vaporization of the fluid at relief pressure. Sizing must verify that the orifice discharge area handles the resulting mass vapor flow without exceeding allowable accumulation."
+      },
+      {
+        "q": "Explain the operational differences between a conventional spring-loaded PRV and a balanced bellows PRV.",
+        "a": "In a conventional PRV, variable backpressure in the discharge flare header acts on the back of the disc, altering the set pop pressure. A balanced bellows PRV incorporates metallic bellows isolating the disc and bonnet from backpressure, ensuring the valve opens reliably at its set pressure regardless of flare header backpressure."
+      },
+      {
+        "q": "How does a sour water stripper separate hydrogen sulfide and ammonia from refinery water streams?",
+        "a": "Sour water from fractionators and hydrotreaters is stripped with live steam in a trayed or packed column. Low-pressure steam heats the water, decomposing ammonium bisulfide (NH4HS <-> NH3 + H2S). H2S, having lower solubility, strips out rapidly, followed by NH3, discharging overhead to a sulfur recovery unit."
+      },
+      {
+        "q": "What causes severe aerodynamic surge in centrifugal compressors and how is it prevented?",
+        "a": "Surge occurs when gas flow rate drops below the surge limit line at a given pressure ratio, causing blade aerodynamic stall, complete loss of pressure generation, and violent cyclic flow reversal. It is prevented by an automated anti-surge controller that modulates a fast-acting recycle valve from discharge back to suction."
+      },
+      {
+        "q": "Explain the significance of the Biot number and Fourier number in transient heat conduction.",
+        "a": "The Biot number (Bi = h * L / k_solid) compares surface convective resistance to internal conductive resistance; when Bi < 0.1, internal thermal gradients are negligible. The Fourier number (Fo = alpha * t / L^2) is dimensionless time, scaling the depth of thermal penetration relative to body dimensions."
+      },
+      {
+        "q": "How do you distinguish between nucleate boiling and film boiling in refinery reboilers?",
+        "a": "Nucleate boiling occurs at low to moderate wall superheat, where vapor bubbles form at nucleation sites and depart rapidly, achieving very high heat transfer coefficients. Film boiling occurs when wall superheat exceeds the critical heat flux; a continuous insulating vapor blanket forms on the tube surface, causing heat transfer collapse and metal overheating."
+      },
+      {
+        "q": "What is the function of a demister pad in a vapor-liquid separator vessel?",
+        "a": "A demister pad (knitted wire mesh or vane pack) captures fine liquid droplets entrained in the upward vapor stream via inertial impaction. Droplets coalesce on wire filaments into larger drops that drain downward against the vapor flow, preventing liquid carryover into downstream compressors."
+      },
+      {
+        "q": "Describe the operational hazards of catalyst bed channeling in hydrotreating reactors.",
+        "a": "Channeling occurs when feed gas and liquid bypass portions of the catalyst bed due to poor distributor trays. Channel paths experience high flow and rapid reaction heat without adequate quench gas cooling, producing severe localized hot spots that can sinter catalyst and threaten vessel shell integrity."
+      },
+      {
+        "q": "How does BP integrate carbon capture, utilization, and storage (CCUS) into blue hydrogen production?",
+        "a": "In blue hydrogen production, natural gas is reformed via autothermal reforming (ATR) or steam methane reforming (SMR). Concentrated CO2 from the syngas separation unit and flue gas is captured using chemical amine or physical absorption, dehydrated, compressed into a supercritical dense phase, and transported via pipelines for offshore deep geological sequestration."
+      }
+    ],
+    "hr": [
+      {
+        "q": "Why do you want to join BP?",
+        "how": "Highlight BP's commitment to safety and operational risk management, its global scale across upstream and refining assets, and its progressive strategy to transition toward integrated energy and lower carbon solutions."
+      },
+      {
+        "q": "Describe a time when you intervened to stop an unsafe practice or hazardous condition.",
+        "how": "Use the STAR framework: clearly outline the context, the specific hazard observed, your respectful and decisive intervention using stop-work authority, and the safe outcome achieved for the team."
+      },
+      {
+        "q": "Tell me about a complex engineering problem where you had to analyze incomplete data.",
+        "how": "Explain how you established bounding physical assumptions, conducted sensitivity analyses, consulted industry literature or senior mentors, and made a well-justified technical recommendation."
+      },
+      {
+        "q": "How do you handle working with colleagues who hold conflicting technical opinions?",
+        "how": "Emphasize active listening, remaining grounded in thermodynamic principles and safety standards, encouraging transparent debate, and finding consensus centered on process integrity."
+      },
+      {
+        "q": "Can you provide an example of adapting quickly to unexpected project delays or operational changes?",
+        "how": "Describe a real engineering or academic challenge, how you reprioritized the critical path, communicated openly with stakeholders, and delivered verified engineering results."
+      },
+      {
+        "q": "Where do you see yourself developing your engineering career at BP over the next 5 years?",
+        "how": "Express an aspiration to master frontline process operations as a site contact engineer, earn professional engineering chartership, lead plant turnaround optimization projects, and progress into process safety or technical leadership."
+      }
+    ],
+    "present": [
+      "Demonstrate a deep commitment to process safety management, barrier integrity, and personal stop-work authority.",
+      "Explain engineering calculations from first principles with clear physical intuition and correct dimensional units.",
+      "Display calm composure, structured thinking, and analytical rigor during technical discussions.",
+      "Show enthusiasm for complex facilities, operational turnarounds, and energy transition technologies.",
+      "Structure behavioral responses cleanly using the STAR methodology (Situation, Task, Action, Result)."
+    ],
+    "tips": [
+      "Review fluid mechanics, pump affinity laws, and centrifugal compressor anti-surge control principles.",
+      "Understand API 520/521 relief valve sizing criteria and external fire heat absorption calculations.",
+      "Be prepared to discuss distillation tray hydraulics (weeping, flooding, entrainment).",
+      "Review the basics of hydrogen production and carbon capture technologies.",
+      "Formulate thoughtful questions about BP's safety transformation and low-carbon investments."
+    ]
+  },
+  "sources": [
+    "https://www.bp.com/en/global/corporate/careers.html",
+    "https://www.glassdoor.com/Interview/BP-Interview-Questions-E9011.htm",
+    "https://www.geeksforgeeks.org/bp-interview-experience/"
+  ]
+}

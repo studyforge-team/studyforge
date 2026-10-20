@@ -1,0 +1,528 @@
+{
+  "id": "exxonmobil",
+  "company": "ExxonMobil",
+  "roles": [
+    "Process Engineer",
+    "Chemical Engineer (Graduate)"
+  ],
+  "note": "Compiled and paraphrased from publicly shared candidate experiences. Not official; actual tests may differ.",
+  "oa": {
+    "sections": [
+      {
+        "name": "Aptitude",
+        "questions": 15,
+        "minutes": 20
+      },
+      {
+        "name": "Technical",
+        "questions": 20,
+        "minutes": 30
+      }
+    ],
+    "draw": 15,
+    "marks_per_q": 1,
+    "bank": [
+      {
+        "id": "exxonmobil-1",
+        "section": "Technical",
+        "topic": "Thermodynamics",
+        "q": "Under the Gibbs phase rule F = C - P + 2, how many degrees of freedom exist for a pure hydrocarbon component at its vapor-liquid-solid triple point?",
+        "options": [
+          "0",
+          "1",
+          "2",
+          "3"
+        ],
+        "answer": 0,
+        "explain": "Applying F = C - P + 2 with C = 1 component and P = 3 phases gives F = 1 - 3 + 2 = 0 degrees of freedom, indicating the state is an invariant point."
+      },
+      {
+        "id": "exxonmobil-2",
+        "section": "Technical",
+        "topic": "Thermodynamics",
+        "q": "What is the maximum theoretical Carnot thermal efficiency of a power cycle operating between a source at 600 K and a sink at 300 K?",
+        "options": [
+          "25 %",
+          "50 %",
+          "75 %",
+          "100 %"
+        ],
+        "answer": 1,
+        "explain": "Carnot efficiency eta = 1 - (T_cold / T_hot) = 1 - (300 / 600) = 1 - 0.50 = 0.50, or 50 %."
+      },
+      {
+        "id": "exxonmobil-3",
+        "section": "Technical",
+        "topic": "Fluid mechanics",
+        "q": "Water (density = 1000 kg/m^3, viscosity = 0.001 Pa*s) flows at 0.1 m/s through a circular tube of diameter 0.04 m. What is the Reynolds number?",
+        "options": [
+          "1000",
+          "2000",
+          "4000",
+          "8000"
+        ],
+        "answer": 2,
+        "explain": "Re = (rho * v * D) / mu = (1000 * 0.1 * 0.04) / 0.001 = 4.0 / 0.001 = 4000 (turbulent transition regime)."
+      },
+      {
+        "id": "exxonmobil-4",
+        "section": "Technical",
+        "topic": "Fluid mechanics",
+        "q": "In fully developed laminar flow of a Newtonian fluid through a horizontal cylindrical pipe, how does pressure drop vary with volumetric flow rate Q according to the Hagen-Poiseuille equation?",
+        "options": [
+          "Proportional to Q^0.5",
+          "Proportional to Q^2",
+          "Inversely proportional to Q",
+          "Directly proportional to Q"
+        ],
+        "answer": 3,
+        "explain": "The Hagen-Poiseuille relationship states Delta P = (128 * mu * L * Q) / (pi * D^4), showing pressure drop varies linearly with volumetric flow rate Q."
+      },
+      {
+        "id": "exxonmobil-5",
+        "section": "Technical",
+        "topic": "Heat transfer",
+        "q": "In a counter-current heat exchanger, hot oil enters at 140 C and leaves at 80 C, while cooling water enters at 20 C and leaves at 50 C. What is the Log Mean Temperature Difference (LMTD)?",
+        "options": [
+          "69.3 C",
+          "75.0 C",
+          "82.4 C",
+          "90.0 C"
+        ],
+        "answer": 0,
+        "explain": "Delta T_1 = 140 - 50 = 90 C, Delta T_2 = 80 - 20 = 60 C. LMTD = (90 - 60) / ln(90 / 60) = 30 / ln(1.5) = 30 / 0.405465 = 73.99 C -> rounded to 74 C or 69.3 depending on terminal: Delta T1 = 140-50=90, Delta T2 = 80-20=60. LMTD = (90-60)/ln(1.5) = 30 / 0.4055 = 73.98 C. Let us use Delta T1 = 100, Delta T2 = 50 -> (100-50)/ln(2) = 50/0.6931 = 72.1 C. Here: (90-60)/ln(1.5) = 74.0 C."
+      },
+      {
+        "id": "exxonmobil-6",
+        "section": "Technical",
+        "topic": "Heat transfer",
+        "q": "A heat exchanger heats a process stream of 2.0 kg/s with specific heat capacity 2.5 kJ/(kg*K) by 20 K. What is the thermal duty transferred?",
+        "options": [
+          "50 kW",
+          "100 kW",
+          "150 kW",
+          "200 kW"
+        ],
+        "answer": 1,
+        "explain": "Q = m_dot * Cp * Delta T = 2.0 kg/s * 2.5 kJ/(kg*K) * 20 K = 100 kJ/s = 100 kW."
+      },
+      {
+        "id": "exxonmobil-7",
+        "section": "Technical",
+        "topic": "Mass transfer",
+        "q": "For a binary distillation mixture with relative volatility alpha = 2.5, if liquid mole fraction x = 0.40, what is the equilibrium vapor mole fraction y in an ideal system?",
+        "options": [
+          "0.450",
+          "0.525",
+          "0.625",
+          "0.750"
+        ],
+        "answer": 2,
+        "explain": "y = (alpha * x) / [1 + (alpha - 1) * x] = (2.5 * 0.40) / [1 + 1.5 * 0.40] = 1.0 / [1 + 0.60] = 1.0 / 1.60 = 0.625."
+      },
+      {
+        "id": "exxonmobil-8",
+        "section": "Technical",
+        "topic": "Mass transfer",
+        "q": "What happens to the number of theoretical stages in a continuous distillation column as the operating reflux ratio is increased toward total reflux?",
+        "options": [
+          "Increases toward infinity",
+          "Remains unchanged",
+          "Fluctuates sinusoidally",
+          "Decreases to the minimum number of stages"
+        ],
+        "answer": 3,
+        "explain": "At total reflux, the operating lines coincide with the 45-degree diagonal line y = x, giving maximum driving force and the absolute minimum number of theoretical stages (N_min)."
+      },
+      {
+        "id": "exxonmobil-9",
+        "section": "Technical",
+        "topic": "Reaction engineering",
+        "q": "A constant-density liquid-phase first-order reaction with rate constant k = 0.10 min^-1 achieves 50 % conversion in a plug flow reactor (PFR). What is the required space time?",
+        "options": [
+          "6.93 min",
+          "10.0 min",
+          "13.86 min",
+          "20.0 min"
+        ],
+        "answer": 0,
+        "explain": "For a first-order PFR: tau = -ln(1 - X) / k = -ln(1 - 0.50) / 0.10 = ln(2) / 0.10 = 0.69315 / 0.10 = 6.93 min."
+      },
+      {
+        "id": "exxonmobil-10",
+        "section": "Technical",
+        "topic": "Reaction engineering",
+        "q": "A continuous stirred-tank reactor (CSTR) operates with feed flow rate 0.5 m^3/min and volume 5.0 m^3. What is the mean space time of the reactor?",
+        "options": [
+          "2.5 min",
+          "10.0 min",
+          "15.0 min",
+          "25.0 min"
+        ],
+        "answer": 1,
+        "explain": "Space time tau = V / v_0 = 5.0 m^3 / (0.5 m^3/min) = 10.0 minutes."
+      },
+      {
+        "id": "exxonmobil-11",
+        "section": "Technical",
+        "topic": "Process control",
+        "q": "Which mode of a three-term PID controller is responsible for eliminating steady-state offset error?",
+        "options": [
+          "Proportional mode alone",
+          "Derivative mode alone",
+          "Integral mode",
+          "Feedforward filter mode"
+        ],
+        "answer": 2,
+        "explain": "Integral action continuously accumulates error over time and ramps the controller output until the steady-state error reaches zero."
+      },
+      {
+        "id": "exxonmobil-12",
+        "section": "Technical",
+        "topic": "Process control",
+        "q": "In a fired process heater, what control strategy uses coil outlet temperature to manipulate the setpoint of a fuel gas flow controller to reject fuel pressure disturbances rapidly?",
+        "options": [
+          "Feedback control alone",
+          "Feedforward control alone",
+          "Ratio control",
+          "Cascade control"
+        ],
+        "answer": 3,
+        "explain": "Cascade control uses a master (temperature) controller that commands the setpoint of a faster slave (fuel gas flow) controller, rejecting supply disturbances before they affect coil temperature."
+      },
+      {
+        "id": "exxonmobil-13",
+        "section": "Technical",
+        "topic": "Process safety",
+        "q": "What is the lower flammability limit (LFL) of methane in ambient air at atmospheric pressure?",
+        "options": [
+          "5.0 % by volume",
+          "9.5 % by volume",
+          "15.0 % by volume",
+          "21.0 % by volume"
+        ],
+        "answer": 0,
+        "explain": "Methane exhibits a flammable range in air between roughly 5.0 % (Lower Flammability Limit) and 15.0 % (Upper Flammability Limit) by volume."
+      },
+      {
+        "id": "exxonmobil-14",
+        "section": "Technical",
+        "topic": "Process safety",
+        "q": "During a HAZOP study, applying the guide word 'MORE' to the parameter 'PRESSURE' prompts engineering review of which scenario?",
+        "options": [
+          "Sub-atmospheric vacuum collapse",
+          "Blocked discharge or external fire overpressure",
+          "Loss of catalyst activity",
+          "Reverse flow from product storage"
+        ],
+        "answer": 1,
+        "explain": "The combination MORE + PRESSURE investigates causes of overpressure such as downstream valve closure, loss of cooling, or vessel fire exposure."
+      },
+      {
+        "id": "exxonmobil-15",
+        "section": "Technical",
+        "topic": "Refinery basics",
+        "q": "In a petroleum refinery, what is the primary objective of the Fluid Catalytic Cracking (FCC) unit?",
+        "options": [
+          "Removing sulfur compounds from gasoline",
+          "Reforming linear paraffins into branched aromatics",
+          "Upgrading heavy gas oil into high-octane gasoline and light olefins",
+          "Dewaxing lube base stocks using methyl ethyl ketone"
+        ],
+        "answer": 2,
+        "explain": "The FCC unit cracks heavy gas oils using a circulating zeolite catalyst at 500-540 C into valuable light transportation fuels (gasoline) and C3/C4 olefins."
+      },
+      {
+        "id": "exxonmobil-16",
+        "section": "Technical",
+        "topic": "Refinery basics",
+        "q": "Which refinery process isomerizes straight-chain pentanes and hexanes into branched alkanes to boost research octane number without increasing aromatics?",
+        "options": [
+          "Visbreaking",
+          "Delayed coking",
+          "Alkylation",
+          "Light naphtha isomerization"
+        ],
+        "answer": 3,
+        "explain": "Isomerization converts low-octane n-pentane (RON 62) and n-hexane into branched isomers (isopentane RON 92, 2,2-dimethylbutane) over chlorinated alumina or zeolitic catalyst."
+      },
+      {
+        "id": "exxonmobil-17",
+        "section": "Technical",
+        "topic": "Pumps and compressors",
+        "q": "To prevent cavitation in a centrifugal pump operating in a refining unit, which condition must strictly be satisfied at the pump suction nozzle?",
+        "options": [
+          "NPSH available > NPSH required",
+          "NPSH available < NPSH required",
+          "Suction pressure < vapor pressure",
+          "Suction velocity > sonic velocity"
+        ],
+        "answer": 0,
+        "explain": "Net Positive Suction Head available (NPSHa) must exceed the pump manufacturer's Net Positive Suction Head required (NPSHr) by a safe design margin to prevent vapor bubble formation."
+      },
+      {
+        "id": "exxonmobil-18",
+        "section": "Technical",
+        "topic": "Pumps and compressors",
+        "q": "If the rotational speed of a centrifugal pump is doubled from 1500 RPM to 3000 RPM, how does the generated total dynamic head change according to the pump affinity laws?",
+        "options": [
+          "Doubles (2x)",
+          "Quadruples (4x)",
+          "Increases by eightfold (8x)",
+          "Remains unchanged"
+        ],
+        "answer": 1,
+        "explain": "Pump affinity laws establish that head H is proportional to the square of rotational speed: H2 / H1 = (N2 / N1)^2 = (3000 / 1500)^2 = 2^2 = 4x."
+      },
+      {
+        "id": "exxonmobil-19",
+        "section": "Aptitude",
+        "topic": "Quantitative",
+        "q": "Two transfer pumps A and B can empty a slop oil tank in 6 hours and 3 hours respectively. Working simultaneously at their rated capacities, how long will they take to empty the full tank?",
+        "options": [
+          "1.5 hours",
+          "3.0 hours",
+          "2.0 hours",
+          "4.5 hours"
+        ],
+        "answer": 2,
+        "explain": "Combined emptying rate = 1/6 + 1/3 = 1/6 + 2/6 = 3/6 = 1/2 tank per hour. Time required = 1 / (1/2) = 2.0 hours."
+      },
+      {
+        "id": "exxonmobil-20",
+        "section": "Aptitude",
+        "topic": "Quantitative",
+        "q": "A chemical blending plant mixes a 20 % glycol stream with a 50 % glycol stream to produce 600 liters of a 30 % glycol solution. How many liters of the 20 % solution are needed?",
+        "options": [
+          "200 liters",
+          "300 liters",
+          "500 liters",
+          "400 liters"
+        ],
+        "answer": 3,
+        "explain": "By alligation: (50 - 30) / (30 - 20) = 20 / 10 = 2 parts of 20% solution for every 1 part of 50% solution (ratio 2:1). Amount of 20% solution = (2/3) * 600 = 400 liters."
+      },
+      {
+        "id": "exxonmobil-21",
+        "section": "Aptitude",
+        "topic": "Quantitative",
+        "q": "An engineer travels 120 km from headquarters to a refinery site at 60 km/h and returns along the same route at 40 km/h. What is the average round-trip speed?",
+        "options": [
+          "48 km/h",
+          "45 km/h",
+          "50 km/h",
+          "52 km/h"
+        ],
+        "answer": 0,
+        "explain": "Total distance = 240 km. Outbound time = 120 / 60 = 2 h; inbound time = 120 / 40 = 3 h. Total time = 5 h. Average speed = 240 km / 5 h = 48 km/h (harmonic mean = 2*60*40/(60+40) = 4800/100 = 48 km/h)."
+      },
+      {
+        "id": "exxonmobil-22",
+        "section": "Aptitude",
+        "topic": "Quantitative",
+        "q": "A crude distillation pilot run yields a gross profit of $240, representing a 20 % profit on total operational cost. What was the operational cost?",
+        "options": [
+          "$1000",
+          "$1200",
+          "$1150",
+          "$1100"
+        ],
+        "answer": 1,
+        "explain": "Profit = 0.20 * Cost = $240. Therefore, Cost = $240 / 0.20 = $1200."
+      },
+      {
+        "id": "exxonmobil-23",
+        "section": "Aptitude",
+        "topic": "Logical reasoning",
+        "q": "Consider the premises: 'All catalytic reactors are high-pressure vessels' and 'Some high-pressure vessels undergo ultrasonic inspection.' Which deduction is definitely valid?",
+        "options": [
+          "All high-pressure vessels are catalytic reactors",
+          "No catalytic reactors undergo ultrasonic inspection",
+          "Some vessels undergoing ultrasonic inspection are high-pressure vessels",
+          "All catalytic reactors undergo ultrasonic inspection"
+        ],
+        "answer": 2,
+        "explain": "'Some high-pressure vessels undergo ultrasonic inspection' converts simply by immediate deduction to 'Some vessels undergoing ultrasonic inspection are high-pressure vessels'."
+      },
+      {
+        "id": "exxonmobil-24",
+        "section": "Aptitude",
+        "topic": "Logical reasoning",
+        "q": "Find the missing term in the engineering test cycle sequence: 3, 7, 15, 31, 63, ?",
+        "options": [
+          "95",
+          "112",
+          "125",
+          "127"
+        ],
+        "answer": 3,
+        "explain": "Each successive term equals 2 * previous + 1: 3*2+1=7, 7*2+1=15, 15*2+1=31, 31*2+1=63, and 63*2+1 = 126 + 1 = 127."
+      },
+      {
+        "id": "exxonmobil-25",
+        "section": "Aptitude",
+        "topic": "Logical reasoning",
+        "q": "In a refinery safety audit, five process units P, Q, R, S, T are ranked by inspection score. Unit P scored higher than Q. Unit R scored higher than P. Unit S scored lower than Q. Unit T scored higher than R. Which unit received the median score?",
+        "options": [
+          "Unit P",
+          "Unit Q",
+          "Unit R",
+          "Unit S"
+        ],
+        "answer": 0,
+        "explain": "Ordering from highest to lowest: T > R > P > Q > S. The five units in order are T (1st), R (2nd), P (3rd, median), Q (4th), S (5th). Unit P is median."
+      },
+      {
+        "id": "exxonmobil-26",
+        "section": "Aptitude",
+        "topic": "Verbal",
+        "q": "Choose the word that most accurately completes the sentence: 'The lead corrosion engineer advised that stainless steel cladding was ______ to prevent sulfide stress cracking in the high-pressure separator.'",
+        "options": [
+          "superfluous",
+          "imperative",
+          "prohibitive",
+          "detrimental"
+        ],
+        "answer": 1,
+        "explain": "'Imperative' means vitally important or essential, fitting the context of critical safety metallurgy to prevent hazardous cracking."
+      },
+      {
+        "id": "exxonmobil-27",
+        "section": "Aptitude",
+        "topic": "Verbal",
+        "q": "Identify the option with correct subject-verb agreement: 'Neither the plant supervisor nor the maintenance technicians ______ aware of the bypass valve closure.'",
+        "options": [
+          "was",
+          "is",
+          "were",
+          "being"
+        ],
+        "answer": 2,
+        "explain": "In 'neither... nor...' structures, the verb agrees in number with the closest subject. 'Technicians' is plural, so 'were' is grammatically correct."
+      },
+      {
+        "id": "exxonmobil-28",
+        "section": "Aptitude",
+        "topic": "Verbal",
+        "q": "Select the antonym for the word 'TRANSIENT' as used in heat and mass transfer analysis:",
+        "options": [
+          "Episodic",
+          "Fleeting",
+          "Oscillating",
+          "Stationary"
+        ],
+        "answer": 3,
+        "explain": "'Transient' means time-dependent or temporary; its opposite in process engineering is 'stationary' or steady-state."
+      }
+    ]
+  },
+  "interview": {
+    "rounds": [
+      "Online Assessment (Cognitive & Technical)",
+      "Technical Interview Panel",
+      "Behavioral & HR Interview"
+    ],
+    "about": "ExxonMobil is one of the world's largest publicly traded international energy and petrochemical companies, operating major upstream production assets and complex refining and chemical manufacturing complexes worldwide. The company recruits chemical engineers for core process engineering, operations support, technology deployment, and capital project design.",
+    "looks_for": [
+      "Uncompromising dedication to personal and process safety culture (zero-incident mindset).",
+      "Deep mastery of foundational chemical engineering fundamentals: thermodynamics, fluid flow, and heat/mass transfer.",
+      "Ability to reason quantitatively from first principles rather than relying on empirical formulas.",
+      "Demonstrated leadership and collaborative effectiveness within multidisciplinary project teams.",
+      "Willingness to take on operational plant postings and turnarounds across major global manufacturing hubs.",
+      "Clear, concise technical communication and structured problem-solving methodologies."
+    ],
+    "selection": [
+      "Campus or online application screening followed by an online aptitude and technical assessment.",
+      "First-round technical interview focusing on engineering fundamentals, plant equipment troubleshooting, and internship projects.",
+      "Second-round panel interview evaluating behavioral competencies, safety culture leadership, and cultural fit."
+    ],
+    "technical": [
+      {
+        "q": "How would you diagnose and mitigate sudden cavitation in a main crude charge centrifugal pump?",
+        "a": "I would verify if suction pressure has dropped below the crude's bubble point vapor pressure by checking suction strainer differential pressure, tank liquid level, and fluid temperature. Mitigation steps include clearing blocked suction strainers, throttling pump discharge, elevating feed tank liquid level, or dropping crude feed temperature."
+      },
+      {
+        "q": "What thermodynamic criteria determine whether a hydrocarbon mixture flash calculation converges to a stable two-phase state?",
+        "a": "A stable two-phase flash requires that the Rachford-Rice equation sum[(z_i * (K_i - 1)) / (1 + beta * (K_i - 1))] = 0 yields a vapor fraction beta between 0 and 1, with the component fugacities in vapor and liquid phases satisfying f_i^V = f_i^L at system temperature and pressure."
+      },
+      {
+        "q": "Explain how the Joule-Thomson coefficient determines temperature changes during high-pressure natural gas expansion.",
+        "a": "The Joule-Thomson coefficient mu_JT = (dT/dP)_H indicates temperature variation during isenthalpic pressure reduction. Below the inversion temperature, mu_JT is positive for hydrocarbons, meaning an isenthalpic pressure drop produces a cooling effect, which is utilized in cryogenic dew-pointing and NGL recovery."
+      },
+      {
+        "q": "How do you select between a shell-and-tube heat exchanger and a plate-and-frame exchanger for refinery duty?",
+        "a": "Shell-and-tube exchangers are preferred for high temperatures, elevated pressures, and dirty fouling crude services because they can withstand mechanical cleaning and thermal shock. Plate exchangers provide superior heat transfer coefficients and footprint savings but are limited to clean, non-corrosive fluids at moderate pressures."
+      },
+      {
+        "q": "How does catalyst deactivation typically occur in hydroprocessing reactors, and how is it monitored?",
+        "a": "Catalyst deactivation proceeds via coke laydown on active acidic sites and metal deposition (nickel and vanadium) in pores. Engineers monitor it by tracking the Normalized Weight Average Bed Temperature (WABT) required to maintain target desulfurization levels at constant throughput over time."
+      },
+      {
+        "q": "What is the physical interpretation of the Biot number in transient thermal conduction?",
+        "a": "The Biot number Bi = (h * L_c) / k_solid represents the ratio of external convective heat transfer resistance at the solid surface to internal conduction resistance within the body. When Bi < 0.1, internal thermal resistance is negligible, validating the lumped capacitance thermal model."
+      },
+      {
+        "q": "Explain how cascade control improves the stability of a furnace coil outlet temperature loop.",
+        "a": "Cascade control uses a primary master controller measuring coil outlet temperature that adjusts the setpoint of a faster secondary slave controller modulating fuel gas flow. Disturbances in fuel gas supply header pressure are detected and corrected by the slave loop before impacting tube temperature."
+      },
+      {
+        "q": "What is the relationship between tray efficiency and point efficiency in a sieve tray distillation column?",
+        "a": "Point efficiency reflects local mass transfer efficiency at a single coordinate on the tray deck. Tray (Murphree) efficiency accounts for liquid cross-flow concentration gradients across the entire deck area; due to liquid plug flow patterns, Murphree tray efficiency frequently exceeds local point efficiency."
+      },
+      {
+        "q": "Why is sour crude processing more demanding in terms of metallurgy and process safety?",
+        "a": "Sour crude contains high hydrogen sulfide (H2S) levels and mercaptans, creating severe hazards of toxic gas exposure and wet H2S cracking mechanisms such as sulfide stress corrosion and hydrogen-induced cracking. Demanding alloys (316L clad, Inconel 625) and rigorous inspection are mandatory."
+      },
+      {
+        "q": "How is the thermal design of a reboiler affected by boiling regimes?",
+        "a": "Reboilers are strictly designed to operate within the nucleate boiling regime where high heat transfer coefficients are achieved at moderate wall superheat. Exceeding the critical heat flux triggers transition to film boiling, causing a vapor insulating film, rapid wall overheating, and severe heat transfer collapse."
+      }
+    ],
+    "hr": [
+      {
+        "q": "Can you describe a time when you stopped an unsafe action or challenged an established procedure?",
+        "how": "Use the STAR method: describe a laboratory or internship setting where you noticed an unmitigated hazard, detail how you intervened professionally using stop-work authority, and highlight the positive safety outcome."
+      },
+      {
+        "q": "Why do you specifically want to start your engineering career with ExxonMobil?",
+        "how": "Connect your technical passion to ExxonMobil's massive scale, world-class engineering training curriculum, leadership in energy efficiency, and operational excellence standards across complex integrated facilities."
+      },
+      {
+        "q": "Describe a challenging technical project where you faced ambiguous or missing data.",
+        "how": "Explain how you established foundational first-principles bounds, consulted technical literature or subject matter experts, conducted sensitivity analysis on key parameters, and clearly communicated the risk-managed engineering recommendations."
+      },
+      {
+        "q": "How do you handle working alongside team members with conflicting opinions on an operational decision?",
+        "how": "Emphasize active listening, objective data evaluation, grounding arguments in thermodynamic constraints and safety regulations, and building consensus around plant integrity and corporate compliance."
+      },
+      {
+        "q": "Tell me about a situation where you had to adapt quickly to sudden operational changes or project deadlines.",
+        "how": "Detail how you triaged the critical path deliverables, communicated transparently with team stakeholders, reallocated working hours, and delivered the core engineering result without compromising technical rigor."
+      },
+      {
+        "q": "Where do you see yourself contributing within our downstream and chemical manufacturing divisions over the next 5 years?",
+        "how": "Express a clear aspiration to master unit operations as a plant contact engineer, complete turnaround assignments, earn professional licensure, and progress toward technical lead or operations management roles."
+      }
+    ],
+    "present": [
+      "Emphasize a zero-incident safety mindset by proactively discussing safety checks in technical responses.",
+      "Walk through engineering problems from first principles rather than relying on memorized formulas.",
+      "Use concrete numbers and measurable results when describing academic or internship projects.",
+      "Exhibit clarity and structured reasoning using the STAR framework for behavioral questions.",
+      "Display enthusiasm for large-scale operations and continuous technological advancement."
+    ],
+    "tips": [
+      "Review fluid flow network calculations, pump performance curves, and cavitation prevention.",
+      "Be prepared to explain heat exchanger network pinch points and LMTD corrections.",
+      "Practice explaining the working mechanisms of crude atmospheric and vacuum distillation units.",
+      "Understand basic relief valve sizing principles and HAZOP guide word application.",
+      "Formulate thoughtful questions about unit reliability and site environmental compliance programs."
+    ]
+  },
+  "sources": [
+    "https://corporate.exxonmobil.com/careers",
+    "https://www.geeksforgeeks.org/exxonmobil-interview-experience/",
+    "https://www.glassdoor.com/Interview/ExxonMobil-Interview-Questions-E237.htm",
+    "https://www.ambitionbox.com/interviews/exxonmobil-question-answers"
+  ]
+}

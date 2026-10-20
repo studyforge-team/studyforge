@@ -1,0 +1,526 @@
+{
+  "id": "ongc",
+  "company": "ONGC",
+  "roles": [
+    "Graduate Trainee (AEE Production)",
+    "Process Chemist"
+  ],
+  "note": "Compiled and paraphrased from publicly shared candidate experiences. Not official; actual tests may differ.",
+  "oa": {
+    "sections": [
+      {
+        "name": "Aptitude",
+        "questions": 15,
+        "minutes": 20
+      },
+      {
+        "name": "Technical",
+        "questions": 20,
+        "minutes": 30
+      }
+    ],
+    "draw": 15,
+    "marks_per_q": 1,
+    "bank": [
+      {
+        "id": "ongc-1",
+        "section": "Technical",
+        "topic": "Upstream production",
+        "q": "On an offshore production platform at Mumbai High, what is the primary operational purpose of a production manifold?",
+        "options": [
+          "Gathering and routing multiphase fluid streams from multiple individual wellheads into production separators or test separators",
+          "Generating electrical power for platform utilities",
+          "Distilling crude into motor spirit and diesel",
+          "Treating platform sewage water"
+        ],
+        "answer": 0,
+        "explain": "The production manifold acts as the central piping header that gathers fluids from individual wellheads, providing header valves to direct any well to the test separator for flow measurement or to the main production train."
+      },
+      {
+        "id": "ongc-2",
+        "section": "Technical",
+        "topic": "Artificial lift",
+        "q": "In continuous gas lift operations, why is high-pressure lift gas injected into the well casing-tubing annulus down to a sub-surface gas lift valve?",
+        "options": [
+          "To freeze water into solid ice crystals",
+          "To aerate and reduce the average density of the fluid column in the production tubing, lowering bottomhole flowing pressure below reservoir pressure",
+          "To generate steam inside the reservoir",
+          "To chemically crack heavy crude oil in the wellbore"
+        ],
+        "answer": 1,
+        "explain": "Gas lift bubbles aerate the oil-water column, reducing hydrostatic head pressure exerted on the reservoir formation. This creates sufficient differential drawdown pressure for the reservoir to flow naturally to the surface."
+      },
+      {
+        "id": "ongc-3",
+        "section": "Technical",
+        "topic": "Gas dehydration",
+        "q": "In a triethylene glycol (TEG) gas dehydration contactor tower, what design parameter governs the required circulation rate of lean TEG per kilogram of water vapor removed from natural gas?",
+        "options": [
+          "500 liters per kilogram of water",
+          "0.1 liter per kilogram of water",
+          "Typically 25 to 40 liters of TEG per kilogram of water removed (approx. 2.5 to 4.0 gal TEG / lb H2O)",
+          "Circulation rate is completely independent of water content"
+        ],
+        "answer": 2,
+        "explain": "Industry standard GPSA rules specify a glycol circulation rate of 2.5 to 4.0 gallons of pure TEG per pound of water absorbed (roughly 25 to 40 L/kg H2O) to ensure adequate mass transfer driving force."
+      },
+      {
+        "id": "ongc-4",
+        "section": "Technical",
+        "topic": "Drilling fluids",
+        "q": "What rheological model is most standardly applied in the oil industry to describe the non-Newtonian flow behavior of drilling muds exhibiting a finite yield stress?",
+        "options": [
+          "Inviscid Euler model",
+          "Newtonian fluid model",
+          "Ideal gas law",
+          "Bingham plastic model (tau = tau_0 + mu_p * gamma_dot)"
+        ],
+        "answer": 3,
+        "explain": "The Bingham plastic model accounts for the yield stress (tau_0) required to initiate mud flow and the plastic viscosity (mu_p) during laminar circulation and cuttings transport in the wellbore annulus."
+      },
+      {
+        "id": "ongc-5",
+        "section": "Technical",
+        "topic": "Fluid mechanics",
+        "q": "A production well flows at 864 m^3/day of liquid crude through a 0.10 m inside diameter production tubing. What is the average fluid velocity inside the tubing?",
+        "options": [
+          "1.27 m/s",
+          "0.64 m/s",
+          "2.55 m/s",
+          "5.10 m/s"
+        ],
+        "answer": 0,
+        "explain": "Volumetric flow rate Q = 864 m^3 / 86400 s = 0.010 m^3/s. Cross-sectional area A = pi * D^2 / 4 = 3.14159 * (0.10)^2 / 4 = 0.007854 m^2. Velocity v = Q / A = 0.010 / 0.007854 = 1.273 m/s (1.27 m/s)."
+      },
+      {
+        "id": "ongc-6",
+        "section": "Technical",
+        "topic": "Fluid mechanics",
+        "q": "In wellhead choke bean sizing, under what pressure condition does the gas flow through the choke become critical (sonic or choked flow), making the flow rate independent of downstream manifold pressure?",
+        "options": [
+          "When downstream pressure equals upstream pressure",
+          "When downstream pressure is less than or equal to approximately 53-55 % of upstream absolute wellhead pressure (P_down / P_up <= (2 / (gamma + 1))^(gamma / (gamma - 1)))",
+          "When downstream pressure is three times upstream pressure",
+          "Only under vacuum conditions"
+        ],
+        "answer": 1,
+        "explain": "When the downstream-to-upstream pressure ratio drops below the critical pressure ratio (~0.53 for natural gas with gamma = 1.3), acoustic velocity (Mach 1) is reached at the choke vena contracta, decoupling upstream pressure from downstream variations."
+      },
+      {
+        "id": "ongc-7",
+        "section": "Technical",
+        "topic": "Thermodynamics",
+        "q": "What is the bubble point pressure of a live crude reservoir fluid?",
+        "options": [
+          "Atmospheric pressure at sea level",
+          "The pressure at which all crude solidifies",
+          "The pressure at a given temperature at which the very first bubble of dissolved gas comes out of solution from the liquid crude",
+          "The critical point pressure of pure water"
+        ],
+        "answer": 2,
+        "explain": "The bubble point pressure (saturation pressure) is the pressure at which dissolved gas first begins to desorb from liquid oil; above this pressure, the reservoir is undersaturated."
+      },
+      {
+        "id": "ongc-8",
+        "section": "Technical",
+        "topic": "Thermodynamics",
+        "q": "What parameter is defined as the volume of gas at standard surface conditions (15 C, 1 atm) dissolved in one unit volume of stock-tank oil at reservoir conditions?",
+        "options": [
+          "Viscosity ratio",
+          "Formation volume factor (Bo)",
+          "API gravity",
+          "Solution Gas-Oil Ratio (Rs)"
+        ],
+        "answer": 3,
+        "explain": "The solution Gas-Oil Ratio (Rs, standard m^3 gas per m^3 stock-tank oil, or scf/bbl) measures the dissolved gas content of crude oil under reservoir temperature and pressure."
+      },
+      {
+        "id": "ongc-9",
+        "section": "Technical",
+        "topic": "Heat transfer",
+        "q": "Why are subsea production flowlines insulated with syntactically foamed polyurethane on the seafloor (ambient seabed temperature ~4 C)?",
+        "options": [
+          "To maintain crude flowing temperature above the wax appearance temperature (WAT) and gas hydrate formation temperature",
+          "To cool the oil down to seawater temperature",
+          "To increase electrical conductivity",
+          "To prevent fish from biting the pipe"
+        ],
+        "answer": 0,
+        "explain": "Subsea flowline thermal insulation ensures the produced warm hydrocarbon fluid stays well above its Wax Appearance Temperature (cloud point) and hydrate envelope during transit to the topside host platform."
+      },
+      {
+        "id": "ongc-10",
+        "section": "Technical",
+        "topic": "Heat transfer",
+        "q": "An oil-gas heat exchanger cools 5.0 kg/s of hot gas (Cp = 2.2 kJ/(kg*K)) by 40 K. What is the heat transfer rate?",
+        "options": [
+          "220 kW",
+          "440 kW",
+          "330 kW",
+          "550 kW"
+        ],
+        "answer": 1,
+        "explain": "Q = m_dot * Cp * Delta T = 5.0 kg/s * 2.2 kJ/(kg*K) * 40 K = 440 kJ/s = 440 kW."
+      },
+      {
+        "id": "ongc-11",
+        "section": "Technical",
+        "topic": "Mass transfer",
+        "q": "In natural gas dehydration using triethylene glycol (TEG), what process condition is maintained inside the glycol reconcentrator reboiler to produce 99.0+ wt% lean glycol without thermal decomposition?",
+        "options": [
+          "Operating at sub-zero temperatures using liquid nitrogen",
+          "Operating at 500 C under pure oxygen",
+          "Operating at atmospheric pressure at approximately 200 to 204 C, often supplemented with stripping gas",
+          "Operating at 50 bar pressure"
+        ],
+        "answer": 2,
+        "explain": "TEG thermally degrades above ~206 C. Reboilers operate at 200-204 C under atmospheric pressure; stripping gas or vacuum is applied to strip residual water without exceeding the thermal limit."
+      },
+      {
+        "id": "ongc-12",
+        "section": "Technical",
+        "topic": "Mass transfer",
+        "q": "In oil-water emulsion treating, what chemical additive destabilizes the interfacial film formed by natural surfactants (asphaltenes and resins) around dispersed water droplets?",
+        "options": [
+          "Sodium silicate",
+          "Hydrochloric acid",
+          "Activated alumina",
+          "Chemical demulsifiers (emulsion breakers)"
+        ],
+        "answer": 3,
+        "explain": "Demulsifiers are surface-active agents that migrate to the oil-water interface, displace rigid natural asphaltenic films, and accelerate water droplet coalescence."
+      },
+      {
+        "id": "ongc-13",
+        "section": "Technical",
+        "topic": "Process safety",
+        "q": "What safety valve installed inside the production tubing approximately 50-100 meters below the seabed automatically isolates the well in the event of platform catastrophe or surface wellhead damage?",
+        "options": [
+          "Subsurface Safety Valve (SSSV / SCSSV) - fail-safe closed",
+          "Manual wing valve",
+          "Needle sampling valve",
+          "Gate valve without actuator"
+        ],
+        "answer": 0,
+        "explain": "The Surface-Controlled Subsurface Safety Valve (SCSSV) is a fail-safe closed flapper valve held open by hydraulic control pressure from the platform; if hydraulic signal is lost, it snaps shut, sealing the wellbore."
+      },
+      {
+        "id": "ongc-14",
+        "section": "Technical",
+        "topic": "Process safety",
+        "q": "What is the primary danger of operating centrifugal pumps or flowline chokes below fluid vapor pressure in crude oil containing entrained hydrogen sulfide?",
+        "options": [
+          "Freezing of the pump casing",
+          "Cavitation damage coupled with severe toxic sour gas release from mechanical seal failures",
+          "Instant polymer formation",
+          "Nuclear decay"
+        ],
+        "answer": 1,
+        "explain": "Cavitation erodes impellers and damages mechanical seals, causing catastrophic leakage of lethal, toxic hydrogen sulfide (H2S) gas into platform working environments."
+      },
+      {
+        "id": "ongc-15",
+        "section": "Technical",
+        "topic": "Reaction engineering",
+        "q": "In oilfield wastewater treatment, how is dissolved hydrogen sulfide biologically or chemically neutralized before ocean discharge?",
+        "options": [
+          "Direct venting to open sea",
+          "Distillation at 300 C",
+          "Chemical oxidation using hydrogen peroxide, sodium hypochlorite, or chlorine dioxide to form soluble sulfates",
+          "Addition of sulfur powder"
+        ],
+        "answer": 2,
+        "explain": "Chemical oxidizing agents oxidize toxic sulfide (S2-) and bisulfide (HS-) ions into harmless water-soluble sulfate (SO4^2-) ions to satisfy environmental discharge norms."
+      },
+      {
+        "id": "ongc-16",
+        "section": "Technical",
+        "topic": "Reaction engineering",
+        "q": "In high-temperature enhanced oil recovery (in-situ combustion / fireflooding), what chemical reaction is sustained inside the reservoir rock formation?",
+        "options": [
+          "Endothermic steam cracking",
+          "Nuclear fission",
+          "Biochemical fermentation of glucose",
+          "Exothermic combustion of heavy residual coke with injected air, generating a thermal front that drives mobilized lighter oil toward production wells"
+        ],
+        "answer": 3,
+        "explain": "In-situ combustion injects air to ignite heavy crude fractions, generating a moving heat front (350-600 C) that cracks and mobilizes viscous heavy crude toward surrounding production wells."
+      },
+      {
+        "id": "ongc-17",
+        "section": "Technical",
+        "topic": "Pumps and compressors",
+        "q": "An Electrical Submersible Pump (ESP) installed downhole consists of multiple centrifugal pump stages. What is the purpose of stacking 100 to 300 individual pump stages in series?",
+        "options": [
+          "To generate the massive cumulative head (often 1000-3000 meters) required to lift liquid from deep reservoirs to the surface",
+          "To clean the wellbore casing",
+          "To heat the crude oil",
+          "To separate gas from water downhole"
+        ],
+        "answer": 0,
+        "explain": "In series centrifugal staging, each individual stage contributes an incremental head (typically 5 to 20 meters), allowing hundreds of stacked stages to produce the thousands of meters of head needed for deep wells."
+      },
+      {
+        "id": "ongc-18",
+        "section": "Technical",
+        "topic": "Process control",
+        "q": "In an offshore test separator, what flow instrumentation is standard for measuring the instantaneous volumetric gas production rate from a test well?",
+        "options": [
+          "Visual sight glass alone",
+          "Senior orifice meter with differential pressure transmitter or Coriolis flowmeter",
+          "Manual dipping tape",
+          "Hydrometer"
+        ],
+        "answer": 1,
+        "explain": "Senior orifice meters (conforming to AGA-3 standards) and Coriolis gas meters provide accurate, real-time custody-transfer level measurement of high-pressure natural gas flow from separators."
+      },
+      {
+        "id": "ongc-19",
+        "section": "Aptitude",
+        "topic": "Quantitative",
+        "q": "An offshore supply boat travels from Nhava Sheva base to an offshore platform at 20 knots and returns along the same route at 30 knots. What is the average speed of the boat for the round trip?",
+        "options": [
+          "22 knots",
+          "25 knots",
+          "24 knots",
+          "26 knots"
+        ],
+        "answer": 2,
+        "explain": "Harmonic mean = 2 * v1 * v2 / (v1 + v2) = 2 * 20 * 30 / (20 + 30) = 1200 / 50 = 24 knots."
+      },
+      {
+        "id": "ongc-20",
+        "section": "Aptitude",
+        "topic": "Quantitative",
+        "q": "An oil well produces 500 barrels/day. After an acidization stimulation job, its production increases by 40 %. What is the new daily production rate?",
+        "options": [
+          "600 barrels/day",
+          "650 barrels/day",
+          "750 barrels/day",
+          "700 barrels/day"
+        ],
+        "answer": 3,
+        "explain": "Increase = 500 * 0.40 = 200 barrels/day. New production = 500 + 200 = 700 barrels/day."
+      },
+      {
+        "id": "ongc-21",
+        "section": "Aptitude",
+        "topic": "Quantitative",
+        "q": "A mud pit with capacity 100 m^3 is filled by two mud pumps. Pump A fills the pit in 5 hours and Pump B in 20 hours. Working together, in how many hours will they fill the pit?",
+        "options": [
+          "4.0 hours",
+          "3.5 hours",
+          "4.5 hours",
+          "5.0 hours"
+        ],
+        "answer": 0,
+        "explain": "Combined rate = 1/5 + 1/20 = 4/20 + 1/20 = 5/20 = 1/4 pit per hour. Time = 4.0 hours."
+      },
+      {
+        "id": "ongc-22",
+        "section": "Aptitude",
+        "topic": "Quantitative",
+        "q": "A contractor quotes Rs. 80,000 for pipeline cleaning and offers an 8 % discount for prompt payment. How much is paid after the discount?",
+        "options": [
+          "Rs. 72,000",
+          "Rs. 73,600",
+          "Rs. 74,400",
+          "Rs. 76,000"
+        ],
+        "answer": 1,
+        "explain": "Discount = 80,000 * 0.08 = Rs. 6,400. Amount paid = 80,000 - 6,400 = Rs. 73,600."
+      },
+      {
+        "id": "ongc-23",
+        "section": "Aptitude",
+        "topic": "Logical reasoning",
+        "q": "Find the missing term in the sequence: 8, 17, 35, 71, ?",
+        "options": [
+          "128",
+          "141",
+          "143",
+          "147"
+        ],
+        "answer": 2,
+        "explain": "Each term follows 2 * n + 1: 8*2+1=17, 17*2+1=35, 35*2+1=71, and 71*2+1 = 143."
+      },
+      {
+        "id": "ongc-24",
+        "section": "Aptitude",
+        "topic": "Logical reasoning",
+        "q": "Statements: 'All offshore platform crew members wear personal locator beacons.' 'Ravi is an offshore platform crew member.' Conclusion: 'Ravi wears a personal locator beacon.'",
+        "options": [
+          "Irrelevant",
+          "Invalid conclusion",
+          "Partially valid",
+          "Valid conclusion"
+        ],
+        "answer": 3,
+        "explain": "By standard categorical syllogism (All A are B; C is A; therefore C is B), the deduction is universally valid."
+      },
+      {
+        "id": "ongc-25",
+        "section": "Aptitude",
+        "topic": "Logical reasoning",
+        "q": "A helicopter departs platform Alpha flying 30 km due East, then turns and flies 40 km due North to platform Beta. What is the shortest straight-line flight distance back to Alpha?",
+        "options": [
+          "50 km",
+          "45 km",
+          "55 km",
+          "60 km"
+        ],
+        "answer": 0,
+        "explain": "By the Pythagorean theorem: Distance = sqrt(30^2 + 40^2) = sqrt(900 + 1600) = sqrt(2500) = 50 km."
+      },
+      {
+        "id": "ongc-26",
+        "section": "Aptitude",
+        "topic": "Verbal",
+        "q": "Select the word that best fills the blank: 'The production superintendent ordered a complete well shut-in after sensors detected an abnormal ______ in casing pressure.'",
+        "options": [
+          "abatement",
+          "escalation",
+          "alleviation",
+          "curtailment"
+        ],
+        "answer": 1,
+        "explain": "'Escalation' means rapid increase or rise, which indicates a dangerous buildup of casing pressure requiring emergency shut-in."
+      },
+      {
+        "id": "ongc-27",
+        "section": "Aptitude",
+        "topic": "Verbal",
+        "q": "Choose the most appropriate synonym for 'RHEOLOGY' in petroleum engineering:",
+        "options": [
+          "Study of ancient fossils",
+          "Study of rock crystals",
+          "Study of fluid flow and deformation",
+          "Study of seismic acoustic waves"
+        ],
+        "answer": 2,
+        "explain": "'Rheology' is the branch of physics and engineering dealing with the deformation and flow of matter, especially non-Newtonian fluids like drilling mud."
+      },
+      {
+        "id": "ongc-28",
+        "section": "Aptitude",
+        "topic": "Verbal",
+        "q": "Identify the grammatically correct sentence:",
+        "options": [
+          "Neither the drill pipe nor the casing strings was damaged during the storm.",
+          "Neither the drill pipe nor the casing strings is damaged during the storm.",
+          "Neither the drill pipe nor the casing strings being damaged during the storm.",
+          "Neither the drill pipe nor the casing strings were damaged during the storm."
+        ],
+        "answer": 3,
+        "explain": "In 'neither... nor...' constructions, the verb agrees with the subject closest to it. 'Casing strings' is plural, so 'were damaged' is grammatically correct."
+      }
+    ]
+  },
+  "interview": {
+    "rounds": [
+      "GATE Score Shortlisting",
+      "Personal Interview (Technical, Project & HR)"
+    ],
+    "about": "Oil and Natural Gas Corporation (ONGC) is India's largest crude oil and natural gas exploration and production company (Maharatna PSU), producing roughly 70 % of India's domestic crude oil and 84 % of its natural gas. ONGC recruits graduate chemical engineers (designated as AEE Production or Process Chemist) through the GATE examination followed by rigorous interviews for challenging postings on offshore platforms (such as Mumbai High, Bassein, Neelam) and onshore processing assets.",
+    "looks_for": [
+      "Top-tier performance and deep conceptual clarity in the GATE Chemical Engineering examination.",
+      "Solid grasp of upstream oil and gas production: multiphase flow, gas lift, separation, and water treatment.",
+      "Physical stamina, mental resilience, and readiness for 14-day rotational offshore platform shifts in open sea.",
+      "Strong commitment to offshore safety regulations (DGMS, OISD) and environmental protection.",
+      "Clear technical reasoning and first-principles derivation of fluid flow and thermodynamics.",
+      "Integrity, leadership potential, and commitment to India's energy security."
+    ],
+    "selection": [
+      "Shortlisting based on GATE Chemical Engineering score and qualifying percentile.",
+      "Comprehensive Personal Interview (PI) covering core chemical engineering, B.Tech projects, and offshore readiness.",
+      "Verification of physical medical fitness standards mandated for offshore oilfield deployment."
+    ],
+    "technical": [
+      {
+        "q": "Describe the sequence of processing steps in an offshore production platform separation train.",
+        "a": "Live crude from wellheads passes through the production manifold into a high-pressure (HP) 3-phase separator, where associated gas flashes off, free water settles, and oil overflows a weir. Liquid oil is routed to medium-pressure (MP) and low-pressure (LP) separators for further degassing, enters a heater-treater/electrostatic desalter to remove remaining emulsified brine, and is pumped via export pumps into subsea oil pipelines to onshore terminals."
+      },
+      {
+        "q": "What is the difference between continuous gas lift and intermittent gas lift?",
+        "a": "Continuous gas lift is used for high-productivity-index wells with high bottomhole pressure; lift gas is injected steadily to aerate the fluid column. Intermittent gas lift is used for low-productivity wells with low reservoir pressure; liquid is allowed to accumulate in the tubing, and a large slug of high-pressure gas is injected cyclically to push the liquid slug to the surface like a piston."
+      },
+      {
+        "q": "How does an Electrical Submersible Pump (ESP) operate and what are its key limitations?",
+        "a": "An ESP is a downhole multistage centrifugal pump coupled to a three-phase electric motor powered by an umbilical cable from the surface. It provides high volume lift capacity. Key limitations include poor tolerance for high free gas volume (which causes gas locking), erosion from abrasive formation sand, and high workover replacement costs when downhole motors fail."
+      },
+      {
+        "q": "Explain the role of drilling mud and the significance of Bingham plastic yield stress.",
+        "a": "Drilling mud lubricates the drill bit, cools downhole tools, balances formation pore pressure to prevent blowouts, and carries rock cuttings up the annulus. Its yield stress (gel strength) is critical because it keeps dense cuttings suspended when mud circulation stops, preventing cuttings from settling and jamming the drill string."
+      },
+      {
+        "q": "What causes gas hydrate formation in subsea flowlines and how does ONGC prevent it?",
+        "a": "Hydrates form when water and light hydrocarbons combine at cold seabed temperatures (4 C) under high reservoir pressures. ONGC prevents hydrates through continuous injection of thermodynamic inhibitors like Monoethylene Glycol (MEG) or Methanol at wellheads, insulating subsea flowlines, and depressurizing lines during extended shutdowns."
+      },
+      {
+        "q": "How do you calculate the API gravity of crude oil from its specific gravity?",
+        "a": "API gravity is calculated using the standard formula: API = (141.5 / SG at 60 F) - 131.5, where SG is the specific gravity relative to pure water. Lighter crude oils have lower specific gravity and higher API gravity values (e.g., Mumbai High crude is light, typically 38-40 API)."
+      },
+      {
+        "q": "What is the function of a triethylene glycol (TEG) gas dehydration contactor?",
+        "a": "Wet natural gas flows upward through bubble-cap trays or structured packing counter-currently against lean TEG (99.0+ wt%). TEG absorbs water vapor via hydrogen bonding. The dry gas exits overhead with water content < 7 lb/MMSCF, meeting pipeline transit specifications and preventing downstream corrosion."
+      },
+      {
+        "q": "Explain the purpose and operation of an electrostatic heater-treater in oil processing.",
+        "a": "A heater-treater combines heat and a high-voltage AC electric field to break stubborn water-in-oil emulsions. Heating reduces oil viscosity and weakens interfacial film strength; the electric field induces dipole alignment and coalescence of microscopic water droplets, which rapidly settle to the vessel bottom."
+      },
+      {
+        "q": "What are the key safety barriers on an offshore wellhead platform (Christmas Tree)?",
+        "a": "The Christmas tree includes the master valve, wing valves, swab valve, and a surface-controlled subsurface safety valve (SCSSV) located downhole. It is tied to emergency shutdown (ESD) systems, fusible loop fire detection, and high/low pressure pilots that instantly isolate the wellhead during abnormal conditions."
+      },
+      {
+        "q": "How is associated sour gas handled if hydrogen sulfide is present in offshore fields?",
+        "a": "Sour gas is routed to amine sweetening units where alkanolamines (MDEA or DEA) absorb H2S and CO2. The stripped acid gas is sent to a Claus sulfur recovery plant to produce solid sulfur, or incinerated in thermal oxidizers meeting environmental emission limits. Flaring sour gas is strictly minimized."
+      }
+    ],
+    "hr": [
+      {
+        "q": "Why do you want to join ONGC as an AEE Production rather than working in downstream refining or IT?",
+        "how": "Highlight ONGC's status as the core upstream explorer of India, the excitement of offshore platform engineering, the massive pride in discovering and producing national hydrocarbons, and the unparalleled technical challenges of deepwater and EOR operations."
+      },
+      {
+        "q": "Are you comfortable with living on an offshore platform for 14 continuous days on a rotational shift schedule?",
+        "how": "Emphasize your physical stamina, mental adaptability, and enthusiasm for the 14-day on / 14-day off offshore lifestyle, noting that life on offshore platforms offers camaraderie, intense technical learning, and complete operational focus."
+      },
+      {
+        "q": "How did you prepare for the GATE examination while managing your engineering coursework?",
+        "how": "Describe your systematic planning: daily study schedules, prioritizing core subjects (fluid mechanics, thermodynamics, mass transfer), practicing previous years' question papers, and focusing on first-principles conceptual derivations."
+      },
+      {
+        "q": "Tell me about a time you handled an emergency or stressful technical situation during your college or internship.",
+        "how": "Use the STAR approach: describe the stressful situation, how you maintained your composure, adhered strictly to safety protocols, took systematic action, and brought the situation to a safe conclusion."
+      },
+      {
+        "q": "How would you handle a disagreement with a senior technician or drill site supervisor on an offshore platform?",
+        "how": "Highlight respect for their decades of practical field wisdom, checking the facts against operating manuals and engineering standards, and resolving differences collaboratively with plant safety and integrity as the common ground."
+      },
+      {
+        "q": "Where do you see yourself contributing within ONGC over the next 5 to 7 years?",
+        "how": "Express an aspiration to master offshore platform operations as an installation manager or production lead, contribute to enhanced oil recovery (EOR) and deepwater development projects in the KG basin, and uphold high safety standards."
+      }
+    ],
+    "present": [
+      "Demonstrate thorough mastery of GATE Chemical Engineering concepts and upstream oil & gas terminology.",
+      "Show familiarity with ONGC's major production basins: Mumbai Offshore, KG Basin, Cambay, Assam-Arakan, and Cauvery.",
+      "Exhibit high confidence, humility, and respectful demeanor during the personal interview.",
+      "Emphasize readiness for offshore rigors and rotational field postings.",
+      "Structure behavioral responses cleanly using the STAR methodology (Situation, Task, Action, Result)."
+    ],
+    "tips": [
+      "Be prepared to explain your B.Tech final year project thoroughly from first principles.",
+      "Review multiphase flow in vertical pipes, gas lift mechanisms, and three-phase separator sizing.",
+      "Understand drilling fluid rheology (Bingham plastic yield stress) and wellhead choke critical flow.",
+      "Familiarize yourself with offshore safety regulations, OISD standards, and blowout preventer (BOP) mechanisms.",
+      "Prepare thoughtful questions about ONGC's deepwater exploration and overseas investments through ONGC Videsh (OVL)."
+    ]
+  },
+  "sources": [
+    "https://www.ongcindia.com/wps/wcm/connect/en/career/",
+    "https://www.geeksforgeeks.org/ongc-interview-experience/",
+    "https://www.ambitionbox.com/interviews/ongc-question-answers"
+  ]
+}

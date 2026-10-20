@@ -1,0 +1,528 @@
+{
+  "id": "bpcl",
+  "company": "Bharat Petroleum (BPCL)",
+  "roles": [
+    "Management Trainee (Chemical)",
+    "Refinery Operations Engineer"
+  ],
+  "note": "Compiled and paraphrased from publicly shared candidate experiences. Not official; actual tests may differ.",
+  "oa": {
+    "sections": [
+      {
+        "name": "Aptitude",
+        "questions": 15,
+        "minutes": 20
+      },
+      {
+        "name": "Technical",
+        "questions": 20,
+        "minutes": 30
+      }
+    ],
+    "draw": 15,
+    "marks_per_q": 1,
+    "bank": [
+      {
+        "id": "bpcl-1",
+        "section": "Technical",
+        "topic": "Petroleum refining",
+        "q": "In an Atmospheric Distillation Unit (ADU) crude distillation column, why is superheated steam injected into the bottom of the stripping section?",
+        "options": [
+          "To reduce the partial pressure of hydrocarbons, thereby vaporizing volatile lighter components from the atmospheric residue without exceeding thermal cracking temperatures",
+          "To increase the overall column operating pressure above 50 bar",
+          "To react with sulfur compounds and precipitate elemental sulfur",
+          "To condense the overhead light naphtha stream"
+        ],
+        "answer": 0,
+        "explain": "Steam injection lowers the hydrocarbon partial pressure (P_hc = P_total - P_steam), allowing vaporization of gas oils at temperatures below 370 C, avoiding thermal coking of furnace coils and residue."
+      },
+      {
+        "id": "bpcl-2",
+        "section": "Technical",
+        "topic": "Catalytic cracking",
+        "q": "In a Fluid Catalytic Cracking (FCC) unit, what is the primary role of the regenerator vessel?",
+        "options": [
+          "To polymerize olefin gases into diesel fuel",
+          "To burn off the deposited carbonaceous coke from the spent zeolitic catalyst using preheated air, restoring catalyst activity and generating high-temperature heat for the endothermic riser cracking reactions",
+          "To hydrotreat vacuum gas oil using high-pressure hydrogen",
+          "To separate gasoline from diesel by gravity decantation"
+        ],
+        "answer": 1,
+        "explain": "Spent FCC catalyst is deactivated by coke deposition in the riser. In the regenerator, air burns this coke (C + O2 -> CO/CO2), heating catalyst to ~700 C; the hot catalyst recirculates back to the riser to vaporize fresh feed and supply cracking heat."
+      },
+      {
+        "id": "bpcl-3",
+        "section": "Technical",
+        "topic": "Petroleum testing",
+        "q": "What fuel property does the Research Octane Number (RON) measure in automotive motor gasoline?",
+        "options": [
+          "The kinematic viscosity of gasoline at 40 C",
+          "The cloud point where paraffin wax crystals first precipitate",
+          "The antiknock resistance of gasoline under mild operating and low-speed driving conditions relative to a blend of iso-octane (100) and n-heptane (0)",
+          "The exact amount of sulfur impurities present in parts per billion"
+        ],
+        "answer": 2,
+        "explain": "RON measures knock resistance in internal combustion engines at low speed (600 rpm) and mild intake temperature. It reflects resistance to auto-ignition and engine pinging."
+      },
+      {
+        "id": "bpcl-4",
+        "section": "Technical",
+        "topic": "Hydroprocessing",
+        "q": "In a diesel Hydrodesulfurization (HDS) unit, what chemical reaction converts organosulfur compounds like dibenzothiophene into hydrocarbons and easily strippable gas?",
+        "options": [
+          "Precipitation by addition of calcium hydroxide",
+          "Aerobic biological digestion by pseudomonas bacteria",
+          "Electrochemical reduction in brine electrolyte",
+          "Catalytic hydrogenolysis over CoMo or NiMo on alumina catalysts at elevated temperature and pressure, converting sulfur into hydrogen sulfide (H2S)"
+        ],
+        "answer": 3,
+        "explain": "HDS employs hydrogen gas at 30-70 bar and 320-380 C over CoMo/Al2O3 catalysts. Sulfur atoms in thiophenes and mercaptans are hydrogenated into H2S gas, which is stripped downstream and treated in amine units."
+      },
+      {
+        "id": "bpcl-5",
+        "section": "Technical",
+        "topic": "Sulfur recovery",
+        "q": "In the modified Claus process for sulfur recovery, what is the stoichiometric ratio of H2S to SO2 required in the catalytic reaction beds to yield elemental sulfur (2 H2S + SO2 -> 3 S + 2 H2O)?",
+        "options": [
+          "2 : 1",
+          "1 : 1",
+          "3 : 1",
+          "1 : 2"
+        ],
+        "answer": 0,
+        "explain": "In the Claus thermal furnace, one-third of the feed H2S is combusted to SO2 (H2S + 1.5 O2 -> SO2 + H2O). The remaining two-thirds of H2S reacts with SO2 in a 2:1 stoichiometric molar ratio over activated alumina catalysts to form sulfur."
+      },
+      {
+        "id": "bpcl-6",
+        "section": "Technical",
+        "topic": "Thermodynamics",
+        "q": "Crude oil is evaluated using API gravity. If an oil has a specific gravity (SG at 60 F / 60 F) of 0.85, what is its API gravity (Formula: API = 141.5 / SG - 131.5)?",
+        "options": [
+          "25.50 API",
+          "34.97 API",
+          "42.10 API",
+          "28.35 API"
+        ],
+        "answer": 1,
+        "explain": "API = (141.5 / 0.85) - 131.5 = 166.47 - 131.5 = 34.97 API (medium-light crude)."
+      },
+      {
+        "id": "bpcl-7",
+        "section": "Technical",
+        "topic": "Heat transfer",
+        "q": "In a refinery crude preheat train, what type of heat exchanger is standardly specified to accommodate large differential thermal expansion between the tube bundle and the shell?",
+        "options": [
+          "Plate-and-frame gasketed exchanger",
+          "Fixed tube sheet heat exchanger with rigid shell",
+          "Floating-head shell-and-tube heat exchanger (TEMA AES or AET)",
+          "Direct-contact barometric condenser"
+        ],
+        "answer": 2,
+        "explain": "Crude preheat trains operate over wide temperature ranges (40 C to 280 C). Floating-head exchangers allow the tube bundle to expand and contract freely without thermal stress, and permit bundle extraction for mechanical cleaning of foulants."
+      },
+      {
+        "id": "bpcl-8",
+        "section": "Technical",
+        "topic": "Distillation",
+        "q": "In a Vacuum Distillation Unit (VDU) processing atmospheric residue, why is the column maintained under deep vacuum (10 to 40 mmHg absolute)?",
+        "options": [
+          "To eliminate the need for any condenser pumps",
+          "To prevent atmospheric air from leaking out of the column",
+          "To increase the condensation temperature of steam",
+          "To lower the boiling temperatures of heavy vacuum gas oils (HVGO) so they can vaporize without undergoing destructive thermal cracking and severe coking"
+        ],
+        "answer": 3,
+        "explain": "Heavy petroleum fractions boil above 500 C at atmospheric pressure, but thermal cracking begins around 360-380 C. Operating at 20-30 mmHg reduces boiling points below cracking limits, allowing recovery of valuable VGO cracking feedstocks."
+      },
+      {
+        "id": "bpcl-9",
+        "section": "Technical",
+        "topic": "Process equipment",
+        "q": "What is the function of the crude oil desalter located in the crude preheat train between 110 C and 140 C?",
+        "options": [
+          "To wash out inorganic chloride salts (NaCl, MgCl2, CaCl2) and abrasive sediments with wash water and separate them via a high-voltage electrostatic grid",
+          "To distill off fuel gas and LPG overhead",
+          "To polymerize aromatics into asphalt",
+          "To convert sulfur into elemental brimstone"
+        ],
+        "answer": 0,
+        "explain": "Hydrolysis of MgCl2 and CaCl2 at high temperatures releases corrosive HCl gas that corrodes column overhead condensers. Desalting washes out these salts into an aqueous phase that coalesces and drops out under high electrostatic electric fields."
+      },
+      {
+        "id": "bpcl-10",
+        "section": "Technical",
+        "topic": "Pumps and compressors",
+        "q": "A centrifugal pump in a refinery LPG transfer service has a Net Positive Suction Head Available (NPSHa) of 3.2 m. The pump manufacturer specifies NPSHr = 4.5 m. What will occur if the pump is operated under these conditions?",
+        "options": [
+          "The pump will operate at peak thermodynamic efficiency",
+          "The pump will experience severe cavitation, leading to noise, vibration, impeller erosion, and flow breakdown",
+          "The motor will reverse direction and turn into a turbine",
+          "Discharge head will increase by 50%"
+        ],
+        "answer": 1,
+        "explain": "For reliable non-cavitating operation, NPSHa must exceed NPSHr by an engineering safety margin (typically >= 0.5-1.0 m). Here NPSHa (3.2 m) < NPSHr (4.5 m), so cavitation is guaranteed."
+      },
+      {
+        "id": "bpcl-11",
+        "section": "Technical",
+        "topic": "Combustion engineering",
+        "q": "In an industrial refinery process furnace, what is the consequence of operating with insufficient excess air (below stoichiometric oxygen)?",
+        "options": [
+          "Excessive NO_x formation accelerates drastically",
+          "The furnace shell cools down to freezing temperatures",
+          "Incomplete combustion occurs, causing carbon monoxide (CO) emissions, unburned hydrocarbon smoke, afterburning in the convection bank, and loss of thermal efficiency",
+          "The stack draft increases indefinitely"
+        ],
+        "answer": 2,
+        "explain": "Deficient oxygen leads to sub-stoichiometric combustion where fuel carbon partially oxidizes to toxic CO and soot, wasting fuel energy and risking explosive afterburning when air leaks into downstream convection sections."
+      },
+      {
+        "id": "bpcl-12",
+        "section": "Technical",
+        "topic": "Reaction engineering",
+        "q": "In delayed coking of heavy residues, what is the primary cracking mechanism occurring in the coker drums?",
+        "options": [
+          "Enzymatic fermentation of long-chain paraffins",
+          "Low-temperature catalytic isomerization over platinum catalysts",
+          "High-pressure catalytic hydrogenation over nickel zeolites",
+          "Severe non-catalytic liquid-phase thermal cracking (pyrolysis) at ~480-500 C with long residence times, yielding cracked vapors and solid petroleum coke"
+        ],
+        "answer": 3,
+        "explain": "Delayed coking is a severe thermal cracking process. Short residence time in the furnace heats the oil to ~490 C, followed by transfer to huge insulated coke drums where prolonged soaking cracking yields gas, naphtha, gas oils, and sponge coke."
+      },
+      {
+        "id": "bpcl-13",
+        "section": "Technical",
+        "topic": "Instrumentation and control",
+        "q": "In a distillation column overhead reflux accumulator, what type of control configuration is typically used to prevent the tank from running dry or overfilling?",
+        "options": [
+          "A liquid level controller modulating the distillate product withdrawal control valve, or modulating the reflux valve",
+          "A temperature transmitter modulating the cooling water valve exclusively",
+          "A differential pressure transmitter venting vapor to flare",
+          "A manual hand valve checked once per week"
+        ],
+        "answer": 0,
+        "explain": "The accumulator level must be held within safe bounds. Reflux drum level controllers manipulate either the distillate draw rate or the reflux flow rate back to the column."
+      },
+      {
+        "id": "bpcl-14",
+        "section": "Technical",
+        "topic": "Process safety",
+        "q": "In refinery flare system design, what is the function of the knockout drum (KOD) located upstream of the flare stack?",
+        "options": [
+          "To inject pure oxygen into the flare gas to ensure complete combustion",
+          "To separate and collect condensed liquid droplets from the relief gas stream, preventing burning liquid rain from showering down around the flare stack",
+          "To compress the gas to 200 bar for bottle storage",
+          "To filter out all carbon dioxide molecules"
+        ],
+        "answer": 1,
+        "explain": "Relief gases entering the flare header often carry liquid droplets. The flare knockout drum provides settling volume and baffle/demister separation to trap liquids and avoid flaming droplets falling onto the plant."
+      },
+      {
+        "id": "bpcl-15",
+        "section": "Technical",
+        "topic": "Fluid mechanics",
+        "q": "A pipeline of internal diameter 0.2 m carries a heavy gas oil with density 900 kg/m^3 and dynamic viscosity 0.045 Pa*s. If the average flow velocity is 1.5 m/s, what is the Reynolds number?",
+        "options": [
+          "12,000",
+          "2,500",
+          "6,000",
+          "4,500"
+        ],
+        "answer": 2,
+        "explain": "Re = rho * v * D / mu = (900 * 1.5 * 0.2) / 0.045 = 270 / 0.045 = 6000 (turbulent flow)."
+      },
+      {
+        "id": "bpcl-16",
+        "section": "Technical",
+        "topic": "Refinery operations",
+        "q": "What fuel specification parameter is determined using the Pensky-Martens Closed Cup test apparatus?",
+        "options": [
+          "Pour point temperature",
+          "Kinematic viscosity at 100 C",
+          "Reid vapor pressure at 37.8 C",
+          "Flash point of petroleum products like diesel, kerosene, and fuel oil"
+        ],
+        "answer": 3,
+        "explain": "The Pensky-Martens closed-cup tester determines the lowest temperature at which fuel vapor above liquid ignites upon application of a test flame, defining its flash point for transportation safety."
+      },
+      {
+        "id": "bpcl-17",
+        "section": "Technical",
+        "topic": "Mass transfer",
+        "q": "In an amine gas treating unit removing H2S and CO2 from refinery off-gas, what solvent is commonly used and regenerated by steam reboiling?",
+        "options": [
+          "Aqueous alkanolamines such as Monoethanolamine (MEA) or Methyldiethanolamine (MDEA)",
+          "Pure liquid acetone",
+          "Anhydrous ammonia",
+          "Concentrated nitric acid"
+        ],
+        "answer": 0,
+        "explain": "Alkanolamines react reversibly with acid gases at low temperatures (~40 C) in an absorber, and release them as pure H2S/CO2 gas when heated to ~120 C in a stripper column."
+      },
+      {
+        "id": "bpcl-18",
+        "section": "Technical",
+        "topic": "Heat transfer",
+        "q": "Why are finned tubes (extended surfaces) used on the gas side rather than the water side in boiler economizers and air-cooled heat exchangers?",
+        "options": [
+          "Fins look aesthetically better on outer metal jackets",
+          "The heat transfer coefficient on the gas side is much lower than on the liquid side; adding external surface area balances the thermal resistances",
+          "Finned tubes prevent the water inside from boiling",
+          "Fins are cheaper to manufacture than smooth round tubes"
+        ],
+        "answer": 1,
+        "explain": "Convective heat transfer coefficient h for air/flue gas is typically 20-80 W/(m^2*K), while for water it is 1000-5000 W/(m^2*K). To reduce overall resistance 1/(U*A), fins are placed where h is lowest."
+      },
+      {
+        "id": "bpcl-19",
+        "section": "Aptitude",
+        "topic": "Quantitative aptitude",
+        "q": "A crude storage tank can be filled by Pump A in 8 hours and Pump B in 12 hours. If both pumps operate together, how long will it take to fill the tank?",
+        "options": [
+          "4.2 hours",
+          "5.0 hours",
+          "4.8 hours",
+          "5.5 hours"
+        ],
+        "answer": 2,
+        "explain": "Combined filling rate = 1/8 + 1/12 = (3 + 2)/24 = 5/24 tanks per hour. Time = 24 / 5 = 4.8 hours (4 hours 48 minutes)."
+      },
+      {
+        "id": "bpcl-20",
+        "section": "Aptitude",
+        "topic": "Quantitative aptitude",
+        "q": "A pipeline pump delivers 500 cubic meters of diesel in 4 hours. If a newer pump is 25% faster, how many hours will the new pump take to deliver the same 500 cubic meters?",
+        "options": [
+          "3.6 hours",
+          "3.0 hours",
+          "3.5 hours",
+          "3.2 hours"
+        ],
+        "answer": 3,
+        "explain": "Original rate = 500 / 4 = 125 m^3/h. New rate = 125 * 1.25 = 156.25 m^3/h. Time taken = 500 / 156.25 = 3.2 hours."
+      },
+      {
+        "id": "bpcl-21",
+        "section": "Aptitude",
+        "topic": "Quantitative aptitude",
+        "q": "In a blending operation, 400 liters of 85-octane petrol is blended with 600 liters of 95-octane petrol. What is the octane number of the resulting fuel blend?",
+        "options": [
+          "91 octane",
+          "90 octane",
+          "92 octane",
+          "89 octane"
+        ],
+        "answer": 0,
+        "explain": "Weighted average octane = (400 * 85 + 600 * 95) / (400 + 600) = (34,000 + 57,000) / 1000 = 91,000 / 1000 = 91 octane."
+      },
+      {
+        "id": "bpcl-22",
+        "section": "Aptitude",
+        "topic": "Quantitative aptitude",
+        "q": "A refinery crude shipment of 100,000 barrels was purchased at $75 per barrel with an import tariff of 4%. What was the total cost including tariff?",
+        "options": [
+          "$7,500,000",
+          "$7,800,000",
+          "$7,600,000",
+          "$8,000,000"
+        ],
+        "answer": 1,
+        "explain": "Base cost = 100,000 * 75 = $7,500,000. Tariff = 4% of $7,500,000 = $300,000. Total = $7,800,000."
+      },
+      {
+        "id": "bpcl-23",
+        "section": "Aptitude",
+        "topic": "Logical reasoning",
+        "q": "Find the missing number in the sequence: 7, 14, 28, 56, 112, ?",
+        "options": [
+          "214",
+          "168",
+          "224",
+          "248"
+        ],
+        "answer": 2,
+        "explain": "Each number is double the previous number: 7*2=14, 14*2=28, 28*2=56, 56*2=112, 112*2=224."
+      },
+      {
+        "id": "bpcl-24",
+        "section": "Aptitude",
+        "topic": "Logical reasoning",
+        "q": "Statements: All refineries have distillation units. All distillation units consume energy. Which conclusion is definitively correct?",
+        "options": [
+          "No distillation unit consumes energy",
+          "Some refineries do not consume energy",
+          "Energy can only be consumed by refineries",
+          "All refineries consume energy"
+        ],
+        "answer": 3,
+        "explain": "By syllogistic transitive property: Refineries subset of Distillation Units subset of Energy Consumers. Therefore, All refineries consume energy."
+      },
+      {
+        "id": "bpcl-25",
+        "section": "Aptitude",
+        "topic": "Logical reasoning",
+        "q": "In a coded process log, 'CRUDE' is encoded as 'DSVEF' by shifting each letter forward by one position. How is 'STEAM' encoded under the exact same rule?",
+        "options": [
+          "TUFBN",
+          "TTFBN",
+          "SUBBN",
+          "TVFBO"
+        ],
+        "answer": 0,
+        "explain": "Each letter is shifted forward by 1: S+1=T, T+1=U, E+1=F, A+1=B, M+1=N -> TUFBN."
+      },
+      {
+        "id": "bpcl-26",
+        "section": "Aptitude",
+        "topic": "Data interpretation",
+        "q": "A refinery product slate consists of: High Speed Diesel (HSD) 45%, Motor Spirit (Petrol) 25%, LPG 10%, Aviation Turbine Fuel (ATF) 10%, Fuel Oil 10%. If crude throughput is 200,000 barrels per day, how many barrels of HSD are produced daily?",
+        "options": [
+          "80,000 barrels",
+          "90,000 barrels",
+          "100,000 barrels",
+          "70,000 barrels"
+        ],
+        "answer": 1,
+        "explain": "HSD volume = 45% of 200,000 = 0.45 * 200,000 = 90,000 barrels per day."
+      },
+      {
+        "id": "bpcl-27",
+        "section": "Aptitude",
+        "topic": "Verbal reasoning",
+        "q": "Choose the most appropriate synonym for the word 'VOLATILE' in the context of hydrocarbons:",
+        "options": [
+          "Viscous",
+          "Stable",
+          "Evaporative",
+          "Insoluble"
+        ],
+        "answer": 2,
+        "explain": "'Volatile' denotes substances that readily vaporize or evaporate at standard temperatures and pressures."
+      },
+      {
+        "id": "bpcl-28",
+        "section": "Aptitude",
+        "topic": "Verbal reasoning",
+        "q": "Select the correct word to fill in the blank: 'Refinery operators must remain vigilant _______ prevent hazardous hydrocarbon vapor accumulation.'",
+        "options": [
+          "although",
+          "because of",
+          "despite",
+          "in order to"
+        ],
+        "answer": 3,
+        "explain": "'In order to' expresses the intention or purpose of an action correctly in formal English grammar."
+      }
+    ]
+  },
+  "interview": {
+    "rounds": [
+      "Online assessment",
+      "Technical interview",
+      "HR interview"
+    ],
+    "about": "Bharat Petroleum Corporation Limited (BPCL) is an Indian Maharatna public sector undertaking operating major refining complexes in Mumbai, Kochi, and Bina, alongside nationwide fuel marketing and pipeline infrastructure. BPCL recruits chemical engineering graduates through GATE and campus drives for refinery operations, technical services, petrochemical integration, and health, safety, and environment (HSE).",
+    "looks_for": [
+      "Rock-solid fundamentals in chemical engineering: thermodynamics, distillation, fluid dynamics, and heat transfer.",
+      "High GATE examination score or strong academic performance in chemical engineering.",
+      "Clear understanding of petroleum refining processes (CDU, VDU, FCC, Hydrocracker, DHDS, Claus).",
+      "Willingness to work in rotating shifts on operating refinery complexes and coastal terminals.",
+      "Commitment to industrial safety protocols, fire protection standards, and environmental compliance.",
+      "Integrity, leadership potential, and public-spirited teamwork characteristic of a Maharatna PSU."
+    ],
+    "selection": [
+      "Initial shortlisting through GATE chemical engineering score or national computer-based online test.",
+      "Group Task or Group Discussion evaluating technical viewpoint articulation and collaborative problem-solving.",
+      "Comprehensive technical interview panel with senior refinery chief managers on core chemical engineering concepts and refinery flows.",
+      "Personal HR interview assessing motivation for PSU service, adaptability to shift duties, and behavioral integrity."
+    ],
+    "technical": [
+      {
+        "q": "Explain the step-by-step processing of crude oil inside an atmospheric distillation column.",
+        "a": "Desalted crude is preheated in heat exchanger trains and fired furnaces to 350-370 C, entering the flash zone of the column. Vapors rise through fractional distillation trays while unvaporized heavy residue drops to the stripping section where live steam strips residual light ends. Side-draw products (heavy naphtha, kerosene, light gas oil, heavy gas oil) are withdrawn via side strippers to meet flash point and distillation specs, while light naphtha and LPG exit overhead."
+      },
+      {
+        "q": "Why is vacuum maintained in a Vacuum Distillation Unit (VDU) and how is it generated?",
+        "a": "Atmospheric residue contains heavy hydrocarbons that would crack and coke at temperatures above 380 C. Operating at deep vacuum (10-40 mmHg) lowers hydrocarbon boiling points, allowing distillation of vacuum gas oils without cracking. Vacuum is generated using multi-stage steam ejectors with surface barometric intercondensers or liquid ring vacuum pumps."
+      },
+      {
+        "q": "What is the difference between Research Octane Number (RON) and Motor Octane Number (MON)?",
+        "a": "RON measures fuel anti-knock performance under mild, low-speed engine operating conditions (600 rpm), whereas MON measures knock resistance under severe high-speed, high-temperature loaded conditions (900 rpm with preheated fuel-air mixture). The difference (RON - MON) is termed the fuel sensitivity."
+      },
+      {
+        "q": "Describe the working mechanism and reactions of a Fluid Catalytic Cracking (FCC) unit.",
+        "a": "Preheated vacuum gas oil contacts hot fluid zeolitic catalyst at the bottom of the riser at ~530 C. Cracking occurs endothermically in seconds via carbocation mechanisms into LPG, gasoline, and cycle oils. Catalyst becomes coked and flows to the regenerator, where air combustion burns off coke at ~700 C, regenerating catalyst activity and providing the heat transported back to the riser."
+      },
+      {
+        "q": "How does a hydrocracker differ from a fluid catalytic cracker?",
+        "a": "FCC is a low-pressure (1-2 bar), carbon-rejection thermal/catalytic process without hydrogen, producing high-octane olefinic gasoline and cycle oils with coke formation. Hydrocracking is a high-pressure (100-180 bar) hydrogen-addition catalytic process over bifunctional catalysts, converting heavy feeds into high-quality, saturated, sulfur-free diesel and jet fuels without making coke."
+      },
+      {
+        "q": "What causes severe cavitation in refinery centrifugal pumps and how can you diagnose it in the field?",
+        "a": "Cavitation happens when available NPSH at the pump suction falls below the required NPSH of the pump, causing localized pressure to drop below liquid vapor pressure. Bubbles form and collapse violently against impeller vanes. Field symptoms include loud popping sounds resembling gravel pumping, erratic discharge pressure fluctuations, and intense high-frequency vibrations."
+      },
+      {
+        "q": "Explain the role and chemical chemistry of the Claus Sulfur Recovery Unit (SRU).",
+        "a": "The Claus process converts toxic H2S from sour gas treaters into benign elemental sulfur. In the thermal reaction furnace, one-third of the H2S is burned with air to produce SO2 (H2S + 1.5 O2 -> SO2 + H2O). The mixture passes through catalytic reactors filled with activated alumina or titania catalysts where H2S and SO2 react via the Claus reaction: 2 H2S + SO2 <-> 3 S + 2 H2O."
+      },
+      {
+        "q": "How is excess air controlled and optimized in refinery fired heaters?",
+        "a": "Furnace efficiency depends on maintaining optimum excess oxygen (typically 2-3% O2 in flue gas for fuel gas, 3-4% for fuel oil). Flue gas analyzers (zirconia O2 probes and CO detectors) continuously monitor combustion products. Air register dampers and stack draft dampers are modulated to supply sufficient air to eliminate CO smoke without wasting heat heating excess nitrogen."
+      },
+      {
+        "q": "What is the purpose of crude desalting and what problems occur if desalting fails?",
+        "a": "Desalters wash inorganic salts (NaCl, MgCl2, CaCl2) from crude using 3-8% fresh water under high electrostatic fields. If desalting fails, MgCl2 hydrolyzes in the atmospheric furnace to form gaseous HCl, which condenses in overhead cooler tubes as dilute hydrochloric acid, causing catastrophic pinhole corrosion, ammonium chloride salt deposition, and severe furnace tube fouling."
+      },
+      {
+        "q": "Explain the difference between McCabe-Thiele and Ponchon-Savarit methods in distillation design.",
+        "a": "The McCabe-Thiele method assumes constant molar overflow (CMO) throughout each column section, relying only on vapor-liquid equilibrium data on an x-y diagram. The Ponchon-Savarit method makes no CMO assumption; it incorporates both enthalpy-concentration and equilibrium relationships, accounting for varying latent heats, sensible heat changes, and heats of mixing across column stages."
+      }
+    ],
+    "hr": [
+      {
+        "q": "Why do you want to join BPCL specifically among Indian oil PSUs?",
+        "how": "Highlight BPCL's reputation for operational efficiency, high refinery Nelson Complexity indexes at Kochi and Mumbai, pioneering retail initiatives, and major renewable energy / green hydrogen investments under Project Aspire."
+      },
+      {
+        "q": "Are you comfortable working in continuous rotating night shifts at a refinery complex?",
+        "how": "State clearly and unequivocally your readiness for shift operations. Explain that frontline shift experience is the best foundation for mastering plant operations, emergency handling, and operational discipline."
+      },
+      {
+        "q": "Describe a situation during your college or internship where you resolved a team conflict.",
+        "how": "Use the STAR format: detail the nature of the disagreement, your objective approach in evaluating engineering alternatives, and how you unified the team around shared goals and timelines."
+      },
+      {
+        "q": "How would you respond if an experienced plant operator asked you to bypass a safety interlock to save production time?",
+        "how": "Emphasize absolute adherence to safety standards. State politely yet firmly that bypassing interlocks without authorized Management of Change (MOC) and risk assessment violates safety policies, and that you would invoke Stop-Work Authority."
+      },
+      {
+        "q": "Tell me about a time you handled significant academic or project stress.",
+        "how": "Describe a real situation with concurrent deadlines, your method of breaking tasks into milestone checklists, prioritizing critical deliverables, and maintaining composure and focus."
+      },
+      {
+        "q": "Where do you see yourself contributing in BPCL over the next 5 to 7 years?",
+        "how": "Express a goal to master refinery unit operations as a shift in-charge, contribute to energy conservation or debottlenecking revamps, and grow into a technical services or unit commissioning specialist."
+      }
+    ],
+    "present": [
+      "Exhibit deep humility, high respect for industrial safety, and proud dedication to national PSU service.",
+      "Explain chemical engineering concepts with clean equations, correct SI units, and clear physical logic.",
+      "Demonstrate readiness for rotating shift operations, remote postings, and plant turnaround challenges.",
+      "Structure answers concisely without rambling; acknowledge honestly if you do not know a specific empirical number.",
+      "Maintain an alert, disciplined, and courteous posture throughout the interview panel."
+    ],
+    "tips": [
+      "Revise GATE chemical engineering syllabus thoroughly: thermodynamics, mass transfer, reaction kinetics, and fluid mechanics.",
+      "Understand petroleum refining fundamentals: CDU/VDU flowcharts, octane number, cetane number, and FCC/Hydrocracker roles.",
+      "Be prepared to draw pump characteristic curves and explain NPSH calculation steps.",
+      "Familiarize yourself with BPCL's major refinery locations (Mumbai, Kochi, Bina) and recent clean fuel / petrochemical expansion projects.",
+      "Review your final year chemical engineering design project thoroughly, especially equipment sizing and mass balances."
+    ]
+  },
+  "sources": [
+    "https://www.bharatpetroleum.in/careers.aspx",
+    "https://www.ambitionbox.com/interviews/bharat-petroleum-corporation-questions",
+    "https://www.geeksforgeeks.org/bpcl-interview-experience/"
+  ]
+}
