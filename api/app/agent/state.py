@@ -19,7 +19,7 @@ class SolveState(BaseModel):
     question: str
     upload_id: str | None = None
     status: Literal["awaiting_confirm", "awaiting_result", "done"] = "awaiting_result"
-    kind: Literal["calc", "concept"] | None = None
+    kind: Literal["calc", "concept", "off_topic"] | None = None
     messages: list[dict[str, Any]] = Field(default_factory=list)
     steps_used: int = 0  # counted tool steps (max 4)
     started_at: float | None = None  # server clock at the first next_action
@@ -49,7 +49,9 @@ class StateStore(Protocol):
     def lock(self, solve_id: str) -> Any: ...  # async context manager
     async def get(self, solve_id: str) -> SolveState | None: ...
     async def save(self, state: SolveState) -> None: ...
-    async def cached(self, question: str) -> dict[str, Any] | None: ...  # last_step of a clean done solve
+    async def cached(
+        self, question: str
+    ) -> dict[str, Any] | None: ...  # last_step of a clean done solve
 
 
 class InMemoryStore:
@@ -72,7 +74,9 @@ class InMemoryStore:
     async def cached(self, question: str) -> dict[str, Any] | None:
         for s in reversed(list(self.states.values())):  # newest saved last
             if (
-                s.status == "done" and s.last_step and norm(s.question) == norm(question)
+                s.status == "done"
+                and s.last_step
+                and norm(s.question) == norm(question)
                 and not {"limit_reached", "cached", "spend_cap"} & set(s.flags)
             ):
                 return dict(s.last_step)

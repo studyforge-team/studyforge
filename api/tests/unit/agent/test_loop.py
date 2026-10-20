@@ -94,7 +94,9 @@ async def solve(
 
 
 def calc(*after: tuple[str, Any]) -> FakeLLM:
-    return FakeLLM(("chat_json", {"kind": "calc"}), *after)
+    return FakeLLM(
+        ("chat_json", {"study": True, "live": False, "kind": "calc"}), *after
+    )
 
 
 def test_calc_happy_path() -> None:
@@ -124,10 +126,34 @@ def test_fenced_code_is_the_fallback() -> None:
 
 
 def test_concept_question_has_no_code_and_no_numbers() -> None:
-    llm = FakeLLM(("chat_json", {"kind": "concept"}), ("chat", res("A CSTR is ...")))
+    llm = FakeLLM(
+        ("chat_json", {"study": True, "live": False, "kind": "concept"}),
+        ("chat", res("A CSTR is ...")),
+    )
     final = run(solve(deps(llm)))[0]
     assert final["type"] == "final"
     assert (final["confidence"], final["numbers"]) == ("medium", {})
+
+
+@pytest.mark.parametrize("study,live", [(False, False), (True, True), (False, True)])
+def test_off_topic_is_refused_with_one_llm_call(study: bool, live: bool) -> None:
+    llm = FakeLLM(("chat_json", {"study": study, "live": live, "kind": "calc"}))
+    final = run(solve(deps(llm, tools=Notes())))[0]
+    assert final["type"] == "final"
+    assert final["answer_md"] == loop.OFF_TOPIC_REPLY
+    assert (final["confidence"], final["numbers"], final["sources"]) == (
+        "medium",
+        {},
+        [],
+    )
+    assert len(llm.calls) == 1 and llm.calls[0][1] == "router"
+
+
+def test_classify_prompt_pins_calc_default_and_flags() -> None:
+    from app.agent import prompts
+
+    assert 'When unsure, reply "calc"' in prompts.CLASSIFY
+    assert "- study:" in prompts.CLASSIFY and "- live:" in prompts.CLASSIFY
 
 
 def test_upload_needs_confirmation_first() -> None:
