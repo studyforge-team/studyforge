@@ -137,3 +137,32 @@ Paginated history of solved questions for the authenticated user (like a chat li
   - `next`: ISO timestamp of the last item to pass as `before` on the next page, or `null` if no more pages.
   - **Security**: Never returns `state`, full figures or raw answers in the list.
 
+
+
+## 11. Practice attempts (FO1): additive, one new endpoint
+
+Saves a self-marked practice result (such as a company OA attempt) into the user's attempt history in `app.quiz_attempts`. Results appear in `GET /api/v1/quiz-attempts` like regular quizzes.
+
+- **Endpoint**: `POST /api/v1/practice-attempts`
+- **Request Body**:
+  ```json
+  {
+    "topic": "OA: ExxonMobil",
+    "score": 12.0,
+    "total": 15,
+    "marks_per_q": 1
+  }
+  ```
+  - `topic`: non-empty string, max length 80.
+  - `score`: float >= 0. Clamped to `total` on save if higher.
+  - `total`: integer between 1 and 50 inclusive.
+  - `marks_per_q`: literal 1, 2, or 4 (default 1).
+- **Response 200**:
+  ```json
+  {
+    "ok": true
+  }
+  ```
+- **Error Responses**:
+  - `422 Unprocessable Entity`: returned if input validation fails (e.g. `total=0`, missing required fields, or unrecognized extra fields).
+  - `503 Service Unavailable`: returned when the database engine dependency is unavailable or `DATABASE_URL` is not set.

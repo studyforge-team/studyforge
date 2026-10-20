@@ -17,6 +17,7 @@ import app.routers.quiz_new as quiz_new_mod
 import app.routers.quizzes as quizzes_mod
 import app.routers.solve as solve_mod
 import app.routers.uploads as uploads_mod
+from app.routers import practice
 
 app = FastAPI(title="StudyForge API", version="0.9.0")
 
@@ -37,6 +38,7 @@ app.include_router(quizzes_mod.router)
 app.include_router(quiz_new_mod.router)
 app.include_router(uploads_mod.router)
 app.include_router(progress_mod.router)
+app.include_router(practice.router)  # FO1; shares checkins.get_engine, solve.current_user
 app.include_router(history_mod.router)
 app.include_router(me_mod.router)
 app.include_router(prep_mod.router)

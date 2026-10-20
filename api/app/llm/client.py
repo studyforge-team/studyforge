@@ -80,7 +80,7 @@ class LLMClient:
             base_url=registry.base_url,
             api_key=key or "unset",
             max_retries=0,
-            http_client=http_client,
+            http_client=http_client,  # type: ignore[arg-type]
         )
         self.recorder = recorder
         self.budget = budget or NoBudgetGuard()

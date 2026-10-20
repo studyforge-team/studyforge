@@ -7,7 +7,7 @@ const BASE = import.meta.env.VITE_API_URL as string | undefined
 async function post<T>(path: string, body: unknown | FormData, onSlow?: () => void): Promise<T> {
   const t = setTimeout(() => onSlow?.(), 3000) // Render free tier sleeps
   try {
-    const r = await fetch(`${BASE}/api/v1${path}`, {
+    const r = await fetch(`${BASE || ''}/api/v1${path}`, {
       method: 'POST',
       // FormData: the browser sets the multipart Content-Type (with boundary) itself
       ...(body instanceof FormData ? { body } : { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
@@ -22,7 +22,7 @@ async function post<T>(path: string, body: unknown | FormData, onSlow?: () => vo
 async function get<T>(path: string, onSlow?: () => void): Promise<T> {
   const t = setTimeout(() => onSlow?.(), 3000)
   try {
-    const r = await fetch(`${BASE}/api/v1${path}`)
+    const r = await fetch(`${BASE || ''}/api/v1${path}`)
     if (!r.ok) throw new Error(`Server error (HTTP ${r.status})`)
     return (await r.json()) as T
   } finally {
@@ -72,8 +72,14 @@ export function saveAnswers(
 
 // T4: per-topic quiz attempt history
 export async function getQuizAttempts(): Promise<QuizAttemptsResponse> {
-  if (!BASE) return { topics: [] }
-  return get<QuizAttemptsResponse>('/quiz-attempts')
+  if (BASE) return get<QuizAttemptsResponse>('/quiz-attempts')
+  try {
+    const r = await fetch('/api/v1/quiz-attempts')
+    if (r.ok) return (await r.json()) as QuizAttemptsResponse
+  } catch {
+    // In demo mode when unmocked, return empty
+  }
+  return { topics: [] }
 }
 
 // T5: paginated solve history
@@ -88,4 +94,14 @@ export async function getSolves(
   if (q) params.set('q', q)
   const qs = params.toString() ? `?${params.toString()}` : ''
   return get<SolvesResponse>(`/solves${qs}`, onSlow)
+}
+
+// FO1: save a self-marked company OA result; demo mode saves nothing unless intercepted in tests
+export const savePractice = (topic: string, score: number, total: number, marks_per_q = 1): Promise<unknown> => {
+  if (BASE) return post('/practice-attempts', { topic, score, total, marks_per_q })
+  return fetch('/api/v1/practice-attempts', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ topic, score, total, marks_per_q }),
+  }).catch(() => {})
 }
