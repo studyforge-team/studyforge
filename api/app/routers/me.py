@@ -18,6 +18,7 @@ from app.db import (
     note_chunks,
     notices,
     push_subscriptions,
+    quiz_attempts,
     quizzes,
     shared_engine,
     solves,
@@ -55,7 +56,7 @@ FilesDep = Annotated[Storage | None, Depends(get_storage_opt)]
 async def export_me(user: UserDep, engine: EngineDep, files: FilesDep) -> JSONResponse:
     out: dict[str, Any] = {"user_id": user, "exported_at": datetime.now(UTC)}
     async with engine.connect() as conn:
-        for t in (solves, quizzes, llm_calls, notices, jobs, topic_results, note_chunks, push_subscriptions):  # heartbeats has no user_id
+        for t in (solves, quizzes, llm_calls, notices, jobs, topic_results, note_chunks, push_subscriptions, quiz_attempts):  # heartbeats has no user_id
             rows = (await conn.execute(select(*[c for c in t.c if c.name != "tsv"]).where(t.c.user_id == user))).mappings().all()
             out[t.name] = [dict(r) for r in rows]
     try:  # names and sizes only: the file bytes are not in the JSON
@@ -81,6 +82,7 @@ async def delete_me(user: UserDep, engine: EngineDep, http: HttpDep, files: File
         await conn.execute(topic_results.delete().where(topic_results.c.user_id == user))
         await conn.execute(note_chunks.delete().where(note_chunks.c.user_id == user))
         await conn.execute(push_subscriptions.delete().where(push_subscriptions.c.user_id == user))  # D1b devices
+        await conn.execute(quiz_attempts.delete().where(quiz_attempts.c.user_id == user))  # T4
         # Anonymise, don't delete: the T7 spend caps sum llm_calls.cost_usd, deleting would
         # let spend accounting drop.
         await conn.execute(update(llm_calls).where(llm_calls.c.user_id == user).values(user_id=None, ip=None))
