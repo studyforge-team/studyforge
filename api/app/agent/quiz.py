@@ -117,8 +117,25 @@ class SubjectiveItem(_Item):
         return v
 
 
+class BlankItem(_Item):
+    """Fill in the blank: a word or short phrase. Numerical answers use NumericalItem instead."""
+
+    type: Literal["blank"]
+    answers: list[Annotated[str, Field(min_length=1, max_length=60)]] = Field(
+        min_length=1, max_length=5
+    )
+    explanation: str
+
+    @field_validator("stem")
+    @classmethod
+    def _stem_has_blank(cls, v: str) -> str:
+        if "____" not in v:
+            raise ValueError('stem must contain a blank "____"')
+        return v
+
+
 QuizItem = Annotated[
-    MCQItem | NumericalItem | SubjectiveItem, Field(discriminator="type")
+    MCQItem | NumericalItem | SubjectiveItem | BlankItem, Field(discriminator="type")
 ]
 
 

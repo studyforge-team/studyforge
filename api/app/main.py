@@ -20,6 +20,7 @@ from app.routers import (
     pdf,
     prep,
     push,
+    quiz_new,
     quizzes,
     solve,
     uploads,
@@ -97,6 +98,7 @@ app.dependency_overrides[checkins.get_engine] = db.shared_engine
 app.include_router(checkins.router)
 app.include_router(dashboard.router)
 app.include_router(quizzes.router)  # shares checkins.get_engine
+app.include_router(quiz_new.router)  # T1 POST /quizzes; shares prep.get_llm, uploads.get_storage_opt
 app.include_router(notes.router)  # shares checkins.get_engine, solve.current_user, uploads.get_storage
 app.dependency_overrides[prep.get_llm] = wiring.prep_llm
 app.include_router(prep.router)  # D5; shares checkins.get_engine, solve.current_user
