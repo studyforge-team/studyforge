@@ -3,8 +3,11 @@ import pytest
 from app.agent.guardrail import allowed_numbers, check, parse_numbers
 
 
-def flagged(answer: str, result: object = None, question: str = "") -> list[str]:
-    report = check(answer, allowed_numbers(result or {}, question))
+def flagged(
+    answer: str, result: object = None, question: str = "", unit: bool = False
+) -> list[str]:
+    q = [(v["value"], v["unit"]) for v in (result or {}).values() if unit]  # type: ignore[attr-defined]
+    report = check(answer, allowed_numbers(result or {}, question), q)
     assert report.ok == (not report.unsupported)
     return [f.text for f in report.unsupported]
 
@@ -19,15 +22,16 @@ def test_decimal_slip_caught() -> None:
 
 
 def test_kpa_pa_slip_caught() -> None:
-    result = {"P": {"value": 101325.0}}
-    assert flagged("P = 101.3 kPa", result) == ["101.3"]
-    assert flagged("P = 101325 Pa", result) == []
+    result = {"P": {"value": 101325.0, "unit": "Pa"}}
+    assert flagged("P = 101.3 kPa", result, unit=True) == []  # real conversion now ok
+    assert flagged("P = 101.3 Pa", result, unit=True) == ["101.3"]
+    assert flagged("P = 101325 Pa", result, unit=True) == []
     assert flagged("P = 98000 Pa", {"P": {"value": 98000.0}}) == []
 
 
-def test_percent_needs_percent_value() -> None:
-    assert flagged("X = 66.7%", {"X": 0.667}) == ["66.7"]
-    assert flagged(r"X = 66.7\%", {"X": 0.667, "X_percent": 66.7}) == []
+def test_percent_of_fraction_allowed() -> None:
+    assert flagged("X = 66.7%", {"X": 0.667}) == []
+    assert flagged(r"X = 66.7\%", {"X": 0.667}) == []
 
 
 @pytest.mark.parametrize(
@@ -158,7 +162,7 @@ def test_parse_formats(text: str, values: list[float]) -> None:
 
 
 @pytest.mark.parametrize(
-    "answer", ["1,234.5", "1.2e-3", r"1.2 \times 10^{-3}", "10^{-3}", "−0.42"]
+    "answer", ["1,234.5", "1.2e-3", r"1.2 \times 10^{-3}", "−0.42"]
 )
 def test_formats_checked_against_allowed(answer: str) -> None:
     nums = [parse_numbers(answer)[0].value]

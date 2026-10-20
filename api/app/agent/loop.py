@@ -84,7 +84,24 @@ def b8_guard(answer_md: str, result: Any, question: str) -> list[str]:
     allowed += [
         f.value for a in _assumptions(result) for f in guardrail.parse_numbers(a)
     ]
-    return [f.text for f in guardrail.check(answer_md, allowed).unsupported]
+    allowed += guardrail.percents(question)
+    return [
+        f.text for f in guardrail.check(answer_md, allowed, _quantities(result)).unsupported
+    ]
+
+
+def _quantities(result: Any) -> list[tuple[float, str]]:
+    if not isinstance(result, dict):
+        return []
+    nodes = [result.get("answer"), result.get("check"), *(result.get("values") or {}).values()]
+    return [
+        (float(n["value"]), n["unit"])
+        for n in nodes
+        if isinstance(n, dict)
+        and isinstance(n.get("value"), int | float)
+        and not isinstance(n["value"], bool)
+        and isinstance(n.get("unit"), str)
+    ]
 
 
 def _assumptions(result: Any) -> list[str]:
@@ -420,7 +437,7 @@ async def _after_run(state: SolveState, body: ResultBody, deps: Deps) -> Step:
         if (
             isinstance(value, int | float)
             and old is not None
-            and abs(value - old) <= AGREE_REL * max(abs(value), abs(old), 1e-12)
+            and abs(value - old) <= AGREE_REL * max(abs(value), abs(old))
         ):  # its answer is the first answer: only its own check is bad
             return await _settle_cross_check(state, run.result, deps)
         state.cross_check = "disagreed"
@@ -449,7 +466,7 @@ async def _settle_cross_check(state: SolveState, result: Any, deps: Deps) -> Ste
     new = float(result["answer"]["value"])
     old = state.first_answer
     # no earlier valid answer to compare with: the cross-check's own two methods agreed
-    agree = old is None or abs(new - old) <= AGREE_REL * max(abs(new), abs(old), 1e-12)
+    agree = old is None or abs(new - old) <= AGREE_REL * max(abs(new), abs(old))
     state.cross_check = "agreed" if agree else "disagreed"
     if not agree:
         state.flags.append("cross_check_disagreed")

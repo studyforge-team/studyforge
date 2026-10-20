@@ -21,7 +21,6 @@ MAX_RESULT_JSON = 16 * 1024 + 1024
 MAX_ERROR = 2000
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 AGREE_REL = 5e-3  # the two methods must agree to 0.5 % (= guardrail REL_TOL)
-AGREE_ABS = 1e-12
 
 
 @dataclass
@@ -101,7 +100,7 @@ def verify(result: Any) -> Verdict:
     if answer[1] != check[1]:
         return Verdict(False, f"answer unit '{answer[1]}' != check unit '{check[1]}'")
     a, c = answer[0], check[0]
-    if abs(a - c) > max(AGREE_REL * max(abs(a), abs(c)), AGREE_ABS):
+    if abs(a - c) > AGREE_REL * max(abs(a), abs(c)):
         return Verdict(
             False, f"methods disagree: answer {a!r} vs check {c!r}", disagree=True
         )

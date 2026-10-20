@@ -7,7 +7,7 @@ from typing import Any
 import pytest
 from pydantic import BaseModel
 
-from app.agent import guardrail, loop
+from app.agent import loop
 from app.agent.loop import Deps
 from app.agent.state import InMemoryStore, SolveNotFound
 from app.agent.steps import ResultBody
@@ -475,17 +475,17 @@ def test_b_cross_check_failure_has_its_own_message() -> None:
 
 
 def flagged_tokens(answer: str, result: dict[str, Any]) -> list[str]:
-    return [
-        f.text
-        for f in guardrail.check(
-            answer, guardrail.allowed_numbers(result, "")
-        ).unsupported
-    ]
+    return loop.b8_guard(answer, {"values": result}, "")
 
 
 def test_c_prefixed_unit_accepted_bare_scale_shift_flagged() -> None:
-    r = {"M": {"value": 15000.0}, "L": {"value": 0.05}, "Re": {"value": 1.2}}
-    assert flagged_tokens("M = 15 kN m and L = 50 mm", r) == []
+    r = {
+        "M": {"value": 15000.0},
+        "L": {"value": 0.05, "unit": "m"},
+        "Re": {"value": 1.2},
+    }
+    assert flagged_tokens("L = 50 mm", r) == []  # real m -> mm conversion
+    assert flagged_tokens("M = 15 kN m", r) == ["15"]  # no unit on M: no blanket shift
     assert flagged_tokens("Re = 1200", r) == ["1200"]
 
 
