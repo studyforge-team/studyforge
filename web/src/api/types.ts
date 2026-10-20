@@ -29,9 +29,16 @@ type ItemBase = { topic: string; source: string | null; tags: string[]; stem: st
 export type MCQItem = ItemBase & { type: 'mcq'; options: string[]; correct_index: number; misconceptions: Record<string, string>; explanation: string } // keys "0".."3"
 export type NumericalItem = ItemBase & { type: 'numerical'; key_code: string; unit: string; tolerance_rel: number; worked_solution: string }
 export type SubjectiveItem = ItemBase & { type: 'subjective'; rubric: string[] }
-export type QuizItem = MCQItem | NumericalItem | SubjectiveItem
+export type BlankItem = ItemBase & { type: 'blank'; answers: string[]; explanation: string } // stem contains ____
+export type QuizItem = MCQItem | NumericalItem | SubjectiveItem | BlankItem
 export type CheckinResult = { done: boolean; follow_up_at: string | null }
-export type Quiz = { id?: string; title: string; items: QuizItem[] }
+// topic..suggested_minutes: only POST /quizzes (T1) returns them; prep packs and the demo quiz do not.
+export type Quiz = { id?: string; title: string; items: QuizItem[]; topic?: string; marks_per_q?: number; total_marks?: number; suggested_minutes?: number }
+export type QuizKinds = 'mcq' | 'blank' | 'mixed'
+export type QuizRequest = { topic: string; n_items?: number; kinds?: QuizKinds; marks_per_q?: 1 | 2 | 4; upload_id?: string }
+// GET /api/v1/quiz-attempts (T4): attempts oldest first, topics by latest attempt.
+export type QuizAttempt = { quiz_id: string; score: number; total: number; marks_per_q: number; created_at: string }
+export type QuizAttempts = { topics: { topic: string; attempts: QuizAttempt[] }[] }
 
 // Notices (D1), docs/api-contract.md section 4: pasted or shared text, stored as given.
 export type NoticeIn = { text: string; source: 'paste' | 'share'; title?: string; url?: string }
@@ -43,3 +50,6 @@ export type PrepPack = { task: { title: string; deadline_utc: string }; quiz_id:
 
 // PY/TE: POST /pdf/read. text: one entry per page (first 200 pages); a scanned PDF has words 0.
 export type PdfRead = { pages: number; words: number; text: string[] }
+
+// T5: GET /api/v1/solves, docs/api-contract.md section 8. The list never carries answers; open one with GET /solve/{id}.
+export type SolveItem = { id: string; question: string; status: string; updated_at: string }

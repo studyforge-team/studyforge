@@ -1,5 +1,5 @@
 // Scripted stand-in for the backend, used when VITE_API_URL is unset. Same two functions as client.ts.
-import type { CheckinResult, Dashboard, PrepPack, Notice, NoticeIn, Quiz, ResultBody, SolveStart, Step, UploadRead } from './types'
+import type { CheckinResult, Dashboard, PrepPack, Notice, NoticeIn, Quiz, QuizRequest, ResultBody, SolveStart, Step, UploadRead } from './types'
 import quizMock from './quizMock.json'
 
 const wait = () => new Promise((r) => setTimeout(r, 300))
@@ -111,8 +111,13 @@ export async function answerCheckin(correct: boolean): Promise<CheckinResult> {
   return { done: correct, follow_up_at: correct ? null : new Date(Date.now() + 24 * 3_600_000).toISOString() }
 }
 
-export async function getQuiz(): Promise<Quiz> {
+export async function getQuiz(req?: QuizRequest): Promise<Quiz> {
   await wait()
+  // The demo quiz ignores the options, except that the fill-in-the-blank kind shows one blank item so that type can be tried.
+  if (req?.kinds === 'blank') {
+    const item = { type: 'blank' as const, topic: req.topic, source: null, tags: [], stem: 'In a steady-state CSTR the outlet concentration equals the ____ concentration.', answers: ['reactor', 'tank'], explanation: 'A CSTR is perfectly mixed, so the outlet stream has the reactor concentration.' }
+    return { title: 'Demo fill in the blanks', items: [item] }
+  }
   return quizMock as unknown as Quiz // JSON widens the `type` literals
 }
 

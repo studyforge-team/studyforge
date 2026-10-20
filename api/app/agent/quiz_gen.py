@@ -66,6 +66,24 @@ Numerical (type "numerical"):
 """
 
 
+KINDS_RULES = {
+    "mcq": "Write only multiple choice (mcq) items.",
+    "blank": (
+        'Write only fill-in-the-blank items (type "blank"): "stem" contains the gap as "____", '
+        '"answers" lists 1 to 5 accepted words or short phrases (each at most 60 characters), '
+        'and "explanation" teaches the concept. The blank is a word or short phrase, never a '
+        'number: when the answer is a number, write a numerical item instead.'
+    ),
+    "mixed": (
+        'Write about half multiple choice (mcq) and half fill-in-the-blank (type "blank") items. '
+        'A blank item has "____" in "stem", "answers" (1 to 5 accepted words or short phrases, '
+        'each at most 60 characters) and "explanation". The blank is never a number: when the '
+        "answer is a number, write a numerical item instead."
+    ),
+}
+DEFAULT_RULE = 'Do not use the type "blank".'
+
+
 class _Loose(BaseModel):
     """Whole-reply shape; each item is validated on its own so one bad item cannot sink a quiz."""
 
@@ -129,9 +147,14 @@ def _tidy(items: Sequence[QuizItem], n: int) -> list[QuizItem]:
 
 
 def _messages(
-    topic: str, n: int, difficulty: str, notes: Sequence[str]
+    topic: str,
+    n: int,
+    difficulty: str,
+    notes: Sequence[str],
+    kinds: Literal["mcq", "blank", "mixed"] | None = None,
 ) -> list[dict[str, str]]:
-    system = f"{QUIZ_PROMPT}\nJSON schema:\n{json.dumps(quiz_json_schema())}"
+    rule = DEFAULT_RULE if kinds is None else KINDS_RULES[kinds]
+    system = f"{QUIZ_PROMPT}\n{rule}\nJSON schema:\n{json.dumps(quiz_json_schema())}"
     quoted = [note[:MAX_NOTE_CHARS] for note in list(notes)[:MAX_NOTES]]
     user = (
         f"topic: {topic}\nn_items: {n}\ndifficulty: {difficulty}\n"
@@ -148,9 +171,10 @@ async def generate_quiz(
     notes: Sequence[str] = (),
     difficulty: Literal["easy", "medium", "hard"] = "medium",
     deadline: float | None = None,
+    kinds: Literal["mcq", "blank", "mixed"] | None = None,
 ) -> Quiz:
     n = max(1, min(MAX_ITEMS, n_items))
-    messages = _messages(topic, n, difficulty, notes)
+    messages = _messages(topic, n, difficulty, notes, kinds)
     need = min(3, n)
     items: list[QuizItem] = []
     title = ""
