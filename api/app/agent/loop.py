@@ -43,7 +43,7 @@ from app.agent.tools import (
     hits_as_data,
     parse_args,
 )
-from app.agent.verify import clean, flat_numbers, verify
+from app.agent.verify import AGREE_REL, clean, flat_numbers, verify
 from app.llm.client import LLMResult, Message
 from app.llm.errors import BudgetExceeded, LLMError
 
@@ -408,7 +408,7 @@ async def _after_run(state: SolveState, body: ResultBody, deps: Deps) -> Step:
         if (
             isinstance(value, int | float)
             and old is not None
-            and abs(value - old) <= 1e-3 * max(abs(value), abs(old), 1e-12)
+            and abs(value - old) <= AGREE_REL * max(abs(value), abs(old), 1e-12)
         ):  # its answer is the first answer: only its own check is bad
             return await _settle_cross_check(state, run.result, deps)
         state.cross_check = "disagreed"
@@ -437,7 +437,7 @@ async def _settle_cross_check(state: SolveState, result: Any, deps: Deps) -> Ste
     new = float(result["answer"]["value"])
     old = state.first_answer
     # no earlier valid answer to compare with: the cross-check's own two methods agreed
-    agree = old is None or abs(new - old) <= 1e-3 * max(abs(new), abs(old), 1e-12)
+    agree = old is None or abs(new - old) <= AGREE_REL * max(abs(new), abs(old), 1e-12)
     state.cross_check = "agreed" if agree else "disagreed"
     if not agree:
         state.flags.append("cross_check_disagreed")
