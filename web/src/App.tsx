@@ -5,6 +5,8 @@ import Solve from './pages/Solve'
 
 const SelfTest = lazy(() => import('./SelfTest'))
 const History = lazy(() => import('./pages/History'))
+const OA = lazy(() => import('./pages/OA'))
+const InterviewBank = lazy(() => import('./pages/InterviewBank'))
 
 export default function App() {
   const [hash, setHash] = useState(location.hash) // ponytail: hash routing, no router library
@@ -22,7 +24,15 @@ export default function App() {
   }
   return (
     <Shell hash={hash}>
-      {hash.startsWith('#history') ? (
+      {hash.startsWith('#oa') ? (
+        <Suspense fallback={null}>
+          <OA />
+        </Suspense>
+      ) : hash.startsWith('#interview') ? (
+        <Suspense fallback={null}>
+          <InterviewBank />
+        </Suspense>
+      ) : hash.startsWith('#history') ? (
         <Suspense fallback={null}>
           <History />
         </Suspense>

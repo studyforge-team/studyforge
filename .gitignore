@@ -30,3 +30,4 @@ desktop.ini
 .vscode/
 *.swp
 web/test-results/
+web/.playwright-results/
