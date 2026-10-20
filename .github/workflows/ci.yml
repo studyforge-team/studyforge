@@ -61,6 +61,8 @@ jobs:
         working-directory: web
       - run: node tests/check-v2da.mjs
         working-directory: web
+      - run: node scripts/check-companies.mjs
+        working-directory: web
       - run: node --test tests/errors.test.ts
         working-directory: web
       - run: npx playwright install --with-deps chromium

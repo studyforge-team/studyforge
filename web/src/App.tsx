@@ -59,7 +59,7 @@ export default function App() {
         <Solve />
       ) : hash === '#quiz' ? (
         <Quiz />
-      ) : hash === '#oa' ? (
+      ) : (hash === '#oa' || hash.startsWith('#oa?')) ? (
         <OA />
       ) : hash === '#interview-bank' ? (
         <InterviewBank />
