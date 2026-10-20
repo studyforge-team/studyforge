@@ -1,5 +1,5 @@
 // Live eval of the deployed StudyForge solver (SV0). Not under web/tests: Playwright and CI never run it.
-// Usage: node web/eval/eval_live.mjs [--only id1,id2] [--out file.json]   (site: EVAL_SITE or the default below)
+// Usage: node web/eval/eval_live.mjs [--only id1,id2] [--out file.json] [--questions file.json]   (site: EVAL_SITE or the default below)
 import { chromium } from '@playwright/test'
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
@@ -11,7 +11,7 @@ const SITE = process.env.EVAL_SITE || 'https://studyforge-ten-alpha.vercel.app'
 const API = 'https://studyforge-api-s7r7.onrender.com'
 const OUT = resolve(arg('--out') || resolve(here, 'out/last_run.json'))
 const only = arg('--only')?.split(',')
-const all = JSON.parse(readFileSync(resolve(here, '../../docs/eval/sv_questions.json'), 'utf8'))
+const all = JSON.parse(readFileSync(resolve(arg('--questions') || resolve(here, '../../docs/eval/sv_questions.json')), 'utf8'))
 const qs = only ? all.filter((q) => only.includes(q.id)) : all
 if (!qs.length) throw new Error('no questions selected')
 
@@ -28,12 +28,18 @@ const near = (v, want, tol) => Number.isFinite(v) && Math.abs(Math.abs(v) - Math
 // a correct value in a 10^3-prefixed unit (L vs m^3, J vs kJ) counts; the answer's unit is in its key name
 const hasNum = (nums, want, tol) => Object.values(nums || {}).some((v) => [1, 1e3, 1e-3, 1e6, 1e-6].some((s) => near(Number(v) * s, want, tol)))
 
+// judge the final answer only: if numbers has "answer..." keys, only those count (not check/helper values)
+const hasAnswer = (nums, want, tol) => {
+  const a = Object.fromEntries(Object.entries(nums || {}).filter(([k]) => /^answer/.test(k)))
+  return hasNum(Object.keys(a).length ? a : nums, want, tol)
+}
+
 function grade(q, f) {
   const e = q.expect, md = f.answer_md || '', refused = isRefusal(f)
   if (e.refuse === true) return refused ? [true, 'refused'] : [false, 'not refused']
   if (refused) return [false, 'refused an on-topic question']
   const why = []
-  if ('value' in e && !hasNum(f.numbers, e.value, e.rel_tol)) why.push(`no number within ${e.rel_tol * 100}% of ${e.value}`)
+  if ('value' in e && !hasAnswer(f.numbers, e.value, e.rel_tol)) why.push(`no number within ${e.rel_tol * 100}% of ${e.value}`)
   if (e.must_assume && !/assum/i.test(md)) why.push('no assumption stated')
   if (e.also) {
     if (typeof e.also === 'string' ? !md.toLowerCase().includes(e.also.toLowerCase()) : !hasNum(f.numbers, e.also.value, e.rel_tol)) why.push(`missing second part ${JSON.stringify(e.also)}`)

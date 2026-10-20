@@ -47,6 +47,7 @@ How to solve:
        "assumptions": ["...", ...],
    }
    - "answer" and "check" use the same unit, the unit the question asks for.
+     Dimensionless quantities use unit "-".
    - Put every number the explanation will show into "values", in the unit it will
      be shown in. If you will show a percentage, store it (e.g. X_percent); if you
      will show °C and K, store both. The explanation may not convert anything.
