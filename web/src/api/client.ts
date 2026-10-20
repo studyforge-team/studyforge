@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase'
 import { HttpError, PlainError } from '@/lib/errors'
 import * as mock from './mock'
-import type { CheckinResult, Dashboard, Notice, NoticeIn, PdfRead, PrepPack, Quiz, QuizAttempts, QuizRequest, ResultBody, SolveStart, Step, UploadKind, UploadRead } from './types'
+import type { CheckinResult, Dashboard, Notice, NoticeIn, PdfRead, PrepPack, Quiz, QuizAttempts, QuizRequest, ResultBody, SolveItem, SolveStart, Step, UploadKind, UploadRead } from './types'
 
 const BASE = import.meta.env.VITE_API_URL as string | undefined
 
@@ -154,3 +154,14 @@ export async function readPdf(file: File, onSlow?: () => void): Promise<PdfRead>
   form.append('file', file)
   return post('/pdf/read', form, onSlow)
 }
+
+// T5: GET /solves (history list) and GET /solve/{id} (one solve's current step). No demo data: history needs an account.
+async function history<T>(path: string): Promise<T> {
+  if (!BASE) throw new PlainError('History needs sign-in')
+  const r = await fetch(`${BASE}/api/v1${path}`, { headers: await auth(), signal: AbortSignal.timeout(90_000) })
+  if (!r.ok) throw new HttpError(r.status)
+  return (await r.json()) as T
+}
+export const getSolves = (before?: string | null, q?: string): Promise<{ items: SolveItem[]; next: string | null }> =>
+  history(`/solves?${new URLSearchParams({ ...(before && { before }), ...(q && { q }) })}`)
+export const getSolveStep = async (id: string): Promise<Step> => (await history<{ step: Step }>(`/solve/${encodeURIComponent(id)}`)).step

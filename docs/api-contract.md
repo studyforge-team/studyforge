@@ -221,3 +221,24 @@ GET /api/v1/quiz-attempts
 Team note: "T4 adds `GET /api/v1/quiz-attempts` (additive) and a new table `app.quiz_attempts`
 (migration 0009). `save_answers` also stores an attempt; its response is unchanged. Shape in
 `docs/api-contract.md` section 9."
+
+## 10. History of solved questions (T5): additive, one new endpoint
+
+```
+GET /api/v1/solves?before=<ISO datetime, optional>&q=<text, optional, max 80>
+  -> 200 { items: [{ id, question, status, updated_at }],   // newest first, at most 20
+           next: string | null }                            // updated_at of the last item, or null
+```
+
+- Signed in only; the student's own solves only. Ordered by `updated_at` descending.
+- `question` is the first 200 characters. `status` is the solve's status (empty string if unknown).
+  The list never returns `state`, figures or answers; open one with the existing `GET /solve/{id}`.
+- `before`: only solves updated before this time (pass the previous page's `next`). A time without
+  a zone is read as UTC.
+- `q`: case-insensitive substring match on the question; `%` and `_` match themselves.
+- Errors (`{detail: string}`): 401 not signed in; 422 `q` over 80 characters or `before` not a time;
+  503 no database.
+
+Team note: "T5 adds `GET /api/v1/solves` (additive, nothing existing changes). It lists the
+student's past questions for the History page; tapping one uses the existing `GET /solve/{id}`.
+Shape in `docs/api-contract.md` section 10."

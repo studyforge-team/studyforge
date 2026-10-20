@@ -50,3 +50,6 @@ export type PrepPack = { task: { title: string; deadline_utc: string }; quiz_id:
 
 // PY/TE: POST /pdf/read. text: one entry per page (first 200 pages); a scanned PDF has words 0.
 export type PdfRead = { pages: number; words: number; text: string[] }
+
+// T5: GET /api/v1/solves, docs/api-contract.md section 8. The list never carries answers; open one with GET /solve/{id}.
+export type SolveItem = { id: string; question: string; status: string; updated_at: string }
