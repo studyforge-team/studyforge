@@ -1,10 +1,9 @@
-import re
+import json
+from pathlib import Path
 
 import pytest
 
-from app.agent.markup import tidy_markdown
-
-_MATH = re.compile(r"\$\$.*?\$\$|\$[^$\n]*\$", re.DOTALL)
+from app.agent.markup import _MATH, tidy_markdown
 
 # Real snippets from the live baseline (1019).
 CONCEPT = (
@@ -58,3 +57,44 @@ def test_final_answer_is_tidied() -> None:
     state = SolveState(id="s", user_id="u", question="q")
     out = _final(state, r"Rate \(k\) here.\n**Steps:** \[x = 1\]", "medium")
     assert out.answer_md == "Rate $k$ here.\n**Steps:** $$x = 1$$"
+
+
+FIXTURES = json.loads(
+    (Path(__file__).parent / "markup_fixtures.json").read_text("utf-8")
+)
+
+
+def _segs(s: str) -> list[str]:
+    return [m.group() for m in _MATH.finditer(s)]
+
+
+@pytest.mark.parametrize("name", FIXTURES["markup_answers"])
+def test_real_answers_have_no_raw_markup_outside_maths(name: str) -> None:
+    src = FIXTURES["markup_answers"][name]
+    out = tidy_markdown(src)
+    outside = _MATH.sub("", out)
+    for bad in ("\\n", "\\cdot", "\\mu", "\\times", "\\text{"):
+        assert bad not in outside
+    assert _segs(out) == _segs(src)
+
+
+def test_bare_latex_and_text_outside_maths() -> None:
+    assert (
+        tidy_markdown(r"Q = A \cdot v, (cp \cdot \mu) / k") == "Q = A · v, (cp · μ) / k"
+    )
+    assert (
+        tidy_markdown(r"**3.79\ \text{units}** \Delta T \le 5")
+        == "**3.79units** Δ T ≤ 5"
+    )
+    assert tidy_markdown(r"a.\nb and \nthe end") == "a.\nb and \nthe end"
+
+
+def test_stray_dollar_before_literal_newline_keeps_the_break_outside_maths() -> None:
+    assert tidy_markdown(r"$a$.$\nE = 1$.") == "$a$.$\nE = 1$."
+
+
+def test_commands_and_maths_left_alone() -> None:
+    keep = r"\nabla f, \nu\,x, \neq, \left( x \right), \lefty"
+    assert tidy_markdown(keep) == keep.replace(r"\nu", "ν")
+    inside = r"$x \le 3 \cdot \mu \text{ m} \nabla$ and $$a \times b\nu$$"
+    assert tidy_markdown(inside) == inside
