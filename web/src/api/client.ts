@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase'
 import { HttpError, PlainError } from '@/lib/errors'
 import * as mock from './mock'
-import type { CheckinResult, Dashboard, Notice, NoticeIn, PdfRead, PrepPack, Quiz, ResultBody, SolveItem, SolveStart, Step, UploadKind, UploadRead } from './types'
+import type { CheckinResult, Dashboard, Notice, NoticeIn, PdfRead, PrepPack, Quiz, QuizAttempts, QuizRequest, ResultBody, SolveItem, SolveStart, Step, UploadKind, UploadRead } from './types'
 
 const BASE = import.meta.env.VITE_API_URL as string | undefined
 
@@ -52,9 +52,19 @@ export async function getDashboard(): Promise<Dashboard> {
   return (await r.json()) as Dashboard
 }
 
-// POST /api/v1/quizzes {topic|upload_id} -> quiz (§3.5). Response `id` is a gap.
-export const getQuiz = (topic: string, onSlow?: () => void): Promise<Quiz> =>
-  BASE ? post('/quizzes', { topic }, onSlow) : mock.getQuiz()
+// POST /api/v1/quizzes {topic, n_items, kinds, marks_per_q, upload_id?} -> quiz (§3.5). A string is just the topic.
+export const getQuiz = (opts: string | QuizRequest, onSlow?: () => void): Promise<Quiz> => {
+  const body = typeof opts === 'string' ? { topic: opts } : opts
+  return BASE ? post('/quizzes', body, onSlow) : mock.getQuiz(body)
+}
+
+// T4: GET /quiz-attempts. Demo mode has no account, so no history. A 401 (signed out) is for the page to hide.
+export async function getQuizAttempts(): Promise<QuizAttempts> {
+  if (!BASE) return { topics: [] }
+  const r = await fetch(`${BASE}/api/v1/quiz-attempts`, { headers: await auth(), signal: AbortSignal.timeout(90_000) })
+  if (!r.ok) throw new HttpError(r.status)
+  return (await r.json()) as QuizAttempts
+}
 
 // D7: POST /checkins/{job_id}. 409 = already answered, 404 = gone (HttpError.status).
 export const answerCheckin = (jobId: string, correct: boolean): Promise<CheckinResult> =>
