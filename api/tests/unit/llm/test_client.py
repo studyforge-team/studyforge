@@ -281,3 +281,12 @@ def test_reply_without_choices_is_unavailable(registry: Registry) -> None:
     client, _ = make(registry, FakeServer().ok(body), FakeClock())
     with pytest.raises(ModelUnavailable):
         run(client.chat("solver", MSG))
+
+
+def test_router_timeout_moves_to_super_without_retry(registry: Registry) -> None:
+    server, clock = FakeServer().timeout().ok(completion("from super")), FakeClock()
+    client, _ = make(registry, server, clock)
+    res = run(client.chat("router", MSG))
+    assert res.model_id == "test/super"
+    assert [server.body(i)["model"] for i in (0, 1)] == ["test/nano", "test/super"]
+    assert len(server.requests) == 2 and clock.sleeps == []

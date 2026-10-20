@@ -196,7 +196,8 @@ class LLMClient:
         params.update(extra)
         think = spec.reasoning if reasoning is None else reasoning
         cost, attempts, last = 0.0, 0, ""
-        for model in self.registry.chain(role):
+        chain = self.registry.chain(role)
+        for model in chain:
             for retry in range(MAX_RETRIES + 1):
                 timeout = self._timeout(spec.timeout_s, deadline)
                 await self.budget.check(role, model.id)
@@ -223,8 +224,11 @@ class LLMClient:
                         break  # model not served: next in chain, no retry
                     if not _retryable(exc):
                         raise LLMRequestError(last) from exc
-                    if retry == MAX_RETRIES:
-                        break
+                    if retry == MAX_RETRIES or (
+                        isinstance(exc, openai.APITimeoutError)
+                        and model is not chain[-1]
+                    ):
+                        break  # a slow model: the next one now, not 3 more waits
                     await self._wait(retry, exc, deadline)
                     continue
                 usage = resp.usage

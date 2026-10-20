@@ -34,7 +34,7 @@ def test_chain_order_follows_config(registry: Registry) -> None:
 def test_path_from_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     src = Path(__file__).parents[4] / "config" / "models.yaml"
     path = tmp_path / "m.yaml"
-    path.write_text(src.read_text().replace("timeout_s: 20", "timeout_s: 7"))
+    path.write_text(src.read_text().replace("timeout_s: 5", "timeout_s: 7"))
     monkeypatch.setenv("STUDYFORGE_MODELS_PATH", str(path))
     assert load_registry().roles["router"].timeout_s == 7
 
