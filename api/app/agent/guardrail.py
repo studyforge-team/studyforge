@@ -110,6 +110,20 @@ def _close(a: float, b: float) -> bool:
     return abs(a - b) <= REL_TOL * b
 
 
+# SI-prefixed unit right after a number: "15 kN·m", "50 mm" (not "5 mol", "3 min";
+# no Pa: "101.3 kPa" for 101325 Pa is the unit slip test_kpa_pa_slip_caught pins)
+_PREFIXED = re.compile(r"\s*[kMGmμµn](?:mol|[NWJmgLsAVK]|Hz)")
+_SHIFTS = [10.0**e for e in (-9, -6, -3, 3, 6, 9)]
+
+
+def _fits(f: Flagged, answer_md: str, pool: Sequence[float]) -> bool:
+    if any(_close(f.value, a) for a in pool):
+        return True
+    return bool(_PREFIXED.match(answer_md, f.start + len(f.text))) and any(
+        _close(f.value, a * k) for a in pool for k in _SHIFTS
+    )
+
+
 def check(answer_md: str, allowed: Sequence[float]) -> GuardrailReport:
     """Flag every number in ``answer_md`` not within 0.5% of an allowed value."""
     pool = [*allowed, *CONSTANTS]
@@ -117,6 +131,6 @@ def check(answer_md: str, allowed: Sequence[float]) -> GuardrailReport:
         f
         for f in parse_numbers(answer_md)
         if not (f.value.is_integer() and abs(f.value) <= SMALL_INT_MAX)
-        and not any(_close(f.value, a) for a in pool)
+        and not _fits(f, answer_md, pool)
     ]
     return GuardrailReport(ok=not bad, unsupported=bad)
