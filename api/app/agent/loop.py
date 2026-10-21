@@ -421,12 +421,6 @@ async def _after_run(state: SolveState, body: ResultBody, deps: Deps) -> Step:
             }
         )
         return await _next_action(state, deps)
-    if "recheck_asked" in state.flags:  # this run is the recheck: settle it, no loops
-        if not run.error and verify(run.result).ok:
-            state.result = run.result
-        if state.result is not run.result or _same_check(run.result):
-            state.flags.append("check_repeated")  # failed or repeated: first result, medium
-        return await _explain(state, deps)
     if run.error:
         return await _next_action(state, deps, _role(state))
     verdict = verify(run.result)
@@ -434,12 +428,6 @@ async def _after_run(state: SolveState, body: ResultBody, deps: Deps) -> Step:
         if state.cross_check == "pending":
             return await _settle_cross_check(state, run.result, deps)
         state.result = run.result
-        if state.cross_check == "none" and _SOFT_FLAG not in state.flags and _same_check(run.result):
-            if state.steps_used < MAX_STEPS and deps.clock() < (state.started_at or 0) + BUDGET_S:
-                state.flags.append("recheck_asked")
-                state.messages.append({"role": "user", "content": prompts.RECHECK})
-                return await _next_action(state, deps)
-            state.flags.append("check_repeated")
         return await _explain(state, deps)
     state.verify_failures += 1
     answer = run.result.get("answer") if isinstance(run.result, dict) else None
@@ -526,11 +514,11 @@ async def _explain(state: SolveState, deps: Deps) -> Step:
         )
     if bad:
         state.flags.append("unsupported_numbers: " + ", ".join(bad))
-    if set(state.flags) - {_SOFT_FLAG, "recheck_asked", "check_repeated"}:
+    if set(state.flags) - {_SOFT_FLAG}:
         confidence: Literal["high", "medium", "low"] = "low"
     elif (
         state.cross_check == "agreed"
-        or {_SOFT_FLAG, "check_repeated"} & set(state.flags)
+        or _SOFT_FLAG in state.flags
         or _invented(state.result, state.question)
     ):
         confidence = "medium"
@@ -540,12 +528,6 @@ async def _explain(state: SolveState, deps: Deps) -> Step:
 
 
 _SOFT_FLAG = "check_disagreed"  # the first check disagreed: never high, not low
-
-
-def _same_check(result: Any) -> bool:
-    """The check is the answer's own number (verified result: both finite)."""
-    a, c = result["answer"]["value"], result["check"]["value"]
-    return abs(a - c) <= 1e-12 * max(abs(a), abs(c))
 _CROSS_CHECK_FAILED = (
     "Two different methods gave answers I couldn't reconcile, and the independent "
     "re-check didn't produce a usable result either, so I'm not giving a number I "
@@ -555,9 +537,6 @@ _CROSS_CHECK_FAILED = (
 
 async def _out_of_budget(state: SolveState, deps: Deps) -> Step:
     """Honest partial answer: no numbers that were not verified."""
-    if "recheck_asked" in state.flags and state.result is not None:
-        state.flags.append("check_repeated")  # no room left for the recheck: keep the first
-        return await _explain(state, deps)
     state.flags.append("limit_reached")
     text = (
         "I couldn't finish a verified answer within the limits for one solve "
