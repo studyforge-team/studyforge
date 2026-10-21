@@ -140,13 +140,13 @@
         "topic": "Heat transfer",
         "q": "A counter-current shell-and-tube heat exchanger cools a polymer solution from 120 C to 60 C using cooling water entering at 20 C and exiting at 40 C. What is the Logarithmic Mean Temperature Difference (LMTD)?",
         "options": [
-          "56.9 C",
+          "57.7 C",
           "40.0 C",
           "50.0 C",
           "68.2 C"
         ],
         "answer": 0,
-        "explain": "Delta T_1 = T_hot_in - T_cold_out = 120 - 40 = 80 C. Delta T_2 = T_hot_out - T_cold_in = 60 - 20 = 40 C. LMTD = (80 - 40) / ln(80/40) = 40 / ln(2) = 40 / 0.703 = 56.9 C."
+        "explain": "Delta T_1 = 120 - 40 = 80 C and Delta T_2 = 60 - 20 = 40 C. LMTD = (80 - 40) / ln(80 / 40) = 40 / 0.6931 = 57.7 C."
       },
       {
         "id": "dow-10",

@@ -54,7 +54,7 @@
         "id": "shell-3",
         "section": "Technical",
         "topic": "LNG technology",
-        "q": "On Shell's Prelude Floating LNG (FLNG) facility, what ultra-compact heat exchanger technology is utilized to handle cryogenic liquefaction duties within tight topsides weight and footprint limits?",
+        "q": "Which type of ultra-compact heat exchanger, built by photochemical etching and diffusion bonding, is favoured for cryogenic duties on offshore LNG topsides where weight and footprint are tight?",
         "options": [
           "Scraped-surface double pipe exchangers",
           "Finned air-cooled bundles with copper tubes",
@@ -278,7 +278,7 @@
         "id": "shell-19",
         "section": "Aptitude",
         "topic": "Quantitative",
-        "q": "A gas turbine operates on natural gas costing $6.00 per MMBtu. If thermal efficiency is improved, cutting fuel consumption by 15 %, what is the fuel cost per MMBtu equivalent of energy saved?",
+        "q": "A gas turbine operates on natural gas costing $6.00 per MMBtu. If thermal efficiency is improved, cutting fuel consumption by 15 %, what is the new effective fuel cost per MMBtu of useful output?",
         "options": [
           "$6.90",
           "$6.00",
@@ -412,7 +412,7 @@
           "The engineer was responsible for inspecting pipelines, calibrating sensors, and reporting safety hazards."
         ],
         "answer": 3,
-        "explain": "Option B maintains parallelism by utilizing the gerund form (-ing) consistently for all three listed duties: inspecting, calibrating, reporting."
+        "explain": "'...inspecting pipelines, calibrating sensors, and reporting safety hazards.' maintains parallelism by using the gerund form (-ing) consistently for all three listed duties."
       }
     ]
   },

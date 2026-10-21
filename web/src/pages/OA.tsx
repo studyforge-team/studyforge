@@ -121,6 +121,7 @@ function CodingOA() {
     return problems.map((p) => saved[p.id] ?? p.starter)
   })
   const [status, setStatus] = useState<Record<string, string>>(() => load().status)
+  const [fails, setFails] = useState<Record<string, string[]>>({}) // failed-test detail, this session only
   const [running, setRunning] = useState<string | null>(null) // id of the problem being run
   const alive = useRef(true)
   const latest = useRef(codes) // the code as it is now, to spot edits made during a run
@@ -167,12 +168,15 @@ function CodingOA() {
       let passed = 0
       let errors = 0
       let firstError = ''
+      const failed: string[] = []
+      const show = (v: unknown) => JSON.stringify(v) ?? String(v)
       for (const [i, test] of target.tests.entries()) {
         if (!alive.current) return
         const response = await run(`${source}\nresult = ${test.input}`, { mode: 'solve' })
         if (!response.ok) {
           errors += 1
           firstError ||= `test ${i + 1}: ${shortError(response.error)}`
+          failed.push(`${test.input} -> error: ${shortError(response.error)} (expected ${show(test.expected)})`)
           if (response.error === 'timeout' || response.error === 'sandbox failed to start') {
             errors += target.tests.length - i - 1 // an infinite loop or a dead sandbox fails the rest too
             break
@@ -183,6 +187,7 @@ function CodingOA() {
           ? sameValue(sorted(response.result), sorted(test.expected))
           : sameValue(response.result, test.expected)
         if (ok) passed += 1
+        else failed.push(`${test.input} -> expected ${show(test.expected)}, got ${show(response.result)}`)
       }
       if (!alive.current) return
       if (latest.current[index] !== ranCode) {
@@ -190,6 +195,7 @@ function CodingOA() {
         return
       }
       const total = target.tests.length
+      setFails((old) => ({ ...old, [target.id]: failed }))
       setStatus((old) => ({
         ...old,
         [target.id]:
@@ -276,6 +282,11 @@ function CodingOA() {
               ? 'Another problem is still running its tests…'
               : (status[problem.id] ?? 'No submission yet.')}
           </p>
+          {status[problem.id] && fails[problem.id]?.length ? (
+            <ul className="w-full space-y-1 font-mono text-xs text-destructive">
+              {fails[problem.id].map((f, i) => <li key={i} className="break-all">{f}</li>)}
+            </ul>
+          ) : null}
         </div>
       </section>
 

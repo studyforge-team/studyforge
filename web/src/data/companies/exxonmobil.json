@@ -84,13 +84,13 @@
         "topic": "Heat transfer",
         "q": "In a counter-current heat exchanger, hot oil enters at 140 C and leaves at 80 C, while cooling water enters at 20 C and leaves at 50 C. What is the Log Mean Temperature Difference (LMTD)?",
         "options": [
-          "69.3 C",
+          "74.0 C",
           "75.0 C",
           "82.4 C",
           "90.0 C"
         ],
         "answer": 0,
-        "explain": "Delta T_1 = 140 - 50 = 90 C, Delta T_2 = 80 - 20 = 60 C. LMTD = (90 - 60) / ln(90 / 60) = 30 / ln(1.5) = 30 / 0.405465 = 73.99 C -> rounded to 74 C or 69.3 depending on terminal: Delta T1 = 140-50=90, Delta T2 = 80-20=60. LMTD = (90-60)/ln(1.5) = 30 / 0.4055 = 73.98 C. Let us use Delta T1 = 100, Delta T2 = 50 -> (100-50)/ln(2) = 50/0.6931 = 72.1 C. Here: (90-60)/ln(1.5) = 74.0 C."
+        "explain": "Delta T_1 = 140 - 50 = 90 C (hot inlet minus cold outlet) and Delta T_2 = 80 - 20 = 60 C (hot outlet minus cold inlet). LMTD = (90 - 60) / ln(90 / 60) = 30 / 0.4055 = 74.0 C."
       },
       {
         "id": "exxonmobil-6",

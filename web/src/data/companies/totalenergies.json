@@ -140,13 +140,13 @@
         "topic": "Heat transfer",
         "q": "A counter-flow shell-and-tube heat exchanger is designed to cool hot amine from 100 C to 60 C using cooling water entering at 20 C and exiting at 40 C. What is the Log Mean Temperature Difference (LMTD)?",
         "options": [
-          "48.2 C",
+          "49.3 C",
           "40.0 C",
           "53.3 C",
           "60.0 C"
         ],
         "answer": 0,
-        "explain": "Terminal temperature differences: Delta T_1 = 100 - 40 = 60 C, Delta T_2 = 60 - 20 = 40 C. LMTD = (60 - 40) / ln(60 / 40) = 20 / ln(1.50) = 20 / 0.405465 = 49.33 C -> wait, 20 / 0.4055 = 49.3 C. If Delta T1 = 60, Delta T2 = 40, LMTD is approx 49.3 C. Let us pick option [40.0, 49.3, 53.3, 60.0], answer = 1."
+        "explain": "Delta T_1 = 100 - 40 = 60 C and Delta T_2 = 60 - 20 = 40 C. LMTD = (60 - 40) / ln(60 / 40) = 20 / 0.4055 = 49.3 C."
       },
       {
         "id": "totalenergies-10",

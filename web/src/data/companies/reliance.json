@@ -362,7 +362,7 @@
         "id": "reliance-25",
         "section": "Aptitude",
         "topic": "Logical reasoning",
-        "q": "Six shifts (1 through 6) are scheduled. Shift 1 is immediately followed by Shift 2. Shift 4 is immediately preceded by Shift 3. Shift 5 is scheduled between Shift 2 and Shift 3. If Shift 6 is last, which shift is 4th in the sequence?",
+        "q": "Six shifts (1 through 6) are scheduled. Shift 1 is immediately followed by Shift 2. Shift 4 is immediately preceded by Shift 3. Shift 5 comes after Shift 2 and before Shift 3. If Shift 6 is last, which shift is 4th in the sequence?",
         "options": [
           "Shift 3",
           "Shift 2",
@@ -398,7 +398,7 @@
           "Desulpherization"
         ],
         "answer": 2,
-        "explain": "The standard engineering spelling is 'Desulfurization' (or desulphurisation in British English; option A is the standard IUPAC/API spelling)."
+        "explain": "The standard engineering spelling is 'Desulfurization' (or 'desulphurisation' in British English). The other options are misspellings."
       },
       {
         "id": "reliance-28",
