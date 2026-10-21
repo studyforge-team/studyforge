@@ -2,9 +2,9 @@
 
 A study agent for engineering students that can't make up numbers. Nemotron (via Nebius
 Token Factory) plans the solution and writes Python, a sealed Pyodide sandbox in the
-student's browser does the computing, and the answer is checked twice before it is
-explained: two independent methods must agree, and every number in the explanation must
-come from the sandbox output or the question. Around the solver sit deadlines and
+student's browser does the computing, and the answer is checked before it is explained:
+the script must produce a check value that agrees with the answer, and every number in the
+explanation must come from the sandbox output or the question. Around the solver sit deadlines and
 reminders, quizzes, prep packs, cited web answers, and ChemLab reactor and distillation
 simulations.
 
@@ -29,8 +29,11 @@ Nebius integration**. <!-- TODO(F4): update status after G10 and the first live 
    questions get a prose answer with no computed numbers.
 2. **Notes.** The student's uploaded notes are searched once; hits enter the prompt as
    quoted data, never as instructions.
-3. **Solver.** The `solver` role writes one Python script that computes the answer by two
-   independent methods; the answer is checked and verified. ChemLab templates are not
+3. **Solver.** The `solver` role writes one Python script that computes the answer and a
+   check value, and the two must agree. The prompt asks for a second route (closed form vs
+   numeric, another balance); in practice the model often re-runs the same formula, so the
+   check catches sandbox, unit and shape errors more than a wrong formula. (Measured 21 Oct:
+   asked explicitly for a different route, it produced one 5 times in 36.) ChemLab templates are not
    used here (they power the ChemLab page), so chat answers no longer include the
    template's stable/unstable steady-state analysis; the ChemLab page shows it. At most 4
    tool steps and 90 s per solve.
