@@ -262,10 +262,22 @@ _SOFTWARE = re.compile(
     r"|e-commerce|online\s+store)\b(?!-)",  # crawler crane is equipment; "website-style" is not a website
     re.IGNORECASE,
 )
+# live/current facts (sports results, news, prices, weather): phrase-level so "score", "price elasticity", "current density" pass
+_LIVE = re.compile(
+    r"\bwho\s+(?:won|wins)\b(?:\W+\w+){0,5}?\W+(?:match|game|final|league|cup|series|tournament|ipl|last\s+night|yesterday|today)\b"
+    r"|\b(?:final|match|cricket|football|live)\s+(?:score|result)s?\b|\bipl\b|\bworld\s+cup\b|\b(?:premier|champions)\s+league\b"
+    r"|\b(?:nba|nfl)\b|\b(?:match|game|final)\b[^.?]{0,30}\blast\s+night\b|\blast\s+night\b[^.?]{0,30}\b(?:match|game|final)\b"
+    r"|\b(?:latest|breaking)\s+news\b|\belection\s+results?\b"
+    r"|\b(?:stock|share)\s+price\b|\bprice\s+of\s+(?:bitcoin|crypto\w*|gold|petrol|diesel)\b"
+    r"|\bprice\b[^.?]{0,20}\bright\s+now\b|\bright\s+now\b[^.?]{0,20}\bprice\b|\btoday'?s\s+price\b"
+    r"|\bexchange\s+rate\s+today\b|\bweather\s+(?:today|tomorrow|forecast)\b|\b(?:today|tomorrow)'?s\s+weather\b",
+    re.IGNORECASE,
+)
 
 
 async def _begin(state: SolveState, deps: Deps) -> Step:
-    if _INJECTION.search(state.question) or _DAN.search(state.question) or _SOFTWARE.search(state.question):
+    q0 = state.question
+    if _INJECTION.search(q0) or _DAN.search(q0) or _SOFTWARE.search(q0) or _LIVE.search(q0):
         state.kind = "off_topic"  # no router call: the router can be talked into study=True
         return _final(state, OFF_TOPIC_REPLY, "medium", with_numbers=False)
     q = _quoted(state.question)
