@@ -29,8 +29,10 @@ compute. <!-- TODO(F8): team's own story, in their words -->
 - Reads a photo or scanned page of a question with a vision model; the transcript always goes
   to a confirm screen so a person fixes any misread digit before anything is solved.
 - ChemLab: eight tested templates (CSTR, PFR, batch, McCabe-Thiele distillation, heat
-  exchanger, flash, recycle with purge, pipe and pump) the agent can pick instead of
-  improvising code. The ChemLab page has a tab for each. Process flow diagrams for all eight,
+  exchanger, flash, recycle with purge, pipe and pump) that power the ChemLab page
+  (interactive models and 3D). Chat answers always go through the general solver with a
+  check and verify, so they no longer include the template's stable/unstable steady-state
+  analysis; the ChemLab page shows it. The page has a tab for each template. Process flow diagrams for all eight,
   engineering drawings for the CSTR, the distillation column, the shell-and-tube exchanger
   and the PFR, and 3D views of the CSTR, column and exchanger.
 - Quizzes whose numerical answer keys are computed by sandboxed code, not written by the model.
@@ -56,8 +58,7 @@ Postgres, Auth and Storage; Vercel and Render free tiers. Libraries: react-markd
 for maths, Mermaid (strict) + DOMPurify for diagrams, Pyodide 314.0.7 for the sandbox.
 
 **Nemotron on Nebius Token Factory.** Through the `openai` SDK pointed at the Token Factory
-base URL. `config/models.yaml` defines four roles: `router` (classify, pick a ChemLab
-template), `solver` (write the code, explain), `cross_check` (re-solve by a different
+base URL. `config/models.yaml` defines four roles: `router` (classify), `solver` (write the code, explain), `cross_check` (re-solve by a different
 method when the first answer fails verification) and `vision`. Reasoning is on for solving
 and off for every JSON call. The client has its own retries with backoff, per-role timeouts,
 a per-solve deadline, model fallback chains, JSON repair, and a cost row per attempt. A
@@ -80,10 +81,10 @@ and 90 s and always ends with an honest final step.
 **Six tools, enforced.** `run_python`, `search_my_notes`, `web_search`, `make_quiz`,
 `schedule_reminder`, `draw_diagram`; unknown tools are refused in code.
 
-**ChemLab.** Plain numpy/scipy templates with declared input ranges (SPEC). The model only
-proposes a template name and quantities with units; the server converts units from an explicit
-table, range-checks them, and builds the code from floats only, so no model-written string
-reaches the sandbox for those solves.
+**ChemLab.** Plain numpy/scipy templates with declared input ranges (SPEC). They power the
+ChemLab page, which makes no API call. The solve path does not use them: a template is a
+single unverified method, and two of its six real picks were wrong but shown as high
+confidence, so templates stay out until they sit behind a verify step.
 
 Measured results (accuracy on the problem set, latency, cost per solve):
 **TBD after Nebius integration**.

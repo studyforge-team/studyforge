@@ -1,0 +1,526 @@
+{
+  "id": "shell",
+  "company": "Shell",
+  "roles": [
+    "Graduate Process Engineer",
+    "Production Technologist"
+  ],
+  "note": "Practice set written for StudyForge from publicly reported hiring patterns and core chemical-engineering topics. Not official; actual tests may differ.",
+  "oa": {
+    "sections": [
+      {
+        "name": "Aptitude",
+        "questions": 15,
+        "minutes": 20
+      },
+      {
+        "name": "Technical",
+        "questions": 20,
+        "minutes": 30
+      }
+    ],
+    "draw": 15,
+    "marks_per_q": 1,
+    "bank": [
+      {
+        "id": "shell-1",
+        "section": "Technical",
+        "topic": "Gas-to-liquids (GTL)",
+        "q": "At Shell's Pearl GTL plant in Qatar (the world's largest gas-to-liquids facility), what catalytic chemical reaction converts synthesis gas (CO + H2) into long-chain paraffinic wax?",
+        "options": [
+          "Fischer-Tropsch synthesis over supported cobalt catalyst: n CO + (2n+1) H2 -> C_n H_{2n+2} + n H2O",
+          "Haber-Bosch ammonia synthesis",
+          "Steam methane reforming",
+          "Claus sulfur conversion"
+        ],
+        "answer": 0,
+        "explain": "The Fischer-Tropsch reaction synthesizes long-chain linear hydrocarbons from syngas over proprietary cobalt catalysts in multi-tubular fixed-bed reactors, producing sulfur-free diesel and base oils."
+      },
+      {
+        "id": "shell-2",
+        "section": "Technical",
+        "topic": "Process integration",
+        "q": "In pinch analysis for refinery heat exchanger network synthesis, what is the fundamental rule regarding heat transfer across the diagnosed pinch point temperature?",
+        "options": [
+          "Heat must only be transferred across the pinch using cooling water",
+          "Heat must not be transferred across the pinch point from above the pinch to below the pinch",
+          "Hot utility must be supplied below the pinch",
+          "Cold utility must be supplied above the pinch"
+        ],
+        "answer": 1,
+        "explain": "Transferring heat across the pinch point increases both the hot utility and cold utility requirements by exactly that amount, violating the minimum energy consumption target."
+      },
+      {
+        "id": "shell-3",
+        "section": "Technical",
+        "topic": "LNG technology",
+        "q": "On Shell's Prelude Floating LNG (FLNG) facility, what ultra-compact heat exchanger technology is utilized to handle cryogenic liquefaction duties within tight topsides weight and footprint limits?",
+        "options": [
+          "Scraped-surface double pipe exchangers",
+          "Finned air-cooled bundles with copper tubes",
+          "Printed Circuit Heat Exchangers (PCHE) manufactured via photochemical etching and diffusion bonding",
+          "Direct-contact barometric condensers"
+        ],
+        "answer": 2,
+        "explain": "PCHEs pack microchannels into solid solid-state diffusion-bonded blocks, offering up to 85 % volume and weight reduction compared to conventional shell-and-tube exchangers for offshore cryogenic service."
+      },
+      {
+        "id": "shell-4",
+        "section": "Technical",
+        "topic": "Process control",
+        "q": "What advanced control strategy uses dynamic matrix models of the process to predict future output trajectories and optimize multiple manipulated variables simultaneously subject to constraints?",
+        "options": [
+          "Open-loop manual operator bias",
+          "Single-loop on-off thermostat control",
+          "Pneumatic proportional-only control",
+          "Model Predictive Control (MPC / Multivariable Control)"
+        ],
+        "answer": 3,
+        "explain": "Model Predictive Control (pioneered in refining by Shell's SMOC / DMC algorithms) optimizes multi-input multi-output (MIMO) process units, handling complex interactions and equipment constraints."
+      },
+      {
+        "id": "shell-5",
+        "section": "Technical",
+        "topic": "Heterogeneous catalysis",
+        "q": "What does an internal catalyst effectiveness factor (eta) significantly less than 1.0 (e.g., eta = 0.20) indicate for a porous catalyst pellet?",
+        "options": [
+          "Strong internal pore diffusion resistance limits the overall reaction rate because reactant molecules cannot penetrate deep into the pellet core",
+          "The reaction is purely surface reaction controlled",
+          "The catalyst has zero surface area",
+          "The reaction is in thermodynamic equilibrium"
+        ],
+        "answer": 0,
+        "explain": "Effectiveness factor eta = actual reaction rate / rate if entire interior were exposed to surface conditions. A low value (eta < 1) means fast reaction consumes reactant near the outer pellet rim before it can diffuse inward."
+      },
+      {
+        "id": "shell-6",
+        "section": "Technical",
+        "topic": "Process safety",
+        "q": "In Shell's process safety framework, what quantitative risk metric represents the expected number of fatal accidents per 100 million hours of occupational exposure?",
+        "options": [
+          "Lost Time Injury Frequency (LTIF)",
+          "Fatal Accident Rate (FAR)",
+          "Total Recordable Incident Rate (TRIR)",
+          "Process Safety Incident Rate (PSIR)"
+        ],
+        "answer": 1,
+        "explain": "FAR (Fatal Accident Rate) is defined as the statistical number of fatalities per 10^8 employee working hours, serving as a key benchmark in Quantitative Risk Assessment (QRA)."
+      },
+      {
+        "id": "shell-7",
+        "section": "Technical",
+        "topic": "Fluid mechanics",
+        "q": "A process pump moves natural gas condensate (density 700 kg/m^3) at 0.05 m^3/s through a 0.10 m inner diameter pipe. What is the mean fluid velocity?",
+        "options": [
+          "3.18 m/s",
+          "9.55 m/s",
+          "6.37 m/s",
+          "12.74 m/s"
+        ],
+        "answer": 2,
+        "explain": "Cross-sectional area A = pi * D^2 / 4 = 3.14159 * (0.10)^2 / 4 = 0.007854 m^2. Velocity v = Q / A = 0.05 m^3/s / 0.007854 m^2 = 6.366 m/s (6.37 m/s)."
+      },
+      {
+        "id": "shell-8",
+        "section": "Technical",
+        "topic": "Fluid mechanics",
+        "q": "What dimensionless number compares inertial forces to viscous forces in fluid flow?",
+        "options": [
+          "Weber number",
+          "Euler number",
+          "Froude number",
+          "Reynolds number (Re)"
+        ],
+        "answer": 3,
+        "explain": "Reynolds number Re = rho * v * L / mu represents the ratio of fluid inertial convective forces to internal viscous shear forces."
+      },
+      {
+        "id": "shell-9",
+        "section": "Technical",
+        "topic": "Heat transfer",
+        "q": "In heat exchanger design, how does introducing turbulent flow inside tubes affect the convective heat transfer coefficient according to the Dittus-Boelter correlation (Nu = 0.023 * Re^0.8 * Pr^n)?",
+        "options": [
+          "Heat transfer coefficient increases approximately with the 0.8 power of fluid velocity (v^0.8)",
+          "Heat transfer coefficient drops to zero",
+          "Heat transfer coefficient is independent of velocity",
+          "Heat transfer coefficient decreases inversely with velocity"
+        ],
+        "answer": 0,
+        "explain": "Since Re is directly proportional to velocity v, Nu (and consequently convective coefficient h) scales as v^0.8, meaning higher flow velocities enhance heat transfer at the expense of higher pumping head loss."
+      },
+      {
+        "id": "shell-10",
+        "section": "Technical",
+        "topic": "Heat transfer",
+        "q": "A shell-and-tube heat exchanger with heat transfer area 50 m^2 operates with overall heat transfer coefficient U = 400 W/(m^2*K) and LMTD = 25 K. What is the total heat transfer rate?",
+        "options": [
+          "250 kW",
+          "500 kW",
+          "750 kW",
+          "1000 kW"
+        ],
+        "answer": 1,
+        "explain": "Q = U * A * LMTD = 400 W/(m^2*K) * 50 m^2 * 25 K = 500,000 W = 500 kW."
+      },
+      {
+        "id": "shell-11",
+        "section": "Technical",
+        "topic": "Mass transfer",
+        "q": "In a gas absorption column, which dimensionless group represents the ratio of the slope of the equilibrium curve (m) to the ratio of liquid-to-gas molar flow rates (L/G)?",
+        "options": [
+          "Schmidt number",
+          "Absorption factor alone",
+          "Stripping factor (S = m * G / L)",
+          "Peclet number"
+        ],
+        "answer": 2,
+        "explain": "The stripping factor S = m * (G / L) = m / (L / G) governs the feasibility of stripping; when S > 1, stripping of solute from liquid into vapor is thermodynamically favored."
+      },
+      {
+        "id": "shell-12",
+        "section": "Technical",
+        "topic": "Mass transfer",
+        "q": "In liquid-liquid extraction of aromatics, what property defines the ratio of solute concentration in the extract phase to its concentration in the raffinate phase at thermodynamic equilibrium?",
+        "options": [
+          "Henry's constant alone",
+          "Relative volatility",
+          "Activity coefficient alone",
+          "Distribution coefficient (Partition ratio K_d)"
+        ],
+        "answer": 3,
+        "explain": "The distribution coefficient K_d = y* / x measures the equilibrium partition of the distributing solute between the solvent extract phase and the raffinate carrier phase."
+      },
+      {
+        "id": "shell-13",
+        "section": "Technical",
+        "topic": "Thermodynamics",
+        "q": "What is the fugacity coefficient phi_i of a component in an ideal gas mixture at any temperature and pressure?",
+        "options": [
+          "Exactly 1.0",
+          "Zero",
+          "Infinity",
+          "Negative 1.0"
+        ],
+        "answer": 0,
+        "explain": "By definition, fugacity f_i equals partial pressure P_i for an ideal gas, making the fugacity coefficient phi_i = f_i / P_i = 1.0."
+      },
+      {
+        "id": "shell-14",
+        "section": "Technical",
+        "topic": "Thermodynamics",
+        "q": "A gas turbine power cycle operates with heat addition of 500 kJ and rejects 300 kJ to the environment. What is the thermal efficiency of the cycle?",
+        "options": [
+          "30 %",
+          "40 %",
+          "50 %",
+          "60 %"
+        ],
+        "answer": 1,
+        "explain": "Net work output W = Q_in - Q_out = 500 - 300 = 200 kJ. Efficiency eta = W / Q_in = 200 / 500 = 0.40, or 40 %."
+      },
+      {
+        "id": "shell-15",
+        "section": "Technical",
+        "topic": "Reaction engineering",
+        "q": "For an exothermic reversible catalytic reaction, what is the optimum temperature trajectory along the length of a plug flow reactor to maximize conversion?",
+        "options": [
+          "Strictly constant sub-ambient temperature",
+          "Low temperature at inlet followed by high temperature at outlet",
+          "High initial temperature at reactor inlet to maximize kinetics, gradually decreasing toward outlet to shift thermodynamic equilibrium toward products",
+          "Oscillating temperature profile"
+        ],
+        "answer": 2,
+        "explain": "Initially, high temperature overcomes activation energy barrier for high rate; as conversion approaches equilibrium, temperature must be lowered to increase equilibrium conversion for exothermic reactions."
+      },
+      {
+        "id": "shell-16",
+        "section": "Technical",
+        "topic": "Reaction engineering",
+        "q": "A constant-density liquid reaction achieves 60 % conversion in a single CSTR. If an identical second CSTR is added in series, the overall conversion across both reactors will be:",
+        "options": [
+          "Zero",
+          "Exactly 60 %",
+          "Less than 60 %",
+          "Greater than 60 %"
+        ],
+        "answer": 3,
+        "explain": "Adding a second CSTR in series provides additional space time and reduces reactant concentration further, increasing the cumulative conversion beyond 60 %."
+      },
+      {
+        "id": "shell-17",
+        "section": "Technical",
+        "topic": "Process safety",
+        "q": "In high-pressure offshore gas processing, what is the purpose of an Emergency Depressurization (EDP) blowdown valve system?",
+        "options": [
+          "Rapidly discharging high-pressure vessel gas inventory to flare within 15 minutes to reduce vessel stress below rupture threshold during an external fire",
+          "Feeding fuel to emergency diesel generators",
+          "Circulating glycol through heat exchangers",
+          "Flushing pipelines with fresh water"
+        ],
+        "answer": 0,
+        "explain": "API 521 recommends emergency depressurization to vent vessel inventory to 50 % of design pressure or 7 bar within 15 minutes during fire exposure to prevent vessel BLEVE rupture."
+      },
+      {
+        "id": "shell-18",
+        "section": "Technical",
+        "topic": "Petroleum refining",
+        "q": "In a catalytic cracking riser, how are hydrocarbon vapors separated from spent catalyst particles at the riser exit before catalyst enters the regenerator?",
+        "options": [
+          "Electrostatic precipitators alone",
+          "High-efficiency two-stage inertial cyclones and riser termination disengagers",
+          "Baghouse fabric filters",
+          "Liquid water quench spray"
+        ],
+        "answer": 1,
+        "explain": "High-efficiency cyclone separators use centrifugal force to rapidly disengage solid catalyst particles from cracked hydrocarbon vapors, terminating cracking reactions in seconds."
+      },
+      {
+        "id": "shell-19",
+        "section": "Aptitude",
+        "topic": "Quantitative",
+        "q": "A gas turbine operates on natural gas costing $6.00 per MMBtu. If thermal efficiency is improved, cutting fuel consumption by 15 %, what is the fuel cost per MMBtu equivalent of energy saved?",
+        "options": [
+          "$6.90",
+          "$6.00",
+          "$5.10",
+          "$7.20"
+        ],
+        "answer": 2,
+        "explain": "New fuel expenditure = $6.00 * (1 - 0.15) = $6.00 * 0.85 = $5.10."
+      },
+      {
+        "id": "shell-20",
+        "section": "Aptitude",
+        "topic": "Quantitative",
+        "q": "A tank containing 1000 liters of 10 % ethanol solution is blended with 500 liters of 40 % ethanol solution. What is the concentration of the resulting mixture?",
+        "options": [
+          "15 %",
+          "30 %",
+          "25 %",
+          "20 %"
+        ],
+        "answer": 3,
+        "explain": "Pure ethanol = (1000 * 0.10) + (500 * 0.40) = 100 + 200 = 300 liters. Total volume = 1500 liters. Concentration = (300 / 1500) * 100 = 20 %."
+      },
+      {
+        "id": "shell-21",
+        "section": "Aptitude",
+        "topic": "Quantitative",
+        "q": "Two pipeline inspection drones depart simultaneously from Platform A and Platform B, located 150 km apart, flying toward each other at speeds of 40 km/h and 60 km/h respectively. In how many hours will they meet?",
+        "options": [
+          "1.5 hours",
+          "1.2 hours",
+          "1.8 hours",
+          "2.0 hours"
+        ],
+        "answer": 0,
+        "explain": "Relative approach speed = 40 + 60 = 100 km/h. Time to meet = Distance / Relative speed = 150 km / 100 km/h = 1.5 hours."
+      },
+      {
+        "id": "shell-22",
+        "section": "Aptitude",
+        "topic": "Quantitative",
+        "q": "An operations budget for a catalyst turnaround was estimated at $50,000. Due to efficient scheduling, actual expenditure was $42,500. What was the percentage cost saving?",
+        "options": [
+          "12 %",
+          "15 %",
+          "17.5 %",
+          "20 %"
+        ],
+        "answer": 1,
+        "explain": "Savings = 50,000 - 42,500 = $7,500. Percentage saving = (7,500 / 50,000) * 100 = 15 %."
+      },
+      {
+        "id": "shell-23",
+        "section": "Aptitude",
+        "topic": "Logical reasoning",
+        "q": "Complete the engineering alphanumeric series: A2, D4, G8, J16, ?",
+        "options": [
+          "L24",
+          "N32",
+          "M32",
+          "P64"
+        ],
+        "answer": 2,
+        "explain": "Letters advance by +3: A (1) -> D (4) -> G (7) -> J (10) -> M (13). Numbers double: 2, 4, 8, 16, 32. Next term is M32."
+      },
+      {
+        "id": "shell-24",
+        "section": "Aptitude",
+        "topic": "Logical reasoning",
+        "q": "In a plant reliability ranking, Turbine 1 is more reliable than Turbine 2. Turbine 3 is less reliable than Turbine 4. Turbine 2 is more reliable than Turbine 4. Which turbine is the least reliable?",
+        "options": [
+          "Turbine 1",
+          "Turbine 2",
+          "Turbine 4",
+          "Turbine 3"
+        ],
+        "answer": 3,
+        "explain": "Order of reliability from highest to lowest: T1 > T2 > T4 > T3. Turbine 3 is the least reliable."
+      },
+      {
+        "id": "shell-25",
+        "section": "Aptitude",
+        "topic": "Logical reasoning",
+        "q": "Statements: 'All FLNG vessels possess cryogenic containment systems.' 'All vessels possessing cryogenic containment systems require invar or stainless steel barriers.' Conclusion: 'All FLNG vessels require invar or stainless steel barriers.'",
+        "options": [
+          "Valid conclusion",
+          "Invalid conclusion",
+          "Undetermined",
+          "Contradictory"
+        ],
+        "answer": 0,
+        "explain": "By hypothetical syllogism (All A are B, All B are C -> All A are C), the conclusion is logically valid and sound."
+      },
+      {
+        "id": "shell-26",
+        "section": "Aptitude",
+        "topic": "Verbal",
+        "q": "Choose the word that most accurately completes the sentence: 'The process technologist recommended a pinch analysis to identify ______ opportunities for energy recovery across the preheat train.'",
+        "options": [
+          "deleterious",
+          "salient",
+          "redundant",
+          "negligible"
+        ],
+        "answer": 1,
+        "explain": "'Salient' means prominent, important, or conspicuous, fitting key high-value opportunities for energy recovery."
+      },
+      {
+        "id": "shell-27",
+        "section": "Aptitude",
+        "topic": "Verbal",
+        "q": "Select the option that correctly describes the meaning of 'ISOTHERMAL':",
+        "options": [
+          "At constant pressure",
+          "At constant volume",
+          "At constant temperature",
+          "At zero entropy"
+        ],
+        "answer": 2,
+        "explain": "'Isothermal' designates a thermodynamic process in which the temperature of the system remains strictly constant."
+      },
+      {
+        "id": "shell-28",
+        "section": "Aptitude",
+        "topic": "Verbal",
+        "q": "Identify the sentence with correct parallel grammatical construction:",
+        "options": [
+          "The engineer was responsible for inspecting pipelines, calibrating sensors, and to report safety hazards.",
+          "The engineer was responsible for inspecting pipelines, to calibrate sensors, and reporting safety hazards.",
+          "The engineer was responsible for inspect pipelines, calibrate sensors, and reporting safety hazards.",
+          "The engineer was responsible for inspecting pipelines, calibrating sensors, and reporting safety hazards."
+        ],
+        "answer": 3,
+        "explain": "Option B maintains parallelism by utilizing the gerund form (-ing) consistently for all three listed duties: inspecting, calibrating, reporting."
+      }
+    ]
+  },
+  "interview": {
+    "rounds": [
+      "Online Cognitive & Working Style Assessment",
+      "On-Demand Video Interview (ODVI)",
+      "Shell Live Assessment (Technical & Case Presentation)"
+    ],
+    "about": "Shell is an international energy company with expertise in the exploration, production, refining, and marketing of oil and natural gas, and the manufacturing and marketing of chemicals. Shell recruits chemical engineers through the Shell Graduate Programme for frontline process engineering, technical data analytics, LNG and GTL operations, and low-carbon hydrogen energy projects.",
+    "looks_for": [
+      "Capacity, Achievement, and Relationship (CAR) criteria: intellectual curiosity and quick grasp of complex technical information.",
+      "Demonstrated passion for process safety leadership and Goal Zero (zero fatalities, zero serious injuries).",
+      "Strong command of thermodynamics, mass transfer, and heat exchanger network pinch design.",
+      "Ability to propose creative engineering solutions balancing economic value and decarbonization.",
+      "Clear, concise presentation of engineering case studies to senior technical leaders.",
+      "Resilience and collaborative drive in international team settings."
+    ],
+    "selection": [
+      "Online application followed by timed cognitive reasoning and situational judgment games.",
+      "On-Demand Video Interview (ODVI) assessing past behavioral achievements using the CAR criteria.",
+      "Shell Live Assessment: a simulated business case study, presentation to assessors, and structured technical interview panel."
+    ],
+    "technical": [
+      {
+        "q": "How does Shell's Pearl GTL plant synthesize ultra-clean liquid fuels from natural gas?",
+        "a": "Natural gas is desulfurized and converted into syngas (CO + H2) via Shell Gasification Process (SGP) partial oxidation. The syngas enters multi-tubular fixed bed reactors where the Fischer-Tropsch reaction over proprietary cobalt catalyst forms waxy heavy paraffins. These waxes are then hydrocracked and fractionated into high-cetane GTL diesel, kerosene, and lubricant base oils."
+      },
+      {
+        "q": "Explain the concept of Pinch Point in Heat Exchanger Network (HEN) synthesis.",
+        "a": "The pinch point represents the thermodynamic constraint location where the temperature driving force between the hot composite curve and cold composite curve equals the minimum allowable approach temperature (Delta T_min). It divides the process into a heat sink above the pinch and a heat source below the pinch."
+      },
+      {
+        "q": "What design challenges are unique to Floating LNG (FLNG) facilities like Prelude?",
+        "a": "Prelude FLNG must operate safely under ocean swell, wind, and wave motions. Key challenges include avoiding liquid sloshing in cryogenic membrane containment tanks, ensuring uniform two-phase distribution in cryogenic heat exchangers without channeling, and condensing the entire processing footprint into a hull one-quarter the size of an onshore plant."
+      },
+      {
+        "q": "How does Model Predictive Control (MPC) handle constraints in multivariable refinery units?",
+        "a": "MPC solves a constrained quadratic programming optimization problem at each control cycle (typically every 10-60 seconds). It predicts future outputs over a time horizon using step-response models and computes optimal manipulated variable moves that keep controlled variables within high/low operating and safety constraints."
+      },
+      {
+        "q": "What is the physical significance of the Thiele modulus in catalytic reactor engineering?",
+        "a": "The Thiele modulus phi evaluates the competition between chemical reaction rate and intra-pellet diffusion rate: phi = L * sqrt(k / D_eff). For small phi (< 0.5), diffusion is fast, effectiveness factor eta ~ 1, and the entire catalyst interior is utilized. For large phi (> 5), the reaction is pore diffusion limited."
+      },
+      {
+        "q": "Describe the barriers used to prevent catastrophic events under Shell's Barrier Management framework.",
+        "a": "Shell uses the 'BowTie' model: proactive barriers (preventive) prevent a threat from releasing the hazard (e.g., vessel wall thickness, high-pressure alarms, basic process control, interlocks), while reactive barriers (mitigating) minimize the consequence if the top event occurs (e.g., deluge water, bunding, blast walls, emergency response)."
+      },
+      {
+        "q": "How do you diagnose between weeping and flooding in an operating fractionation column?",
+        "a": "Flooding is indicated by a sharp spike in column differential pressure, high liquid levels in downcomers, loss of bottoms level, and liquid carryover overhead. Weeping is indicated by an abnormally low differential pressure across the tray deck, poor tray fractionation efficiency, and premature dumping of cold liquid into lower trays."
+      },
+      {
+        "q": "What are the advantages of coil-wound heat exchangers in cryogenic service?",
+        "a": "Coil-wound exchangers consist of thousands of helically wound tubes around a central core. They provide massive heat transfer area per unit volume, accommodate differential thermal contraction without mechanical stress, tolerate multi-stream duties, and withstand operating pressures up to 100 bar."
+      },
+      {
+        "q": "How is hydrogen generated from natural gas via partial oxidation (gasification) compared to steam methane reforming?",
+        "a": "Steam methane reforming is highly endothermic and requires external firing in a furnace with steam. Partial oxidation (POX) reacts methane with a sub-stoichiometric amount of oxygen in a non-catalytic refractory burner at high pressure: CH4 + 0.5 O2 -> CO + 2 H2. POX is exothermic, produces no NOx, and handles heavier feeds."
+      },
+      {
+        "q": "What is Goal Zero and how does it translate into a process engineer's day-to-day responsibilities?",
+        "a": "Goal Zero is Shell's commitment to achieve zero fatalities and no leaks or serious incidents across all operations. For a process engineer, it means ensuring Operating Envelopes (Integrity Operating Windows) are never breached, participating rigorously in Management of Change (MOC) reviews, and speaking up using Stop-Work Authority whenever an unsafe condition arises."
+      }
+    ],
+    "hr": [
+      {
+        "q": "Why do you want to join the Shell Graduate Programme?",
+        "how": "Highlight Shell's world-class structured training curriculum, its pioneership in major mega-facilities (GTL, FLNG, deepwater), its proactive investments in decarbonization and hydrogen, and the opportunity to rotate across diverse engineering assignments."
+      },
+      {
+        "q": "Give an example of a time you achieved an ambitious goal under challenging circumstances (CAR criteria).",
+        "how": "Frame your response using Shell's CAR framework (Context, Action, Result): articulate the challenge, the specific technical or leadership actions you took, the obstacles overcome, and the measurable results delivered."
+      },
+      {
+        "q": "Describe a situation where you had to influence a teammate or stakeholder who disagreed with your engineering approach.",
+        "how": "Explain how you gathered objective operational data, listened empathetically to their underlying concerns, walked through first-principles simulations together, and established an aligned path forward."
+      },
+      {
+        "q": "Tell me about a time you challenged a peer or supervisor on a safety or procedural issue.",
+        "how": "Emphasize how Goal Zero gives every individual personal accountability: describe noticing a safety shortcut or procedural deviation, intervening calmly and firmly, and securing a safe, compliant outcome."
+      },
+      {
+        "q": "How do you stay resilient when a project faces major unexpected delays or technical setbacks?",
+        "how": "Describe maintaining an objective, calm perspective: breaking the complex problem into root causes, re-evaluating baseline assumptions, communicating transparently with mentors, and driving forward to the solution."
+      },
+      {
+        "q": "Where do you envision your technical engineering career with Shell in 5 years?",
+        "how": "Express a clear ambition to complete the Shell Graduate Programme, achieve chartered engineer (CEng) status, become a lead unit contact engineer on a major asset, and contribute to energy efficiency or carbon capture projects."
+      }
+    ],
+    "present": [
+      "Structure presentations clearly: Problem Statement, Technical Analysis, Options Considered, Recommendations, and Safety Implications.",
+      "Ground engineering recommendations in quantified mass and energy balances and thermodynamic reality.",
+      "Emphasize Goal Zero safety culture and personal accountability.",
+      "Display strong collaborative energy and respect for assessors' feedback.",
+      "Use clear, articulate communication with concise technical slides."
+    ],
+    "tips": [
+      "Familiarize yourself with Shell's Capacity, Achievement, and Relationship (CAR) evaluation criteria.",
+      "Review pinch analysis, heat exchanger network synthesis, and minimum utility targets.",
+      "Understand the basic operational principles of Pearl GTL and Prelude FLNG.",
+      "Prepare detailed personal examples of project leadership, obstacle overcoming, and safety intervention.",
+      "Formulate thoughtful questions regarding Shell's Powering Progress strategy and net-zero emissions targets."
+    ]
+  },
+  "sources": [
+    "https://www.shell.com/careers",
+    "https://www.glassdoor.com/Interview/Shell-Interview-Questions-E5833.htm"
+  ]
+}

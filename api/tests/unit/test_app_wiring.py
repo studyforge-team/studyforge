@@ -44,10 +44,10 @@ def test_one_client_for_all_requests(monkeypatch: pytest.MonkeyPatch) -> None:
     assert type(a.llm.recorder).__name__ == "PgCostRecorder"  # type: ignore[attr-defined]
 
 
-def test_deps_carry_chemlab_templates(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_deps_have_no_templates_in_solve_path(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("DATABASE_URL", "postgresql://u:p@127.0.0.1:1/x")
     monkeypatch.setenv("TF_API_KEY", "k")
-    assert "cstr" in (wiring.get_deps().templates or {})
+    assert wiring.get_deps().templates is None
 
 
 def test_dbtools_delegate_and_never_raise(monkeypatch: pytest.MonkeyPatch) -> None:

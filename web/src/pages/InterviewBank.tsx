@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import ChemInterview from '@/components/ChemInterview'
 
 type Question = {
   id: number
@@ -62,7 +63,7 @@ const questions: Question[] = [
 
 const field = 'min-h-11 rounded-lg border border-input bg-background px-3 py-2 text-base'
 
-export default function InterviewBank() {
+function CsInterviewBank() {
   const [company, setCompany] = useState('All companies')
   const [revealed, setRevealed] = useState<number[]>([])
 
@@ -145,5 +146,21 @@ export default function InterviewBank() {
         })}
       </ul>
     </main>
+  )
+}
+
+export default function InterviewBank() {
+  const [fieldName, setFieldName] = useState<'Chemical' | 'Computer science'>('Chemical')
+  return (
+    <>
+      <div role="group" aria-label="Field" className="mx-auto flex max-w-3xl items-center gap-2 px-4 pt-4">
+        <span className="text-sm font-medium">Field</span>
+        {(['Chemical', 'Computer science'] as const).map((f) => (
+          <button key={f} type="button" aria-pressed={fieldName === f} onClick={() => setFieldName(f)}
+            className={`min-h-11 rounded-lg border px-4 text-sm font-medium ${fieldName === f ? 'border-primary bg-primary text-primary-foreground' : 'bg-background'}`}>{f}</button>
+        ))}
+      </div>
+      {fieldName === 'Chemical' ? <main className="mx-auto max-w-3xl px-4 py-6 sm:py-8"><ChemInterview /></main> : <CsInterviewBank />}
+    </>
   )
 }

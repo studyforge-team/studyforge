@@ -1,6 +1,6 @@
 // Live eval of the deployed StudyForge solver (SV0). Not under web/tests: Playwright and CI never run it.
 // Usage: node web/eval/eval_live.mjs [--only id1,id2] [--out file.json] [--questions file.json]   (site: EVAL_SITE or the default below)
-import { chromium } from '@playwright/test'
+//        node web/eval/eval_live.mjs --regrade saved_out.json [--questions file.json] [--out file.json]   (offline: re-grade a saved run, no network)
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -34,15 +34,19 @@ const hasAnswer = (nums, want, tol) => {
   return hasNum(Object.keys(a).length ? a : nums, want, tol)
 }
 
+// whole word, case-insensitive, not negated: rejects "not valid", "invalid", "non-valid", "unvalid"
+const wordHit = (md, w) => new RegExp(String.raw`(?<!\bnot\s)(?<!\bin)(?<!\bnon-)(?<!\bun)\b` + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + String.raw`\b`, 'i').test(md)
+
 function grade(q, f) {
   const e = q.expect, md = f.answer_md || '', refused = isRefusal(f)
   if (e.refuse === true) return refused ? [true, 'refused'] : [false, 'not refused']
   if (refused) return [false, 'refused an on-topic question']
   const why = []
-  if ('value' in e && !hasAnswer(f.numbers, e.value, e.rel_tol)) why.push(`no number within ${e.rel_tol * 100}% of ${e.value}`)
+  // multi-part questions: the main value may sit in a non-"answer" key, so search all numbers
+  if ('value' in e && !(e.also ? hasNum : hasAnswer)(f.numbers, e.value, e.rel_tol)) why.push(`no number within ${e.rel_tol * 100}% of ${e.value}`)
   if (e.must_assume && !/assum/i.test(md)) why.push('no assumption stated')
   if (e.also) {
-    if (typeof e.also === 'string' ? !md.toLowerCase().includes(e.also.toLowerCase()) : !hasNum(f.numbers, e.also.value, e.rel_tol)) why.push(`missing second part ${JSON.stringify(e.also)}`)
+    if (typeof e.also === 'string' ? !wordHit(md, e.also) : !hasNum(f.numbers, e.also.value, e.rel_tol)) why.push(`missing second part ${JSON.stringify(e.also)}`)
   }
   if (e.keywords) {
     const hits = e.keywords.filter((k) => md.toLowerCase().includes(k.toLowerCase()))
@@ -54,6 +58,38 @@ function grade(q, f) {
 // the "final" object, wherever the response carries it
 const finalOf = (b) => b?.final ?? (b?.step?.type === 'final' ? b.step : b?.type === 'final' ? b : null)
 
+const summarize = (rows, aborted) => {
+  const secs = rows.map((r) => r.seconds).sort((a, b) => a - b)
+  const mid = secs.length ? (secs[(secs.length - 1) >> 1] + secs[secs.length >> 1]) / 2 : 0
+  const plain = rows.filter((r) => r.category === 'plain_calc')
+  return {
+    run: rows.length, pass: rows.filter((r) => r.pass).length, wrong_high: rows.filter((r) => r.wrong_high).length,
+    plain_calc: plain.length, plain_calc_high: plain.filter((r) => r.confidence === 'high').length,
+    mean_s: +(secs.reduce((a, b) => a + b, 0) / (secs.length || 1)).toFixed(1), median_s: +mid.toFixed(1), aborted,
+  }
+}
+const printRow = (r) => console.log(`${r.pass ? 'PASS' : 'FAIL'}  ${r.id.padEnd(28)} ${String(r.confidence).padEnd(7)} ${String(r.seconds).padStart(6)}s  ${r.reason}`)
+
+// offline re-grade of a saved run: exits before the /health poll and the browser launch
+const RG = arg('--regrade')
+if (RG) {
+  const saved = JSON.parse(readFileSync(resolve(RG), 'utf8'))
+  const rows = saved.rows.map((r) => {
+    const q = all.find((x) => x.id === r.id)
+    if (!q) throw new Error(`question ${r.id} not in question file`)
+    if (r.numbers == null && r.answer_md == null) return r // saved final was null (timeout): stays failed
+    const [pass, reason] = grade(q, { numbers: r.numbers, answer_md: r.answer_md, confidence: r.confidence })
+    return { ...r, pass, reason, wrong_high: !pass && q.expect.refuse !== true && r.confidence === 'high' }
+  })
+  rows.forEach(printRow)
+  console.log('\nSAVED TOTALS', JSON.stringify(saved.totals))
+  const totals = summarize(rows, saved.totals?.aborted ?? null)
+  console.log('TOTALS', JSON.stringify(totals))
+  if (arg('--out')) { mkdirSync(dirname(OUT), { recursive: true }); writeFileSync(OUT, JSON.stringify({ site: saved.site, at: new Date().toISOString(), regraded_from: RG, totals, rows }, null, 1)) }
+  process.exit(0)
+}
+
+const { chromium } = await import('@playwright/test') // live path only
 // cold start: poll /health until 200 (up to ~2 min)
 for (let i = 0; i < 40; i++) {
   try { if ((await fetch(`${API}/health`)).status === 200) break } catch {}
@@ -103,18 +139,11 @@ for (const q of qs) {
     wrong_high: !pass && q.expect.refuse !== true && f?.confidence === 'high',
   }
   rows.push(row)
-  console.log(`${pass ? 'PASS' : 'FAIL'}  ${q.id.padEnd(28)} ${String(row.confidence).padEnd(7)} ${String(seconds).padStart(6)}s  ${reason}`)
+  printRow(row)
 }
 await browser.close()
 
-const secs = rows.map((r) => r.seconds).sort((a, b) => a - b)
-const mid = secs.length ? (secs[(secs.length - 1) >> 1] + secs[secs.length >> 1]) / 2 : 0
-const plain = rows.filter((r) => r.category === 'plain_calc')
-const totals = {
-  run: rows.length, pass: rows.filter((r) => r.pass).length, wrong_high: rows.filter((r) => r.wrong_high).length,
-  plain_calc: plain.length, plain_calc_high: plain.filter((r) => r.confidence === 'high').length,
-  mean_s: +(secs.reduce((a, b) => a + b, 0) / (secs.length || 1)).toFixed(1), median_s: +mid.toFixed(1), aborted,
-}
+const totals = summarize(rows, aborted)
 console.log('\nTOTALS', JSON.stringify(totals))
 mkdirSync(dirname(OUT), { recursive: true })
 writeFileSync(OUT, JSON.stringify({ site: SITE, at: new Date().toISOString(), totals, rows }, null, 1))

@@ -1,0 +1,527 @@
+{
+  "id": "dow",
+  "company": "Dow",
+  "roles": [
+    "Chemical Engineer Trainee",
+    "Manufacturing Engineer"
+  ],
+  "note": "Practice set written for StudyForge from publicly reported hiring patterns and core chemical-engineering topics. Not official; actual tests may differ.",
+  "oa": {
+    "sections": [
+      {
+        "name": "Aptitude",
+        "questions": 15,
+        "minutes": 20
+      },
+      {
+        "name": "Technical",
+        "questions": 20,
+        "minutes": 30
+      }
+    ],
+    "draw": 15,
+    "marks_per_q": 1,
+    "bank": [
+      {
+        "id": "dow-1",
+        "section": "Technical",
+        "topic": "Polymer reaction engineering",
+        "q": "In free-radical addition polymerization, how does an increase in the initiator concentration affect the rate of polymerization (R_p) and the number-average degree of polymerization (X_n)?",
+        "options": [
+          "R_p increases proportionally to [I]^0.5, while X_n decreases inversely with [I]^0.5",
+          "Both R_p and X_n increase linearly with [I]",
+          "R_p decreases, while X_n increases",
+          "Neither R_p nor X_n depends on initiator concentration"
+        ],
+        "answer": 0,
+        "explain": "Classic free-radical kinetics gives R_p = k_p * [M] * (f * k_d * [I] / k_t)^0.5, so rate scales as [I]^0.5. Kinetic chain length nu = R_p / R_t scales inversely with [I]^0.5, so higher initiator creates more radicals that terminate faster, yielding shorter polymer chains."
+      },
+      {
+        "id": "dow-2",
+        "section": "Technical",
+        "topic": "Polymer properties",
+        "q": "What thermodynamic and molecular transition occurs at the glass transition temperature (T_g) of an amorphous polymer like polystyrene?",
+        "options": [
+          "The polymer undergoes first-order crystalline melting with a latent heat of fusion",
+          "Cooperative segmental mobility of polymer chain backbones unfreezes, transitioning the material from a brittle glassy state to a rubbery/flexible state",
+          "Covalent bonds in the polymer backbone thermally dissociate into monomer radicals",
+          "The polymer vaporizes completely into gas phase"
+        ],
+        "answer": 1,
+        "explain": "T_g is a second-order thermodynamic pseudo-transition marked by a step change in heat capacity (C_p) and thermal expansion coefficient as long-range coordinated segmental chain rotation becomes active."
+      },
+      {
+        "id": "dow-3",
+        "section": "Technical",
+        "topic": "Polyolefin catalysis",
+        "q": "What is the primary architectural difference between Low-Density Polyethylene (LDPE) produced via high-pressure autoclave/tubular reactors and Linear Low-Density Polyethylene (LLDPE) produced via catalytic gas-phase fluidized bed reactors?",
+        "options": [
+          "LDPE is synthesized from propylene, while LLDPE is synthesized from butadiene",
+          "LDPE is perfectly crystalline without any branches, while LLDPE is heavily cross-linked thermoset",
+          "LDPE possesses both short-chain and long-chain branching from free-radical backbiting, whereas LLDPE has only short-chain branches from 1-hexene/1-octene copolymerization on a linear backbone",
+          "LDPE has a molecular weight under 500 g/mol, while LLDPE is an ultra-high molecular weight fiber"
+        ],
+        "answer": 2,
+        "explain": "High-pressure LDPE free-radical synthesis involves intramolecular chain transfer (backbiting) creating short branches and intermolecular chain transfer creating long branches. LLDPE uses coordination catalysts (Ziegler-Natta or metallocenes) with alpha-olefin comonomers to introduce controlled short-chain branches."
+      },
+      {
+        "id": "dow-4",
+        "section": "Technical",
+        "topic": "Chemical kinetics",
+        "q": "For an exothermic liquid-phase reaction A -> B conducted in an adiabatic CSTR, what condition leads to thermal runaway and multiple steady states?",
+        "options": [
+          "When the residence time in the reactor is strictly zero",
+          "When the activation energy E_a equals zero",
+          "When the heat capacity of the mixture approaches infinity",
+          "When the sigmoidal heat generation curve Q_g intersects the linear heat removal line Q_r at three distinct points, and the reactor operates near the unstable middle steady state"
+        ],
+        "answer": 3,
+        "explain": "Van Heerden analysis shows that nonlinear exponential Arrhenius heat generation can intersect linear convective heat removal at three temperatures: an unignited low-conversion state, an unstable saddle point, and an ignited high-conversion state."
+      },
+      {
+        "id": "dow-5",
+        "section": "Technical",
+        "topic": "Fluid mechanics",
+        "q": "Molten high-density polyethylene displays pseudoplastic (shear-thinning) rheology. What happens to its apparent viscosity as the shear rate in an extruder die increases?",
+        "options": [
+          "Apparent viscosity decreases significantly as polymer chains disentangle and align with the flow streamline",
+          "Apparent viscosity increases rapidly, causing dilatant dilatancy",
+          "Viscosity remains constant regardless of shear rate (Newtonian behavior)",
+          "Viscosity drops instantly to zero like a superfluid"
+        ],
+        "answer": 0,
+        "explain": "In the Ostwald-de Waele power law model (tau = K * gamma_dot^n), pseudoplastic fluids have power-law index n < 1. Increasing shear rate disentangles coiled macromolecular chains, lowering resistance and reducing apparent viscosity."
+      },
+      {
+        "id": "dow-6",
+        "section": "Technical",
+        "topic": "Mass transfer",
+        "q": "In the manufacture of ethylene oxide (EO) by direct catalytic vapor-phase oxidation of ethylene over silver catalysts, how is dilute EO recovered from the reactor effluent gas stream?",
+        "options": [
+          "Condensation with liquid helium at -269 C",
+          "Absorption into cold water in a high-pressure packed scrubber column, followed by steam stripping in an EO desorber",
+          "Direct crystallization as a hydrate clathrate cake",
+          "Adsorption onto activated bauxite beds"
+        ],
+        "answer": 1,
+        "explain": "Ethylene oxide is highly soluble in cold water. The reactor gas effluent (containing 1-2 mol% EO) is contacted with chilled recycled water in a packed absorber, and the rich EO water is stripped in an atmospheric desorber."
+      },
+      {
+        "id": "dow-7",
+        "section": "Technical",
+        "topic": "Process safety",
+        "q": "According to the Design Institute for Emergency Relief Systems (DIERS) methodology, why does emergency venting of a runaway polymerizer require significantly larger relief areas than a non-foaming vapor relief scenario?",
+        "options": [
+          "Polymers react chemically with stainless steel rupture discs to form toxic oxides",
+          "Venting vapor alone creates vacuum collapse of the vessel",
+          "Two-phase bubbly or churn-turbulent flow vents liquid and vapor simultaneously, which drastically reduces the mass venting rate per unit area and exhausts high-density liquid",
+          "Two-phase venting drops the pressure too quickly, causing cavitation"
+        ],
+        "answer": 2,
+        "explain": "In runaway reactions involving viscous reacting fluids, boiling vapor bubbles disengage slowly, resulting in two-phase (gas-liquid) venting. The mass discharge flux for two-phase flow is much lower than for pure gas, requiring a substantially larger nozzle area."
+      },
+      {
+        "id": "dow-8",
+        "section": "Technical",
+        "topic": "Thermodynamics",
+        "q": "In phase equilibrium thermodynamics, what criterion defines the bubble point temperature of a multi-component liquid mixture at a given pressure P?",
+        "options": [
+          "The critical temperature of the lightest component",
+          "The temperature where the sum of liquid mole fractions equals 1: sum(x_i) = sum(y_i / K_i) = 1",
+          "The temperature where the enthalpy of vaporization equals zero",
+          "The temperature where the sum of vapor mole fractions equals 1: sum(y_i) = sum(K_i * x_i) = 1"
+        ],
+        "answer": 3,
+        "explain": "At the bubble point, the first incipient bubble of vapor forms from the saturated liquid. Therefore, sum(y_i) = sum(K_i * x_i) must equal exactly 1.0."
+      },
+      {
+        "id": "dow-9",
+        "section": "Technical",
+        "topic": "Heat transfer",
+        "q": "A counter-current shell-and-tube heat exchanger cools a polymer solution from 120 C to 60 C using cooling water entering at 20 C and exiting at 40 C. What is the Logarithmic Mean Temperature Difference (LMTD)?",
+        "options": [
+          "56.9 C",
+          "40.0 C",
+          "50.0 C",
+          "68.2 C"
+        ],
+        "answer": 0,
+        "explain": "Delta T_1 = T_hot_in - T_cold_out = 120 - 40 = 80 C. Delta T_2 = T_hot_out - T_cold_in = 60 - 20 = 40 C. LMTD = (80 - 40) / ln(80/40) = 40 / ln(2) = 40 / 0.703 = 56.9 C."
+      },
+      {
+        "id": "dow-10",
+        "section": "Technical",
+        "topic": "Process control",
+        "q": "In an exothermic polymerization reactor with cooling water jacket, why is cascade control (reactor temperature controller setting the setpoint of the jacket cooling water temperature controller) preferred over single-loop feedback?",
+        "options": [
+          "Cascade control eliminates the need for any control valves",
+          "The secondary jacket loop quickly rejects cooling water supply temperature and pressure disturbances before they affect the primary reactor bulk temperature",
+          "Cascade control increases the overall dead time of the process loop",
+          "Cascade control prevents the controller from ever saturating"
+        ],
+        "answer": 1,
+        "explain": "Cooling water header fluctuations directly disturb the jacket heat transfer. The slave loop detects and corrects jacket temperature changes rapidly, isolating the slow thermal inertia of the reactor bulk contents."
+      },
+      {
+        "id": "dow-11",
+        "section": "Technical",
+        "topic": "Separation processes",
+        "q": "In pressure-swing adsorption (PSA) cycles used to recover monomer-grade ethylene from purge gas streams, how is the solid adsorbent regenerated?",
+        "options": [
+          "By combusting the adsorbent inside the vessel",
+          "By washing the bed with concentrated sulfuric acid",
+          "By reducing the bed pressure to near-atmospheric or vacuum levels to desorb the loaded hydrocarbon adsorbate",
+          "By heating the adsorbent to 1200 C"
+        ],
+        "answer": 2,
+        "explain": "PSA exploits equilibrium adsorption isotherms where capacity decreases with reduced partial pressure. Depressurizing the bed shifts equilibrium, desorbing the captured species without supplying latent heat."
+      },
+      {
+        "id": "dow-12",
+        "section": "Technical",
+        "topic": "Process equipment",
+        "q": "What type of impeller is best suited for blending high-viscosity non-Newtonian polymer doughs (viscosities > 50,000 cP) in industrial mixing vessels?",
+        "options": [
+          "Centrifugal spray nozzles",
+          "High-speed marine propellers",
+          "Small flat-blade Rushton turbines",
+          "Helical ribbon or anchor impellers operating at low rotational speeds with narrow wall clearance"
+        ],
+        "answer": 3,
+        "explain": "In laminar high-viscosity mixing, high-speed turbines produce localized cavern flow leaving stagnant fluid near the wall. Helical ribbon and anchor impellers scrape and circulate fluid throughout the entire vessel volume."
+      },
+      {
+        "id": "dow-13",
+        "section": "Technical",
+        "topic": "Thermodynamics",
+        "q": "In polymer-solvent solutions, why does Raoult's law fail dramatically, requiring the use of the Flory-Huggins lattice theory?",
+        "options": [
+          "The enormous difference in molar volumes between monomeric solvent molecules and macromolecular polymer chains creates an unusually large combinatorial entropy of mixing",
+          "Polymer molecules do not possess any kinetic energy",
+          "Solvent molecules cannot interact with polar polymer segments",
+          "Polymers violate the first law of thermodynamics"
+        ],
+        "answer": 0,
+        "explain": "Raoult's law assumes ideal random mixing of equisized particles. In polymer solutions, one polymer chain occupies thousands of lattice sites, yielding an entropy of mixing much larger than ideal mole-fraction predictions."
+      },
+      {
+        "id": "dow-14",
+        "section": "Technical",
+        "topic": "Materials science",
+        "q": "In polyurethanes chemistry, what functional groups react to form the primary urethane linkage?",
+        "options": [
+          "A carboxylic acid group (-COOH) and an amine group (-NH2)",
+          "An isocyanate group (-N=C=O) and a hydroxyl group (-OH)",
+          "An aldehyde group (-CHO) and an alkene group (C=C)",
+          "An ether linkage (-O-) and an ester group (-COO-)"
+        ],
+        "answer": 1,
+        "explain": "Polyurethanes are formed via polyaddition of polyols (containing terminal -OH groups) with diisocyanates (such as MDI or TDI), forming urethane carbamate linkages (-NH-COO-)."
+      },
+      {
+        "id": "dow-15",
+        "section": "Technical",
+        "topic": "Fluid mechanics",
+        "q": "A slurry pump transports polymer pellets suspended in water. If the pipe diameter is halved while the volumetric flow rate remains constant, by what factor does the average fluid velocity increase?",
+        "options": [
+          "8 times",
+          "2 times",
+          "4 times",
+          "16 times"
+        ],
+        "answer": 2,
+        "explain": "From continuity (Q = v * A = v * pi * D^2 / 4), velocity v is inversely proportional to D^2. Halving the diameter D multiplies velocity by (1 / 0.5)^2 = 4."
+      },
+      {
+        "id": "dow-16",
+        "section": "Technical",
+        "topic": "Distillation",
+        "q": "In extractive distillation of close-boiling hydrocarbon mixtures (such as butadiene from butenes), how does the addition of a polar solvent like N-methylpyrrolidone (NMP) facilitate separation?",
+        "options": [
+          "It freezes butadiene so it can be filtered out as solid crystals",
+          "It reacts irreversibly with butenes to precipitate a solid salt",
+          "It lowers the critical temperature of the entire column below absolute zero",
+          "It selectively alters the activity coefficients of the components, significantly increasing the relative volatility (alpha) between butadiene and the butenes"
+        ],
+        "answer": 3,
+        "explain": "Extractive solvents interact more strongly with more polarizable pi-electrons (dienes), lowering their activity coefficient relative to mono-olefins and raising the separation factor alpha."
+      },
+      {
+        "id": "dow-17",
+        "section": "Technical",
+        "topic": "Environmental engineering",
+        "q": "In the treatment of chemical plant wastewater containing halogenated volatile organic compounds (VOCs), what advanced oxidation process (AOP) utilizes UV light and hydrogen peroxide?",
+        "options": [
+          "UV/H2O2 photolysis generating highly reactive, non-selective hydroxyl radicals (OH*) that oxidize organic pollutants into CO2, H2O, and halide ions",
+          "Biological anaerobic digestion in septic lagoons",
+          "Gravity sedimentation in API oil-water separators",
+          "Thermal drying into solid briquettes"
+        ],
+        "answer": 0,
+        "explain": "UV cleavage of H2O2 (H2O2 + h*nu -> 2 OH*) generates free hydroxyl radicals with redox potential 2.8 V, rapidly destroying refractory organic toxins."
+      },
+      {
+        "id": "dow-18",
+        "section": "Technical",
+        "topic": "Process safety",
+        "q": "Under OSHA Process Safety Management (PSM 1910.119), what document is required whenever a temporary or permanent change is made to process chemicals, technology, equipment, or operating procedures?",
+        "options": [
+          "A new corporate stock issuance form",
+          "Management of Change (MOC) authorization and review",
+          "An annual tax filing declaration",
+          "A commercial marketing advertisement"
+        ],
+        "answer": 1,
+        "explain": "MOC is a core PSM pillar requiring formal technical evaluation of safety, health, and environmental impacts before altering process chemistry, control setpoints, piping, or equipment."
+      },
+      {
+        "id": "dow-19",
+        "section": "Aptitude",
+        "topic": "Quantitative aptitude",
+        "q": "A chemical storage tank is filled by Pipe A in 6 hours and Pipe B in 10 hours. An outlet drain pipe can empty the full tank in 15 hours. If all three pipes are opened simultaneously when the tank is empty, how many hours will it take to fill the tank?",
+        "options": [
+          "6.5 hours",
+          "4.0 hours",
+          "5.0 hours",
+          "7.5 hours"
+        ],
+        "answer": 2,
+        "explain": "Net filling rate per hour = 1/6 + 1/10 - 1/15. Common denominator is 30: (5 + 3 - 2)/30 = 6/30 = 1/5 per hour. Time required = 1 / (1/5) = 5 hours."
+      },
+      {
+        "id": "dow-20",
+        "section": "Aptitude",
+        "topic": "Quantitative aptitude",
+        "q": "A pilot plant reactor blends two aqueous polymer solutions: Solution X with 20 wt% solids and Solution Y with 50 wt% solids. How many kilograms of Solution X must be mixed with Solution Y to produce 300 kg of a final blended solution containing 30 wt% solids?",
+        "options": [
+          "250 kg",
+          "100 kg",
+          "150 kg",
+          "200 kg"
+        ],
+        "answer": 3,
+        "explain": "By alligation: (50 - 30) / (30 - 20) = 20 / 10 = 2 : 1 ratio of Solution X to Solution Y. Mass of X = (2/3) * 300 kg = 200 kg. Mass of Y = 100 kg."
+      },
+      {
+        "id": "dow-21",
+        "section": "Aptitude",
+        "topic": "Quantitative aptitude",
+        "q": "The concentration of an unreacted monomer in a batch reactor drops by 20% during the first hour and by 30% of the remaining amount during the second hour. If the initial concentration was 50 mol/L, what is the final concentration after 2 hours?",
+        "options": [
+          "28 mol/L",
+          "25 mol/L",
+          "32 mol/L",
+          "35 mol/L"
+        ],
+        "answer": 0,
+        "explain": "After 1 hour: 50 * (1 - 0.20) = 40 mol/L. After 2 hours: 40 * (1 - 0.30) = 40 * 0.70 = 28 mol/L."
+      },
+      {
+        "id": "dow-22",
+        "section": "Aptitude",
+        "topic": "Quantitative aptitude",
+        "q": "A chemical manufacturing unit produced 12,000 tons of resin in 2024. Production is projected to grow by 5% annually. What will be the expected production in 2026 (rounded to the nearest ton)?",
+        "options": [
+          "13,200 tons",
+          "13,230 tons",
+          "12,600 tons",
+          "13,500 tons"
+        ],
+        "answer": 1,
+        "explain": "Year 2025: 12,000 * 1.05 = 12,600 tons. Year 2026: 12,600 * 1.05 = 13,230 tons."
+      },
+      {
+        "id": "dow-23",
+        "section": "Aptitude",
+        "topic": "Logical reasoning",
+        "q": "Identify the next number in the industrial production sequence: 4, 9, 19, 39, 79, ?",
+        "options": [
+          "169",
+          "149",
+          "159",
+          "158"
+        ],
+        "answer": 2,
+        "explain": "The pattern is x_(n+1) = 2 * x_n + 1: 4*2+1=9; 9*2+1=19; 19*2+1=39; 39*2+1=79; 79*2+1=159."
+      },
+      {
+        "id": "dow-24",
+        "section": "Aptitude",
+        "topic": "Logical reasoning",
+        "q": "Consider the following statements: (1) All polymers are macromolecules. (2) Some macromolecules are biodegradable. Which conclusion logically follows?",
+        "options": [
+          "All macromolecules are polymers",
+          "All polymers are biodegradable",
+          "No polymer is biodegradable",
+          "Some macromolecules are polymers"
+        ],
+        "answer": 3,
+        "explain": "Since 'All polymers are macromolecules', the sub-class of polymers is contained within macromolecules; thus 'Some macromolecules are polymers' is unconditionally valid."
+      },
+      {
+        "id": "dow-25",
+        "section": "Aptitude",
+        "topic": "Logical reasoning",
+        "q": "In a manufacturing facility, if 'CATALYST' is encoded as 'FDWDOBWW', each letter being shifted forward by 3 positions in the alphabet, how is 'RESIN' encoded using the same rule?",
+        "options": [
+          "UHVLQ",
+          "TGSMQ",
+          "UHWLR",
+          "SFTJO"
+        ],
+        "answer": 0,
+        "explain": "Shift each letter forward by 3: R+3=U, E+3=H, S+3=V, I+3=L, N+3=Q -> UHVLQ."
+      },
+      {
+        "id": "dow-26",
+        "section": "Aptitude",
+        "topic": "Data interpretation",
+        "q": "A plant's energy consumption consists of: Steam 50%, Electricity 30%, Fuel Gas 20%. If total energy cost is $2,000,000 per month, how much is spent specifically on electricity?",
+        "options": [
+          "$500,000",
+          "$600,000",
+          "$400,000",
+          "$1,000,000"
+        ],
+        "answer": 1,
+        "explain": "Electricity cost = 30% of $2,000,000 = 0.30 * 2,000,000 = $600,000."
+      },
+      {
+        "id": "dow-27",
+        "section": "Aptitude",
+        "topic": "Verbal reasoning",
+        "q": "Select the word that is most nearly opposite in meaning (antonym) to 'HOMOGENEOUS':",
+        "options": [
+          "Uniform",
+          "Consistent",
+          "Heterogeneous",
+          "Congruent"
+        ],
+        "answer": 2,
+        "explain": "'Homogeneous' means composed of identical or uniform parts; its antonym is 'heterogeneous', meaning composed of diverse or dissimilar elements."
+      },
+      {
+        "id": "dow-28",
+        "section": "Aptitude",
+        "topic": "Verbal reasoning",
+        "q": "Complete the sentence with the grammatically correct option: 'The chemical manufacturing team implemented the new control philosophy _______ the plant could achieve higher thermal efficiency.'",
+        "options": [
+          "whereas",
+          "in spite of",
+          "although",
+          "so that"
+        ],
+        "answer": 3,
+        "explain": "'So that' introduces a clause expressing purpose or intended outcome, which fits the causal relationship correctly."
+      }
+    ]
+  },
+  "interview": {
+    "rounds": [
+      "Online assessment",
+      "Technical interview",
+      "HR interview"
+    ],
+    "about": "Dow is a world-leading materials science enterprise manufacturing plastics, industrial intermediates, coatings, and silicones. Dow recruits chemical engineers for manufacturing operations, process development, technical service, and environmental health and safety across global chemical production hubs.",
+    "looks_for": [
+      "Strong command of chemical engineering fundamentals: thermodynamics, mass transfer, kinetics, and fluid flow.",
+      "Deep respect for Environmental, Health, and Safety (EH&S) standards and a zero-incident mindset.",
+      "Demonstrated problem-solving ability in plant environments and process optimization.",
+      "Collaborative mindset and effective communication across multi-disciplinary teams.",
+      "Adaptability, drive for continuous improvement, and customer-focused solution design.",
+      "Hands-on laboratory, pilot plant, or manufacturing internship experience."
+    ],
+    "selection": [
+      "Online assessment covering quantitative reasoning, deductive logic, and core chemical engineering fundamentals.",
+      "Initial behavioral interview evaluating teamwork, safety ownership, and situational judgment.",
+      "Comprehensive technical panel interview reviewing engineering coursework, internship projects, and process scenarios.",
+      "Site visit or leadership discussion focused on cultural fit, mobility, and career goals."
+    ],
+    "technical": [
+      {
+        "q": "How does free-radical polymerization kinetics determine the molecular weight distribution of polyethylene?",
+        "a": "In free-radical polymerization, chain propagation competes directly with chain termination (combination or disproportionation) and chain transfer reactions. The ratio of propagation rate to termination rate sets the instantaneous kinetic chain length. Frequent chain transfer to monomer, solvent, or polymer broadens the polydispersity index (PDI = Mw / Mn) and generates short and long branches."
+      },
+      {
+        "q": "Explain the significance of the glass transition temperature (Tg) versus the crystalline melting temperature (Tm).",
+        "a": "Tg is a second-order transition observed in amorphous regions where cooperative segmental rotation of polymer chains becomes active, transitioning the polymer from a rigid, glassy state to a rubbery state. Tm is a true first-order thermodynamic phase transition observed in crystalline domains where ordered crystalline lamellae melt into a disordered liquid melt, absorbing latent heat."
+      },
+      {
+        "q": "How are runaway exothermic reactions prevented in industrial chemical reactors?",
+        "a": "Runaways are prevented by operating safely below the critical runaway temperature limit using high-reliability temperature control loops, installing redundant jacket cooling systems, maintaining rapid emergency inhibitor injection or cold-solvent quench systems, and designing emergency relief systems with rupture discs and catch tanks sized via DIERS two-phase flow guidelines."
+      },
+      {
+        "q": "What design considerations distinguish packed columns from trayed columns in chemical separation?",
+        "a": "Packed columns offer significantly lower pressure drop per theoretical stage, smaller liquid hold-up, and higher capacity for foaming or vacuum systems, making them ideal for temperature-sensitive materials like ethylene oxide. Trayed columns handle wider liquid turn-down ratios, fouling solids, and large diameters without the severe liquid maldistribution risks inherent in deep packed beds."
+      },
+      {
+        "q": "How does shear-thinning (pseudoplastic) behavior impact the sizing of pumps and piping in polymer processing?",
+        "a": "For shear-thinning fluids (n < 1), apparent viscosity decreases as shear rate increases. In high-shear regions like pump impellers and pipe walls, the fluid flows with less resistance than predicted by low-shear zero-rate viscosity. Sizing calculations must use the generalized Reynolds number and Metzner-Otto shear correlations to avoid overestimating frictional head loss."
+      },
+      {
+        "q": "Describe the operational difference between solution polymerization and emulsion polymerization.",
+        "a": "In solution polymerization, monomer and initiator dissolve in a solvent that dissipates reaction heat and lowers viscosity, but solvent recovery adds capital and energy costs. In emulsion polymerization, hydrophobic monomer droplets are dispersed in water via surfactants, forming micelles where reaction occurs. Water acts as an excellent heat transfer medium with high rates and high molecular weights at low bulk viscosities."
+      },
+      {
+        "q": "What is the role of Management of Change (MOC) in process safety management?",
+        "a": "MOC is a systematic procedure to review and authorize any modification to process chemicals, operating parameters, equipment, or piping before implementation. It ensures that secondary hazards (such as metallurgical incompatibility, overpressure risks, or relief system inadequacies) are identified and mitigated before the alteration goes live."
+      },
+      {
+        "q": "How do you calculate the required heat transfer area for a counter-current heat exchanger?",
+        "a": "The required area is determined from Q = U * A * LMTD * F_t, where Q is the thermal duty (m_dot * C_p * Delta T), U is the overall heat transfer coefficient accounting for tube/shell convective coefficients, wall resistance, and fouling factors, LMTD is the log-mean temperature difference, and F_t is the multi-pass correction factor."
+      },
+      {
+        "q": "What factors cause liquid entrainment and flooding in distillation columns?",
+        "a": "Flooding occurs when vapor velocity exceeds the allowable limit (Souders-Brown velocity), causing vapor to entrain massive liquid droplets upward to the tray above (entrainment flooding), or when downcomers become choked with frothy aerated liquid due to excessive liquid rate or inadequate downcomer area (downcomer backup flooding)."
+      },
+      {
+        "q": "Explain how cross-flow membrane separation works in solvent recovery or monomer purification.",
+        "a": "In cross-flow membrane filtration, feed solution flows tangentially across the membrane surface at high velocity, which sweeps away accumulated foulants and minimizes concentration polarization. A pressure gradient (transmembrane pressure) drives permeable solvent or light molecules through the selective polymer or ceramic matrix into the permeate stream while retaining macromolecules in the retentate."
+      }
+    ],
+    "hr": [
+      {
+        "q": "Why do you want to work at Dow?",
+        "how": "Connect your passion for materials science and sustainable manufacturing with Dow's leadership in circular economy solutions, plastics recycling, and world-class EH&S culture."
+      },
+      {
+        "q": "Tell me about a time you identified and resolved a safety concern in a project or laboratory.",
+        "how": "Use the STAR approach: describe the specific chemical or mechanical hazard, your immediate proactive action to halt work or notify the supervisor, and the permanent mitigation implemented."
+      },
+      {
+        "q": "Describe a difficult engineering challenge where you had to collaborate with a cross-functional team.",
+        "how": "Focus on how you communicated complex chemical engineering concepts clearly to non-chemical colleagues, resolved differing technical viewpoints respectfully, and delivered project objectives on time."
+      },
+      {
+        "q": "Give an example of a situation where an experiment or project failed. What did you learn?",
+        "how": "Emphasize accountability, analytical root cause investigation without defensive excuses, and the procedural changes or engineering insights gained that made subsequent runs successful."
+      },
+      {
+        "q": "How do you prioritize competing deadlines when operating under tight plant or academic schedules?",
+        "how": "Explain your systematic approach to risk-based prioritization: evaluating safety, critical path impacts, and communicating trade-offs early and transparently with supervisors."
+      },
+      {
+        "q": "Where do you envision your career trajectory at Dow over the next five years?",
+        "how": "State your enthusiasm for mastering frontline production engineering, earning operational credibility on a manufacturing plant, and expanding into process development, optimization, or plant leadership."
+      }
+    ],
+    "present": [
+      "Demonstrate an unwavering commitment to personal and process safety (zero-injury mindset).",
+      "Present chemical engineering calculations logically from first principles with dimensional consistency.",
+      "Communicate project experiences clearly using the STAR structure (Situation, Task, Action, Result).",
+      "Exhibit curiosity and enthusiasm for polymer manufacturing, reaction engineering, and materials innovation.",
+      "Display humility, active listening, and a strong collaborative team ethos."
+    ],
+    "tips": [
+      "Review polymer chemistry basics: free radical kinetics, Mw/Mn, copolymerization, and rheology.",
+      "Be prepared to explain heat exchanger LMTD calculations and distillation tray hydraulics.",
+      "Understand the OSHA PSM 14 elements, especially MOC, PHA, and mechanical integrity.",
+      "Familiarize yourself with Dow's key product lines: polyolefins, polyurethanes, and silicones.",
+      "Prepare 2-3 thoughtful questions about plant sustainability projects and manufacturing career paths."
+    ]
+  },
+  "sources": [
+    "https://www.dow.com/en-us/careers.html",
+    "https://www.glassdoor.com/Interview/Dow-Interview-Questions-E238.htm"
+  ]
+}
