@@ -1,9 +1,10 @@
 import json
+import re
 from pathlib import Path
 
 import pytest
 
-from app.agent.markup import _MATH, tidy_markdown
+from app.agent.markup import _DOUBLE, _MATH, tidy_markdown
 
 # Real snippets from the live baseline (1019).
 CONCEPT = (
@@ -35,7 +36,7 @@ def test_delimiters_converted() -> None:
 
 
 def test_newlines_real() -> None:
-    assert tidy_markdown(CALC2).count("\n") == 4
+    assert tidy_markdown(CALC2).count("\n") == 5  # blank line before **Method:**
 
 
 def test_maths_content_untouched() -> None:
@@ -56,7 +57,7 @@ def test_final_answer_is_tidied() -> None:
 
     state = SolveState(id="s", user_id="u", question="q")
     out = _final(state, r"Rate \(k\) here.\n**Steps:** \[x = 1\]", "medium")
-    assert out.answer_md == "Rate $k$ here.\n**Steps:** $$x = 1$$"
+    assert out.answer_md == "Rate $k$ here.\n\n**Steps:** $$x = 1$$"
 
 
 FIXTURES = json.loads(
@@ -75,7 +76,7 @@ def test_real_answers_have_no_raw_markup_outside_maths(name: str) -> None:
     outside = _MATH.sub("", out)
     for bad in ("\\n", "\\cdot", "\\mu", "\\times", "\\text{"):
         assert bad not in outside
-    assert _segs(out) == _segs(src)
+    assert _segs(out) == _segs(_DOUBLE.sub(lambda _: chr(92), src))
 
 
 def test_bare_latex_and_text_outside_maths() -> None:
@@ -98,3 +99,21 @@ def test_commands_and_maths_left_alone() -> None:
     assert tidy_markdown(keep) == keep.replace(r"\nu", "ν")
     inside = r"$x \le 3 \cdot \mu \text{ m} \nabla$ and $$a \times b\nu$$"
     assert tidy_markdown(inside) == inside
+
+
+def test_double_backslash_and_sections() -> None:
+    b, bb, nl = chr(92), chr(92) * 2, chr(10)
+    src = nl.join([
+        f"**Given:** $k = 0.1{b} {b}text{{min}}^{{-1}}$.",
+        f"**Method:** ${bb}displaystyle X = {bb}frac{{k {bb}tau}}{{1 + k {bb}tau}}$",
+        "**Steps:**",
+        f"$$[X = k {bb}tau (1 - X)]$$",
+        f"**Answer:** ${bb}mathbf{{400{b} {b}text{{L}}}}$",
+    ])
+    out = tidy_markdown(src)
+    assert not re.search(re.escape(bb) + "[A-Za-z]", out)
+    assert all(b + c in out for c in ("frac", "tau", "mathbf", "text"))
+    assert out.count(nl * 2) == 4
+    row = "$$" + b + "begin{aligned} a &= b " + bb + " c &= d " + b + "end{aligned}$$"
+    assert tidy_markdown(row) == row
+    assert tidy_markdown(f"{bb}[ x {bb}] y") == "$$ x $$ y"

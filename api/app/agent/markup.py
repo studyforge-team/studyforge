@@ -9,6 +9,11 @@ _BLOCK = re.compile(r"\\\[(.*?)\\\]", re.DOTALL)
 _INLINE = re.compile(r"\\\((.*?)\\\)", re.DOTALL)
 # outside maths a literal "\n" is a line break unless it starts a LaTeX command (\nabla, \nu, \neq...)
 _LITERAL_NL = re.compile(r"\\n(?!(?:abla|u|e|eq|ewline|ot|i)\b)")
+# model over-escapes inside JSON: two backslashes before a letter or bracket become one
+# (a doubled backslash before whitespace is a real LaTeX row break and stays)
+_DOUBLE = re.compile(r"(?<!\\)\\\\(?=[A-Za-z\[\]()])")
+# glued **Section:** lines (single newlines) must be separate paragraphs
+_SECTION_NL = re.compile(r"(?<!\n)\n(?!\n)(?=\*\*)|(?<=:\*\*)\n(?!\n)")
 _SYMBOLS = {
     "cdot": "·", "times": "×", "mu": "μ", "rho": "ρ", "Delta": "Δ", "pi": "π",
     "approx": "≈", "le": "≤", "ge": "≥", "alpha": "α", "beta": "β", "eta": "η",
@@ -20,10 +25,12 @@ _TEXT = re.compile(r"(?:\\+ )?\\+(?:text|mathrm)\{([^{}]*)\}")
 
 def _plain(s: str) -> str:
     s = _TEXT.sub(r"\1", _LITERAL_NL.sub("\n", s))
+    s = _SECTION_NL.sub("\n\n", s)
     return _LATEX.sub(lambda m: _SYMBOLS[m.group(1)], s)
 
 
 def tidy_markdown(md: str) -> str:
+    md = _DOUBLE.sub(lambda _: chr(92), md)
     md = _BLOCK.sub(lambda m: f"$${m.group(1)}$$", md)
     md = _INLINE.sub(lambda m: f"${m.group(1).strip()}$", md)
     out, last = [], 0
