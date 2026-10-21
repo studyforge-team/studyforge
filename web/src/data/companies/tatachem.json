@@ -1,0 +1,527 @@
+{
+  "id": "tatachem",
+  "company": "Tata Chemicals",
+  "roles": [
+    "Executive Trainee (Chemical)",
+    "Manufacturing Specialist"
+  ],
+  "note": "Practice set written for StudyForge from publicly reported hiring patterns and core chemical-engineering topics. Not official; actual tests may differ.",
+  "oa": {
+    "sections": [
+      {
+        "name": "Aptitude",
+        "questions": 15,
+        "minutes": 20
+      },
+      {
+        "name": "Technical",
+        "questions": 20,
+        "minutes": 30
+      }
+    ],
+    "draw": 15,
+    "marks_per_q": 1,
+    "bank": [
+      {
+        "id": "tatachem-1",
+        "section": "Technical",
+        "topic": "Inorganic chemical technology",
+        "q": "In the Solvay process for manufacturing soda ash (sodium carbonate, Na2CO3), what primary intermediate solid salt precipitates from the carbonating tower?",
+        "options": [
+          "Sodium bicarbonate (NaHCO3)",
+          "Ammonium chloride (NH4Cl)",
+          "Calcium carbonate (CaCO3)",
+          "Sodium hydroxide (NaOH)"
+        ],
+        "answer": 0,
+        "explain": "In the Solvay carbonating tower, ammoniated brine reacts with CO2: NaCl + NH3 + CO2 + H2O <-> NaHCO3 (precipitate) + NH4Cl. Sodium bicarbonate has relatively low solubility in ammonium chloride brine and precipitates out."
+      },
+      {
+        "id": "tatachem-2",
+        "section": "Technical",
+        "topic": "Chemical kinetics and calcination",
+        "q": "How is precipitated sodium bicarbonate converted to dense soda ash in industrial calciner kilns?",
+        "options": [
+          "Dissolution in concentrated hydrochloric acid",
+          "Thermal decomposition at 160-230 C: 2 NaHCO3 -> Na2CO3 + H2O + CO2, recovering CO2 gas for recycle to carbonating towers",
+          "High-pressure catalytic hydrogenation",
+          "Electrochemical reduction in molten salts"
+        ],
+        "answer": 1,
+        "explain": "Filtered sodium bicarbonate cake is heated in steam-tube or direct-fired rotary calciners to 180-200 C, driving off CO2 and steam. The evolved pure CO2 is compressed and recycled back to the carbonation towers."
+      },
+      {
+        "id": "tatachem-3",
+        "section": "Technical",
+        "topic": "Solvay ammonia recovery",
+        "q": "Why is the ammonia recovery distillation column (ammonia still) essential to the economic viability of the Solvay soda ash process?",
+        "options": [
+          "It produces solid ammonium nitrate explosive for quarrying",
+          "It converts ammonia into nitric acid fertilizer",
+          "Ammonia acts as an expensive chemical catalyst/carrier; reacting ammonium chloride with slaked lime (2 NH4Cl + Ca(OH)2 -> CaCl2 + 2 NH3 + 2 H2O) recovers > 99% of ammonia for continuous reuse in brine ammoniation",
+          "It oxidizes ammonia to nitrogen gas to prevent toxicity"
+        ],
+        "answer": 2,
+        "explain": "Ammonia is expensive compared to salt and limestone. The ammonia still strips free ammonia with steam and decomposes fixed ammonium chloride using milk of lime, keeping ammonia losses under 1-2 kg per ton of soda ash."
+      },
+      {
+        "id": "tatachem-4",
+        "section": "Technical",
+        "topic": "Chlor-alkali electrolysis",
+        "q": "In modern chlor-alkali manufacturing, what is the primary advantage of perfluorinated cation-exchange membrane cells over older diaphragm and mercury cell technologies?",
+        "options": [
+          "Membrane cells operate with unpurified raw sea salt without brine treatment",
+          "Membrane cells produce pure liquid chlorine directly inside the cell without drying",
+          "Membrane cells eliminate the need for electrical DC power",
+          "Membranes selectively permit only Na+ ions and hydrated water to migrate from anolyte to catholyte, completely excluding toxic mercury and asbestos while producing pure 32-35 wt% caustic soda (NaOH) with low chloride content and superior energy efficiency"
+        ],
+        "answer": 3,
+        "explain": "Nafion-type bilayer cation-exchange membranes prevent hydroxyl (OH-) and chloride (Cl-) ions from crossing into the anolyte, generating chlorine at the anode and chlorine-free NaOH + H2 at the cathode safely and efficiently."
+      },
+      {
+        "id": "tatachem-5",
+        "section": "Technical",
+        "topic": "Evaporation systems",
+        "q": "In a multi-effect evaporator (MEE) concentrating caustic soda or evaporating vacuum salt brine, what is the fundamental thermodynamic principle behind operating effects in series at successively lower pressures?",
+        "options": [
+          "Vapor boiled off from an earlier effect can serve as the heating steam for the subsequent effect because the lower operating pressure reduces the boiling temperature of the liquid in the next effect",
+          "Lower pressure increases the heat of vaporization of water to infinity",
+          "Operating in vacuum prevents all forms of tube fouling and scaling",
+          "Operating in series doubles the electrical conductivity of the solution"
+        ],
+        "answer": 0,
+        "explain": "By maintaining each successive effect at lower pressure (deeper vacuum), the boiling point drops below the saturation temperature of vapor leaving the preceding effect, enabling multiple reuse of latent heat."
+      },
+      {
+        "id": "tatachem-6",
+        "section": "Technical",
+        "topic": "Chemical kinetics",
+        "q": "In limestone calcination inside a vertical shaft lime kiln (CaCO3 -> CaO + CO2), what factor limits the thermal decomposition rate at temperatures around 900 C?",
+        "options": [
+          "Activation energy of the solid crystalline transition",
+          "Heat conduction through the insulating outer calcium oxide (porous lime) product layer and intraparticle diffusion of CO2 gas out of the unreacted carbonate core",
+          "Excessive oxygen concentration in the kiln draft",
+          "Sublimation of calcium metal"
+        ],
+        "answer": 1,
+        "explain": "According to the shrinking unreacted core model, as decomposition proceeds, a porous CaO layer surrounds the unreacted CaCO3 core. Rate is governed by thermal conduction across the lime shell and mass diffusion of CO2."
+      },
+      {
+        "id": "tatachem-7",
+        "section": "Technical",
+        "topic": "Solid-liquid separation",
+        "q": "In the filtration of sodium bicarbonate slurry leaving Solvay carbonating towers, why are continuous Rotary Vacuum Drum Filters (RVDF) preferred?",
+        "options": [
+          "They dry the cake completely to zero moisture without requiring any heat",
+          "They can withstand pressures up to 300 bar",
+          "They allow continuous high-throughput cake filtration, effective cake washing with water displacement to wash away adhering ammonium chloride liquor, and automated pneumatic cake discharge",
+          "They eliminate the need for filter cloths"
+        ],
+        "answer": 2,
+        "explain": "Solvay plants process enormous slurry flows continuously. RVDF units rotate a segmented drum under vacuum, continuously forming, washing (crucial to minimize NH4Cl in product), and scraping off bicarbonate cake."
+      },
+      {
+        "id": "tatachem-8",
+        "section": "Technical",
+        "topic": "Mass transfer",
+        "q": "In chlor-alkali plants, how is wet chlorine gas exiting membrane cells at ~85 C dried before it can be compressed in carbon steel compressors?",
+        "options": [
+          "Adsorption onto activated carbon beds",
+          "Passing through beds of active calcium hydroxide pellets",
+          "Chilling with direct contact liquid ammonia",
+          "Counter-current scrubbing with concentrated sulfuric acid (98% H2SO4) in multi-stage packed towers, which absorbs water vapor without reacting with chlorine"
+        ],
+        "answer": 3,
+        "explain": "Wet chlorine is intensely corrosive to steel and titanium. Concentrated sulfuric acid is inert toward chlorine and has immense hygroscopic affinity, drying Cl2 gas to < 20 ppmv moisture, making it safe for carbon steel."
+      },
+      {
+        "id": "tatachem-9",
+        "section": "Technical",
+        "topic": "Thermodynamics",
+        "q": "What is Boiling Point Elevation (BPE) and how does it affect the design of multi-effect evaporators concentrating aqueous sodium hydroxide solutions?",
+        "options": [
+          "Non-volatile dissolved solute lowers the solvent vapor pressure, raising the solution boiling point above pure water at the same pressure; BPE consumes available temperature driving force across evaporator effects",
+          "BPE increases the latent heat of condensation of heating steam",
+          "BPE lowers the overall heat transfer coefficient to zero",
+          "BPE accelerates nucleate boiling by generating micro-cavities"
+        ],
+        "answer": 0,
+        "explain": "Concentrated NaOH exhibits massive BPE (e.g. 50% NaOH boils > 40 C above pure water at atmospheric pressure). This elevation subtracts directly from the total temperature driving force (Delta T) across the MEE train."
+      },
+      {
+        "id": "tatachem-10",
+        "section": "Technical",
+        "topic": "Process safety",
+        "q": "In chlor-alkali facilities, why is the mixture of hydrogen and chlorine gas strictly prevented from entering the explosive range (explosive limits 4% to 93% H2 in Cl2)?",
+        "options": [
+          "H2 and Cl2 react to produce liquid chloroform that dissolves rubber gaskets",
+          "Hydrogen and chlorine form a photochemically and thermally explosive mixture that detonates violently upon exposure to ultraviolet light, static sparks, or temperatures above 200 C",
+          "The mixture forms toxic phosgene in the absence of carbon",
+          "The mixture causes severe vacuum collapse of cathode compartments"
+        ],
+        "answer": 1,
+        "explain": "H2 + Cl2 -> 2 HCl is an extremely fast free-radical chain reaction with very wide flammability limits. Trace membrane tears can allow H2 to leak into anode chlorine, creating an explosive hazard."
+      },
+      {
+        "id": "tatachem-11",
+        "section": "Technical",
+        "topic": "Brine purification",
+        "q": "Before raw saturated rock salt brine can be fed to chlor-alkali membrane electrolysis cells, why must calcium (Ca2+) and magnesium (Mg2+) ions be reduced to < 20 ppb?",
+        "options": [
+          "They cause severe foaming in the hydrogen gas scrubber",
+          "Ca2+ and Mg2+ ions turn into chlorine gas at the anode",
+          "In the alkaline environment near the membrane cathode interface (pH > 14), Ca2+ and Mg2+ precipitate as insoluble hydroxides and carbonates inside the microscopic membrane pores, irreversibly blinding the membrane and causing electrical voltage spikes",
+          "They react with titanium anodes to cause galvanic embrittlement"
+        ],
+        "answer": 2,
+        "explain": "Membranes are vulnerable to alkaline precipitation. Primary chemical precipitation (with Na2CO3 and NaOH) removes bulk Ca/Mg to ~1 ppm, followed by chelating ion-exchange resin columns to reach < 20 ppb."
+      },
+      {
+        "id": "tatachem-12",
+        "section": "Technical",
+        "topic": "Crystallization",
+        "q": "In vacuum salt manufacturing, what operating conditions in an Oslo or draft-tube baffle (DTB) crystallizer promote uniform large crystal growth while suppressing unwanted nucleation?",
+        "options": [
+          "Adding concentrated nitric acid to dissolve all crystal nuclei",
+          "Operating with maximum possible mechanical impeller shear speed",
+          "Rapidly shock-cooling the saturated solution with liquid nitrogen",
+          "Maintaining supersaturation strictly within the metastable zone and providing gentle fluid circulation through an active fluidized crystal suspension bed"
+        ],
+        "answer": 3,
+        "explain": "If supersaturation enters the labile zone, spontaneous secondary nucleation creates fine dust-like crystals. Operating within the metastable zone allows solute deposition solely onto existing crystal faces."
+      },
+      {
+        "id": "tatachem-13",
+        "section": "Technical",
+        "topic": "Process control",
+        "q": "In a lime kiln, why is continuous monitoring and control of the fuel-to-stone ratio critical to product quality?",
+        "options": [
+          "Under-burning leaves residual unreacted core CaCO3 in the lime, whereas over-burning (hard burning) vitrifies and sinters the CaO crystal structure, severely destroying its reactivity during slaking",
+          "Over-burning turns calcium oxide into metallic calcium powder",
+          "Under-burning causes the limestone to melt into slag",
+          "The ratio has no impact on slaking reactivity"
+        ],
+        "answer": 0,
+        "explain": "Optimum soft-burned lime requires precise calcination temperature (~950 C). Sintering above 1100 C collapses microporosity, making hard-burned lime unreactive and unusable in the ammonia still."
+      },
+      {
+        "id": "tatachem-14",
+        "section": "Technical",
+        "topic": "Fluid mechanics",
+        "q": "Slurry piping carrying sodium bicarbonate crystal suspensions in Solvay plants is designed with a minimum flow velocity (critical velocity). What is the purpose of maintaining this minimum velocity?",
+        "options": [
+          "To prevent fluid velocity from exceeding the speed of sound",
+          "To prevent gravitational settling and saltation of solid crystals, which would deposit bed dunes and cause line blockages",
+          "To eliminate all pipe friction and pump head loss",
+          "To keep the crystal slurry from evaporating"
+        ],
+        "answer": 1,
+        "explain": "According to the Durand correlation for slurry transport, fluid velocity must stay above the critical deposition velocity to ensure turbulent eddies keep solid particles suspended in the carrier liquid."
+      },
+      {
+        "id": "tatachem-15",
+        "section": "Technical",
+        "topic": "Environmental engineering",
+        "q": "In the Solvay process, the effluent from the bottom of the ammonia recovery still consists of an aqueous slurry containing calcium chloride (CaCl2), unreacted lime, and suspended grit. How is this managed environmentally?",
+        "options": [
+          "Incineration in high-temperature hazardous waste boilers",
+          "Direct discharge into municipal drinking water aqueducts",
+          "Settling in clarification lagoons to separate suspended solids (distiller waste solids), followed by marine discharge of neutralized clear brine or commercial recovery of refined calcium chloride and gypsum",
+          "Conversion into gasoline using zeolite catalysts"
+        ],
+        "answer": 2,
+        "explain": "Distiller waste liquid contains dissolved CaCl2 and residual NaCl with suspended unreacted CaCO3/lime. Solids settle out in holding beds, while clarified brine is safely discharged to sea under environmental norms or recovered as commercial CaCl2."
+      },
+      {
+        "id": "tatachem-16",
+        "section": "Technical",
+        "topic": "Materials selection",
+        "q": "Why is pure titanium standardly specified for wet chlorine gas coolers and headers, whereas dry chlorine gas can be safely transported in carbon steel piping?",
+        "options": [
+          "Titanium dissolves in wet chlorine to form liquid catalyst",
+          "Titanium is cheaper than carbon steel",
+          "Dry chlorine reacts with carbon steel to generate explosive hydrogen",
+          "Wet chlorine rapidly forms a dense, self-healing protective titanium dioxide (TiO2) passivation film in the presence of trace moisture (> 0.5% H2O), whereas dry chlorine attacks titanium violently, creating spontaneous pyrophoric ignition"
+        ],
+        "answer": 3,
+        "explain": "Titanium requires moisture to form its passivating oxide layer. In perfectly dry chlorine (< 0.4% H2O), titanium undergoes severe pitting and can spontaneously ignite. Conversely, dry Cl2 passivates carbon steel with an insoluble FeCl3 film."
+      },
+      {
+        "id": "tatachem-17",
+        "section": "Technical",
+        "topic": "Heat transfer",
+        "q": "In falling film evaporators used for concentrating caustic soda lye up to 50 wt%, what is the principal advantage of falling film over rising film (climbing film) units?",
+        "options": [
+          "Short liquid residence time and the ability to operate effectively with very low temperature driving forces (small Delta T) without requiring hydrostatic head to initiate boiling",
+          "Falling film units can operate without any pump",
+          "They allow processing of slurries containing 80% heavy rocks",
+          "They produce superheated steam without any heat input"
+        ],
+        "answer": 0,
+        "explain": "Falling film evaporators spread liquor as a thin continuous film down tube walls. Boiling occurs at the liquid-vapor interface without suppressing boiling by hydrostatic liquid head, enabling minimal thermal degradation."
+      },
+      {
+        "id": "tatachem-18",
+        "section": "Technical",
+        "topic": "Process safety",
+        "q": "What emergency mitigation system is mandated around bulk liquid chlorine storage tanks in chemical complexes?",
+        "options": [
+          "Water deluge spray systems that spray water directly onto liquid chlorine pools",
+          "Chlorine emergency scrubber systems containing recirculating sodium hydroxide (caustic soda) solution capable of neutralizing the entire vapor discharge from a relief valve or major leak",
+          "Open roof ventilation vents to disperse gas into the atmosphere",
+          "High-volume air blowers to push gas toward the property boundary"
+        ],
+        "answer": 1,
+        "explain": "Spraying water on liquid chlorine accelerates vaporization by supplying heat and forms corrosive acids. Dedicated emergency caustic scrubbers (Cl2 + 2 NaOH -> NaOCl + NaCl + H2O) are mandatory to neutralize toxic releases safely."
+      },
+      {
+        "id": "tatachem-19",
+        "section": "Aptitude",
+        "topic": "Quantitative aptitude",
+        "q": "A Solvay soda ash calciner processes 50 metric tons per hour of sodium bicarbonate cake containing 16 wt% free moisture. How many metric tons of dry NaHCO3 are fed to the kiln per hour?",
+        "options": [
+          "44 metric tons",
+          "40 metric tons",
+          "42 metric tons",
+          "38 metric tons"
+        ],
+        "answer": 2,
+        "explain": "Dry NaHCO3 = 50 * (1 - 0.16) = 50 * 0.84 = 42 metric tons per hour."
+      },
+      {
+        "id": "tatachem-20",
+        "section": "Aptitude",
+        "topic": "Quantitative aptitude",
+        "q": "A brine saturator dissolves raw solar salt to produce saturated brine (density 1,200 kg/m^3, 26 wt% NaCl). How many kilograms of pure NaCl are contained in 5 cubic meters of this saturated brine?",
+        "options": [
+          "1,820 kg",
+          "1,200 kg",
+          "1,300 kg",
+          "1,560 kg"
+        ],
+        "answer": 3,
+        "explain": "Total mass of brine = 5 m^3 * 1,200 kg/m^3 = 6,000 kg. Mass of NaCl = 6,000 * 0.26 = 1,560 kg."
+      },
+      {
+        "id": "tatachem-21",
+        "section": "Aptitude",
+        "topic": "Quantitative aptitude",
+        "q": "A triple-effect evaporator uses 10 tons of low-pressure steam to evaporate 26 tons of water from a salt solution. What is the Steam Economy of this evaporator system (Steam Economy = mass of water evaporated / mass of steam consumed)?",
+        "options": [
+          "2.6",
+          "3.0",
+          "2.0",
+          "1.8"
+        ],
+        "answer": 0,
+        "explain": "Steam Economy = 26 tons water evaporated / 10 tons steam consumed = 2.6."
+      },
+      {
+        "id": "tatachem-22",
+        "section": "Aptitude",
+        "topic": "Quantitative aptitude",
+        "q": "A chemical packaging unit packs 50 kg bags of dense soda ash. If a bagging machine packs at an average speed of 18 bags per minute, how many metric tons of soda ash are packed in an 8-hour shift?",
+        "options": [
+          "400 metric tons",
+          "432 metric tons",
+          "380 metric tons",
+          "450 metric tons"
+        ],
+        "answer": 1,
+        "explain": "Bags per shift = 18 bags/min * 60 min/h * 8 h = 8,640 bags. Total mass = 8,640 * 50 kg = 432,000 kg = 432 metric tons."
+      },
+      {
+        "id": "tatachem-23",
+        "section": "Aptitude",
+        "topic": "Logical reasoning",
+        "q": "Find the next number in the industrial process sequence: 5, 11, 23, 47, 95, ?",
+        "options": [
+          "195",
+          "189",
+          "191",
+          "185"
+        ],
+        "answer": 2,
+        "explain": "Pattern is x_(n+1) = 2 * x_n + 1: 5*2+1=11; 11*2+1=23; 23*2+1=47; 47*2+1=95; 95*2+1=191."
+      },
+      {
+        "id": "tatachem-24",
+        "section": "Aptitude",
+        "topic": "Logical reasoning",
+        "q": "Statements: All alkalis are basic compounds. Sodium hydroxide is an alkali. Which conclusion must follow with certainty?",
+        "options": [
+          "No alkali is a basic compound",
+          "All basic compounds are sodium hydroxide",
+          "Sodium hydroxide is an acidic compound",
+          "Sodium hydroxide is a basic compound"
+        ],
+        "answer": 3,
+        "explain": "By transitive deduction: NaOH is a member of the class 'alkali', and all members of 'alkali' belong to 'basic compounds'. Therefore, Sodium hydroxide is a basic compound."
+      },
+      {
+        "id": "tatachem-25",
+        "section": "Aptitude",
+        "topic": "Logical reasoning",
+        "q": "In a factory logistics code, 'BRINE' is encoded as 'CSJOF' by shifting each letter forward by one alphabetical position. How is 'SALTS' encoded using the exact same rule?",
+        "options": [
+          "TBMUT",
+          "TBMTU",
+          "TAMUT",
+          "UBNVT"
+        ],
+        "answer": 0,
+        "explain": "Each letter is shifted forward by 1: S+1=T, A+1=B, L+1=M, T+1=U, S+1=T -> TBMUT."
+      },
+      {
+        "id": "tatachem-26",
+        "section": "Aptitude",
+        "topic": "Data interpretation",
+        "q": "A chemical plant manufactures 1,000 metric tons of chemicals daily: Soda Ash 60%, Sodium Bicarbonate 25%, Caustic Soda 15%. How many metric tons of Sodium Bicarbonate are produced daily?",
+        "options": [
+          "200 metric tons",
+          "250 metric tons",
+          "300 metric tons",
+          "150 metric tons"
+        ],
+        "answer": 1,
+        "explain": "Sodium Bicarbonate = 25% of 1,000 tons = 0.25 * 1000 = 250 metric tons."
+      },
+      {
+        "id": "tatachem-27",
+        "section": "Aptitude",
+        "topic": "Verbal reasoning",
+        "q": "Select the word that is most nearly opposite in meaning (antonym) to 'PRECIPITATION':",
+        "options": [
+          "Condensation",
+          "Sedimentation",
+          "Dissolution",
+          "Coagulation"
+        ],
+        "answer": 2,
+        "explain": "'Precipitation' in chemistry refers to the separation of a solid substance from a solution; 'dissolution' is the process where a solid dissolves into a liquid phase."
+      },
+      {
+        "id": "tatachem-28",
+        "section": "Aptitude",
+        "topic": "Verbal reasoning",
+        "q": "Fill in the blank with the most appropriate connector: 'The rotary vacuum filter cloth was washed thoroughly _______ prevent crystal blinding during the next production cycle.'",
+        "options": [
+          "furthermore",
+          "because",
+          "nevertheless",
+          "in order to"
+        ],
+        "answer": 3,
+        "explain": "'In order to' expresses the purpose or intended objective of the filtration washing action correctly."
+      }
+    ]
+  },
+  "interview": {
+    "rounds": [
+      "Online assessment",
+      "Technical interview",
+      "HR interview"
+    ],
+    "about": "Tata Chemicals Limited is a sustainable chemistry pioneer and member of the prestigious Tata Group, ranking among the world's largest manufacturers of soda ash, sodium bicarbonate, and vacuum salt, with major manufacturing complexes in Mithapur (Gujarat), the UK, USA, and Kenya. Tata Chemicals recruits chemical engineering graduates for manufacturing plant operations, process improvement, sustainability, and plant reliability.",
+    "looks_for": [
+      "Strong grasp of basic chemical engineering principles: mass and energy balances, filtration, crystallization, distillation, and reaction engineering.",
+      "Deep alignment with the Tata Code of Conduct, business ethics, and community sustainability values.",
+      "Willingness to take operational responsibility in coastal manufacturing complexes and continuous process plants.",
+      "Practical problem-solving mindset and analytical capability to diagnose equipment performance issues.",
+      "Commitment to workplace safety, zero harm, and environmental conservation.",
+      "Collaborative spirit, resilience, and positive leadership potential."
+    ],
+    "selection": [
+      "Online standardized assessment testing cognitive reasoning, quantitative problem-solving, and chemical engineering technical fundamentals.",
+      "Group discussion or case study evaluating technical logic, structured presentation, and collaborative team communication.",
+      "Technical interview panel with manufacturing chief managers and technical specialists focusing on core unit operations and college projects.",
+      "HR leadership interview evaluating ethical alignment with Tata values, adaptability to plant locations, and long-term career drive."
+    ],
+    "technical": [
+      {
+        "q": "Explain the step-by-step chemical reactions involved in the Solvay process for manufacturing soda ash.",
+        "a": "The Solvay process begins by saturating purified brine with ammonia gas. In the carbonating tower, ammoniated brine contacts CO2 gas under pressure: NaCl + NH3 + CO2 + H2O <-> NaHCO3 (s) + NH4Cl (aq). Sodium bicarbonate crystals precipitate, are filtered on rotary vacuum drum filters, and calcined thermally at 180-200 C to form soda ash: 2 NaHCO3 -> Na2CO3 + H2O + CO2. The evolved CO2 is recycled. Ammonium chloride filtrate is reacted with milk of lime in the ammonia still to recover ammonia: 2 NH4Cl + Ca(OH)2 -> CaCl2 + 2 NH3 + 2 H2O."
+      },
+      {
+        "q": "Why is ammonia recovery critical to the economics of the Solvay process, and how does the ammonia still work?",
+        "a": "Ammonia is expensive, acting as a chemical loop carrier rather than a consumed raw material. The ammonia still consists of a preheater, a free ammonia stripper, and a lime mixer/fixed leg. Low-pressure steam strips volatile free ammonia and ammonium carbonate in the upper section. In the lower section, milk of lime (Ca(OH)2) is thoroughly mixed with liquor to decompose fixed ammonium chloride into CaCl2 and gaseous NH3, recovering over 99.5% of the circulating ammonia."
+      },
+      {
+        "q": "How does a modern chlor-alkali membrane cell function, and what reactions occur at the electrodes?",
+        "a": "Saturated purified brine (NaCl) enters the anode compartment where chloride ions oxidize to chlorine gas: 2 Cl- -> Cl2 + 2 e-. A cation-selective fluoropolymer membrane allows only hydrated Na+ ions to migrate into the cathode compartment while blocking Cl- and OH- ions. At the cathode, water is reduced to hydrogen gas and hydroxide ions: 2 H2O + 2 e- -> H2 + 2 OH-. The Na+ and OH- combine to form high-purity 32-35 wt% caustic soda (NaOH)."
+      },
+      {
+        "q": "Why is primary and secondary brine purification so stringent in chlor-alkali membrane cell operations?",
+        "a": "Calcium and magnesium ions present in raw salt brine will precipitate as insoluble hydroxides (Mg(OH)2) and carbonates (CaCO3) inside the microscopic pores of the sulfonic/carboxylic acid membrane due to the high pH (~14) on the cathode side. This causes irreversible membrane blistering, increased electrical resistance, elevated cell voltage, and ruined current efficiency. Chelating ion-exchange resin columns polish the brine to achieve Ca/Mg levels below 20 ppb."
+      },
+      {
+        "q": "Describe the operating mechanism and benefits of a Multi-Effect Evaporator (MEE) system.",
+        "a": "An MEE system connects multiple evaporation stages in series where each subsequent effect operates at lower absolute pressure (deeper vacuum). High-pressure primary steam boils liquor in Effect 1. The vapor boiled off from Effect 1 serves as the heating steam for Effect 2 because the lower boiling point of Effect 2 provides a driving temperature difference (Delta T). This cascades across all effects, multiplying the steam economy (e.g. ~2.5-2.8 kg water evaporated per kg fresh steam in a triple-effect unit)."
+      },
+      {
+        "q": "What is the difference between light soda ash and dense soda ash, and how is dense soda ash produced?",
+        "a": "Light soda ash is the direct porous product of sodium bicarbonate calcination with a low bulk density (~0.5-0.6 g/cm^3), which creates excessive dusting and slow dissolution. Dense soda ash has a bulk density of ~1.0-1.1 g/cm^3 preferred by glass manufacturers. It is produced by hydrating light soda ash with water to form sodium carbonate monohydrate crystals (Na2CO3*H2O), followed by re-dehydration in a rotary fluid bed dryer, yielding large, dense, dust-free granules."
+      },
+      {
+        "q": "How do Rotary Vacuum Drum Filters (RVDF) achieve effective cake washing in bicarbonate filtration?",
+        "a": "As the drum rotates through the slurry trough under vacuum, a uniform cake of NaHCO3 forms on the filter cloth. As the cake emerges from the slurry, wash water spray nozzles deposit a controlled water layer. The vacuum draws wash water through the porous cake via plug-flow displacement, washing out mother liquor containing ammonium chloride without excessive cake dissolution. Finally, vacuum dewaters the cake before an air blow or scraper blade discharges it."
+      },
+      {
+        "q": "What factors influence the reactivity of quicklime (CaO) produced in limestone kilns?",
+        "a": "Lime reactivity in water slaking depends on calcination temperature and soaking time. Soft-burned lime produced at 900-1000 C possesses a high specific surface area, high microporosity, and slakes violently within 1-2 minutes. Over-burning limestone above 1150-1200 C causes sintering and grain growth of CaO crystallites, collapsing internal pore volume and producing unreactive 'hard-burned' lime that slakes sluggishly and poorly in the ammonia recovery still."
+      },
+      {
+        "q": "Explain the safe handling and storage precautions required for industrial chlorine gas.",
+        "a": "Chlorine is a highly toxic, dense choking gas. Precautions include storing liquid chlorine in pressure vessels under strict level limits (maximum 85% volumetric fill to allow thermal expansion), installing safety relief valves with rupture disc combinations, maintaining dry air padding (dew point < -40 C) to prevent wet chlorine corrosion of carbon steel, installing perimeter chlorine gas sensors with audible alarms, and connecting storage vent headers to dedicated caustic emergency absorption scrubbers."
+      },
+      {
+        "q": "What is Boiling Point Elevation (BPE) and how does it influence caustic soda evaporation design?",
+        "a": "Boiling Point Elevation occurs because non-volatile dissolved caustic soda lowers water vapor pressure, raising the solution boiling point above that of pure water at the same pressure. For concentrated caustic (50% NaOH), BPE exceeds 40 C. This significant elevation reduces the available net effective temperature driving force (Delta T_eff = T_steam - T_boil - BPE) across evaporator heating bundles, requiring larger heat transfer areas or higher steam pressures."
+      }
+    ],
+    "hr": [
+      {
+        "q": "Why do you want to join Tata Chemicals and the Tata Group?",
+        "how": "Connect your professional aspirations with Tata's legendary 150-year heritage of ethics, nation-building, community development, and leadership in sustainable basic chemistry and circular manufacturing."
+      },
+      {
+        "q": "Are you comfortable living and working at a manufacturing site like Mithapur?",
+        "how": "State your enthusiasm for site-based engineering roles. Highlight that living on an integrated manufacturing complex provides immersive operational learning, direct plant exposure, and strong community bonding."
+      },
+      {
+        "q": "Describe a situation where you had to uphold ethical integrity under pressure.",
+        "how": "Use the STAR format: detail an academic, project, or testing dilemma where taking a shortcut was possible, explain why you chose the honest path, and emphasize that long-term trust always outweighs short-term expediency."
+      },
+      {
+        "q": "Tell me about a challenging team project where you had to work with an uncooperative teammate.",
+        "how": "Focus on emotional intelligence, open one-on-one communication, understanding their constraints or concerns, aligning on mutual project milestones, and delivering project goals collaboratively."
+      },
+      {
+        "q": "How do you handle unexpected setbacks or equipment failures during practical work?",
+        "how": "Demonstrate a calm, structured troubleshooting approach: prioritizing safety first, isolating the root cause through systematic physical checks rather than guesswork, and implementing robust corrective actions."
+      },
+      {
+        "q": "Where do you envision your career development at Tata Chemicals over the next 5 years?",
+        "how": "Express a strong desire to master production and plant operations, lead energy-efficiency and debottlenecking revamps, earn trust as a dependable manufacturing specialist, and grow into technical operational leadership."
+      }
+    ],
+    "present": [
+      "Demonstrate strong chemical engineering fundamentals: mass balances, distillation, evaporation, and filtration.",
+      "Display deep humility, respect for colleagues, and strong alignment with the Tata values and ethics.",
+      "Show genuine readiness for plant operations, coastal manufacturing environments, and hands-on fieldwork.",
+      "Present technical explanations with clean first-principles logic, correct terminology, and SI units.",
+      "Articulate behavioral experiences using the structured STAR technique with clear personal accountability."
+    ],
+    "tips": [
+      "Review the Solvay process flow sheet in detail: carbonating tower, ammonia still, calciner, and lime kiln.",
+      "Understand chlor-alkali membrane cell technology, brine purification steps, and caustic evaporation.",
+      "Be prepared to explain multi-effect evaporator steam economy and boiling point elevation calculations.",
+      "Familiarize yourself with rotary vacuum drum filtration and solid-liquid separation equipment.",
+      "Review the history of Tata Chemicals, the Mithapur complex, and recent green chemistry initiatives."
+    ]
+  },
+  "sources": [
+    "https://www.tatachemicals.com/careers",
+    "https://www.ambitionbox.com/interviews/tata-chemicals-questions"
+  ]
+}

@@ -1,0 +1,92 @@
+[
+  {
+    "id": "exxonmobil",
+    "company": "ExxonMobil",
+    "sector": "Oil & gas",
+    "roles": ["Process Engineer", "Chemical Engineer (Graduate)"]
+  },
+  {
+    "id": "aramco",
+    "company": "Saudi Aramco",
+    "sector": "Oil & gas",
+    "roles": ["Process Engineer", "Operations Engineer"]
+  },
+  {
+    "id": "reliance",
+    "company": "Reliance Industries",
+    "sector": "Chemicals",
+    "roles": ["Graduate Engineer Trainee (Chemical)", "Process Engineer"]
+  },
+  {
+    "id": "chevron",
+    "company": "Chevron",
+    "sector": "Oil & gas",
+    "roles": ["Process Engineer", "Facilities Engineer"]
+  },
+  {
+    "id": "totalenergies",
+    "company": "TotalEnergies",
+    "sector": "Oil & gas",
+    "roles": ["Process Engineer", "Development Engineer"]
+  },
+  {
+    "id": "iocl",
+    "company": "Indian Oil Corporation",
+    "sector": "Oil & gas",
+    "roles": ["Graduate Apprentice Engineer", "Operations Officer"]
+  },
+  {
+    "id": "shell",
+    "company": "Shell",
+    "sector": "Oil & gas",
+    "roles": ["Graduate Process Engineer", "Production Technologist"]
+  },
+  {
+    "id": "basf",
+    "company": "BASF",
+    "sector": "Chemicals",
+    "roles": ["Process Development Engineer", "Production Engineer"]
+  },
+  {
+    "id": "ongc",
+    "company": "ONGC",
+    "sector": "Oil & gas",
+    "roles": ["Graduate Trainee (AEE Production)", "Process Chemist"]
+  },
+  {
+    "id": "bp",
+    "company": "BP",
+    "sector": "Oil & gas",
+    "roles": ["Process Engineer", "Safety and Operational Risk Specialist"]
+  },
+  {
+    "id": "dow",
+    "company": "Dow",
+    "sector": "Chemicals",
+    "roles": ["Chemical Engineer Trainee", "Manufacturing Engineer"]
+  },
+  {
+    "id": "bpcl",
+    "company": "Bharat Petroleum (BPCL)",
+    "sector": "Oil & gas",
+    "roles": ["Management Trainee (Chemical)", "Refinery Operations Engineer"]
+  },
+  {
+    "id": "sabic",
+    "company": "SABIC",
+    "sector": "Chemicals",
+    "roles": ["Process Engineer", "Technical Services Engineer"]
+  },
+  {
+    "id": "linde",
+    "company": "Linde",
+    "sector": "Industrial gases",
+    "roles": ["Process Design Engineer", "Plant Operations Engineer"]
+  },
+  {
+    "id": "tatachem",
+    "company": "Tata Chemicals",
+    "sector": "Chemicals",
+    "roles": ["Executive Trainee (Chemical)", "Manufacturing Specialist"]
+  }
+]

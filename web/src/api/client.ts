@@ -165,3 +165,7 @@ async function history<T>(path: string): Promise<T> {
 export const getSolves = (before?: string | null, q?: string): Promise<{ items: SolveItem[]; next: string | null }> =>
   history(`/solves?${new URLSearchParams({ ...(before && { before }), ...(q && { q }) })}`)
 export const getSolveStep = async (id: string): Promise<Step> => (await history<{ step: Step }>(`/solve/${encodeURIComponent(id)}`)).step
+
+// FO1: save a self-marked company OA result; demo mode saves nothing
+export const savePractice = (topic: string, score: number, total: number, marks_per_q = 1): Promise<unknown> =>
+  BASE ? post('/practice-attempts', { topic, score, total, marks_per_q }) : Promise.resolve()
