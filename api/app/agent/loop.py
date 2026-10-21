@@ -256,9 +256,10 @@ _DAN = re.compile(r"\bDAN\b")  # caps only: "Dan" is a name
 # build verb + general-software artifact within a few words; the router sometimes calls these study=true
 _SOFTWARE = re.compile(
     r"\b(?:write|build|make|create|code|develop|program|generate)\b(?:\W+\w+){0,4}?\W+"
-    r"(?:web\s*scraper|scraper|crawler|website|web\s*app|landing\s+page|chrome\s+extension"
-    r"|browser\s+extension|discord\s+bot|telegram\s+bot|whatsapp\s+bot|chatbot|bot"
-    r"|mobile\s+app|android\s+app|ios\s+app|login\s+page|e-commerce|online\s+store)\b",
+    r"(?:web\s*scraper|scraper|crawler(?!\s+(?:crane|excavator|tractor|dozer))|website|web\s*app"
+    r"|landing\s+page|chrome\s+extension|browser\s+extension|discord\s+bot|telegram\s+bot"
+    r"|whatsapp\s+bot|chatbot|bot|mobile\s+app|android\s+app|ios\s+app|login\s+page"
+    r"|e-commerce|online\s+store)\b(?!-)",  # crawler crane is equipment; "website-style" is not a website
     re.IGNORECASE,
 )
 

@@ -595,6 +595,8 @@ def test_general_software_requests_are_refused_with_no_llm_call(q: str) -> None:
         "How do I code a numerical solver for the heat equation?",
         "Develop the energy balance for an adiabatic CSTR.",
         "Write the rate law for a second-order reaction.",
+        "Make a crawler crane load table for 5 t at 10 m radius.",
+        "Make a website-style summary of fluid statics.",
     ],
 )
 def test_engineering_code_requests_reach_the_router(q: str) -> None:
