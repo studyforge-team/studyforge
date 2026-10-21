@@ -267,9 +267,9 @@ _LIVE = re.compile(
     r"\bwho\s+(?:won|wins)\b(?:\W+\w+){0,5}?\W+(?:match|game|final|league|cup|series|tournament|ipl|last\s+night|yesterday|today)\b"
     r"|\b(?:final|match|cricket|football|live)\s+(?:score|result)s?\b|\bipl\b|\bworld\s+cup\b|\b(?:premier|champions)\s+league\b"
     r"|\b(?:nba|nfl)\b|\b(?:match|game|final)\b[^.?]{0,30}\blast\s+night\b|\blast\s+night\b[^.?]{0,30}\b(?:match|game|final)\b"
-    r"|\b(?:latest|breaking)\s+news\b|\belection\s+results?\b|\blatest\b(?:\W+\w+){0,3}?\W+about\b"
+    r"|\b(?:latest|breaking)\s+news\b|\belection\s+results?\b"
     r"|\b(?:stock|share)\s+price\b|\bprice\s+of\s+(?:bitcoin|crypto\w*|gold|petrol|diesel)\b"
-    r"|\bprice\b[^.?]{0,20}\bright\s+now\b|\bright\s+now\b[^.?]{0,20}\bprice\b|\btoday'?s\s+price\b|\bcurrent\s+price\b"
+    r"|\bprice\b[^.?]{0,20}\bright\s+now\b|\bright\s+now\b[^.?]{0,20}\bprice\b|\btoday'?s\s+price\b"
     r"|\bexchange\s+rate\s+today\b|\bweather\s+(?:today|tomorrow|forecast)\b|\b(?:today|tomorrow)'?s\s+weather\b",
     re.IGNORECASE,
 )
