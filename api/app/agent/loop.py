@@ -253,10 +253,18 @@ _INJECTION = re.compile(
     re.IGNORECASE,
 )
 _DAN = re.compile(r"\bDAN\b")  # caps only: "Dan" is a name
+# build verb + general-software artifact within a few words; the router sometimes calls these study=true
+_SOFTWARE = re.compile(
+    r"\b(?:write|build|make|create|code|develop|program|generate)\b(?:\W+\w+){0,4}?\W+"
+    r"(?:web\s*scraper|scraper|crawler|website|web\s*app|landing\s+page|chrome\s+extension"
+    r"|browser\s+extension|discord\s+bot|telegram\s+bot|whatsapp\s+bot|chatbot|bot"
+    r"|mobile\s+app|android\s+app|ios\s+app|login\s+page|e-commerce|online\s+store)\b",
+    re.IGNORECASE,
+)
 
 
 async def _begin(state: SolveState, deps: Deps) -> Step:
-    if _INJECTION.search(state.question) or _DAN.search(state.question):
+    if _INJECTION.search(state.question) or _DAN.search(state.question) or _SOFTWARE.search(state.question):
         state.kind = "off_topic"  # no router call: the router can be talked into study=True
         return _final(state, OFF_TOPIC_REPLY, "medium", with_numbers=False)
     q = _quoted(state.question)
