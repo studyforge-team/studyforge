@@ -43,6 +43,11 @@ export default function Equip3D(p: Equip3DProps) {
     scene.add(sun)
     const cam = new THREE.PerspectiveCamera(35, 1, 0.01, 100)
     const ctl = new OrbitControls(cam, canvas)
+    ctl.enableZoom = false // wheel zoom only after a press on the canvas, so page scroll still works
+    const zoomOn = () => { ctl.enableZoom = true }
+    const zoomOff = () => { ctl.enableZoom = false }
+    canvas.addEventListener('pointerdown', zoomOn)
+    canvas.addEventListener('pointerleave', zoomOff)
     let group: THREE.Group | undefined
     let anchors: THREE.Vector3[] = []
     let first = true, last = '', lastSize = ''
@@ -177,6 +182,8 @@ export default function Equip3D(p: Equip3DProps) {
       api.current = null
       ro.disconnect()
       canvas.removeEventListener('webglcontextlost', lost)
+      canvas.removeEventListener('pointerdown', zoomOn)
+      canvas.removeEventListener('pointerleave', zoomOff)
       ctl.dispose(); free(); renderer.dispose()
     }
   }, [fb])
@@ -210,7 +217,7 @@ export default function Equip3D(p: Equip3DProps) {
             <span className="pointer-events-none absolute bottom-1 left-1 rounded bg-background/80 px-1 text-xs tabular-nums">{cap}{exTxt(p)}</span>
             <span ref={note} data-subset className="pointer-events-none absolute right-1 top-1 rounded bg-background/80 px-1 text-xs" />
           </div>
-          <p className="mt-1 text-xs text-muted-foreground">Drag to rotate, pinch or scroll to zoom. Diameter and heads are illustrative.</p>
+          <p className="mt-1 text-xs text-muted-foreground">Drag to rotate; click then scroll, or pinch, to zoom. Diameter and heads are illustrative.</p>
           <Button className="mt-2 h-11" variant="outline" onClick={png}>Download PNG</Button>
         </>
       )}
