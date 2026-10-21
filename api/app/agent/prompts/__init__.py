@@ -81,6 +81,11 @@ answer. Decide which is wrong: replace the check with an exact, independent meth
 (never an approximation tuned to match), fix whichever is in error, and rerun with
 the same result = {...} shape."""
 
+RECHECK = """Your check repeats the answer's own calculation, so it proves nothing.
+Compute the check by a genuinely different route: a numeric solve instead of the
+closed form, another balance, the reverse calculation, or an independent formula.
+Keep the same result = {...} shape and do not copy the answer value into the check."""
+
 REPAIR = """The result failed its check: {reason}.
 Fix the code so result has the required shape and both methods agree, then rerun.
 Do not remove or fake the second method."""

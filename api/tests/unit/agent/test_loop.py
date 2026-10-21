@@ -7,7 +7,7 @@ from typing import Any
 import pytest
 from pydantic import BaseModel
 
-from app.agent import loop
+from app.agent import loop, prompts
 from app.agent.loop import Deps
 from app.agent.state import InMemoryStore, SolveNotFound
 from app.agent.steps import ResultBody
@@ -126,7 +126,9 @@ def test_dimensionless_result_with_helper_unit_goes_straight_to_explain() -> Non
         ("chat_tools", tool("run_python", code="result = {}")),
         ("chat_json", {"answer_md": "t = 46.05 min"}),
     )
-    steps = run(solve(deps(llm), {"result": fixture["batch_time"]}))
+    result = fixture["batch_time"]
+    result["check"]["value"] *= 1.0001  # a genuinely different check: no recheck
+    steps = run(solve(deps(llm), {"result": result}))
     assert steps[-1]["type"] == "final" and steps[-1]["confidence"] == "high"
     assert [c[0] for c in llm.calls] == ["chat_json", "chat_tools", "chat_json"]
 
@@ -238,6 +240,100 @@ def test_cross_check_that_disagrees_is_flagged_low() -> None:
     bodies = [{"result": disagreeing()}, {"result": disagreeing()}, {"result": other}]
     steps = run(solve(deps(llm), *bodies))
     assert steps[-1]["confidence"] == "low"
+
+
+def repeated(answer: float = 0.6667) -> dict[str, Any]:
+    """A result whose check is the answer's own number."""
+    return {
+        "answer": {"value": answer, "unit": "-"},
+        "check": {"value": answer, "unit": "-", "method": "same formula again"},
+    }
+
+
+def recheck_llm(*after: tuple[str, Any]) -> FakeLLM:
+    return calc(("chat_tools", tool("run_python", code="a")), *after)
+
+
+def test_identical_check_gets_one_recheck_and_a_real_second_method_is_high() -> None:
+    llm = recheck_llm(
+        ("chat_tools", tool("run_python", code="b")),
+        ("chat_json", {"answer_md": "ok"}),
+    )
+    steps = run(solve(deps(llm), {"result": repeated()}, {"result": GOOD}))
+    assert steps[1]["type"] == "run_python" and steps[1]["code"] == "b"
+    asked = llm.calls[2][2][-1]
+    assert asked["role"] == "user" and asked["content"] == prompts.RECHECK
+    assert [c[1] for c in llm.calls[1:3]] == ["solver", "solver"]
+    assert steps[2]["type"] == "final" and steps[2]["confidence"] == "high"
+    assert steps[2]["numbers"]["check"] == 0.66671
+
+
+def test_recheck_that_repeats_again_is_medium() -> None:
+    llm = recheck_llm(
+        ("chat_tools", tool("run_python", code="b")),
+        ("chat_json", {"answer_md": "ok"}),
+    )
+    steps = run(solve(deps(llm), {"result": repeated()}, {"result": repeated()}))
+    assert steps[2]["confidence"] == "medium"
+
+
+def test_recheck_run_that_errors_falls_back_to_the_first_result_at_medium() -> None:
+    llm = recheck_llm(
+        ("chat_tools", tool("run_python", code="b")),
+        ("chat_json", {"answer_md": "ok"}),
+    )
+    steps = run(solve(deps(llm), {"result": repeated()}, {"error": "boom"}))
+    assert steps[2]["type"] == "final" and steps[2]["confidence"] == "medium"
+    assert steps[2]["numbers"]["answer"] == 0.6667
+    assert len(llm.calls) == 4  # classify, solver, solver, explain: no repair, no cross-check
+    assert all(c[1] != "cross_check" for c in llm.calls)
+    assert not any("failed its check" in str(c[2][-1]["content"]) for c in llm.calls)
+
+
+def test_recheck_that_fails_verify_or_disagrees_falls_back_at_medium() -> None:
+    bad_shape = {"answer": {"value": "x", "unit": "-"}, "check": GOOD["check"]}
+    for second in (bad_shape, disagreeing(0.9)):
+        llm = recheck_llm(
+            ("chat_tools", tool("run_python", code="b")),
+            ("chat_json", {"answer_md": "ok"}),
+        )
+        steps = run(solve(deps(llm), {"result": repeated()}, {"result": second}))
+        assert steps[2]["type"] == "final" and steps[2]["confidence"] == "medium"
+        assert steps[2]["numbers"]["answer"] == 0.6667
+        assert len(llm.calls) == 4
+
+
+def test_no_room_for_a_recheck_is_medium_without_asking() -> None:
+    llm = calc(
+        *[("chat_tools", tool("run_python", code="x")) for _ in range(4)],
+        ("chat_json", {"answer_md": "ok"}),
+    )
+    errors = [{"error": "boom"}] * 3
+    steps = run(solve(deps(llm), *errors, {"result": repeated()}))
+    assert steps[-1]["type"] == "final" and steps[-1]["confidence"] == "medium"
+    assert not any(c[2][-1]["content"] == prompts.RECHECK for c in llm.calls)
+
+
+def test_recheck_asked_but_model_burns_the_last_step_explains_the_first_result() -> None:
+    llm = recheck_llm(
+        ("chat_tools", res("thinking, no code")),  # the 4th and last step, no tool call
+        ("chat_json", {"answer_md": "ok"}),
+    )
+    d = deps(llm)
+    sid, _ = run(loop.start("q", d, user_id=USER))
+    state = run(d.store.get(sid))
+    assert state is not None
+    state.steps_used = loop.MAX_STEPS - 1  # one step left when the result arrives
+    run(d.store.save(state))
+    final = run(loop.on_result(sid, USER, ResultBody(result=repeated()), d))
+    assert final["type"] == "final" and final["confidence"] == "medium"
+    assert final["numbers"]["answer"] == 0.6667
+
+
+def test_check_that_genuinely_differs_is_high_with_no_recheck() -> None:
+    llm = recheck_llm(("chat_json", {"answer_md": "ok"}))
+    steps = run(solve(deps(llm), {"result": GOOD}))
+    assert steps[1]["confidence"] == "high" and len(llm.calls) == 3
 
 
 def test_at_most_four_tool_steps() -> None:
