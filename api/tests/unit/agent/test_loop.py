@@ -585,6 +585,45 @@ def test_general_software_requests_are_refused_with_no_llm_call(q: str) -> None:
 @pytest.mark.parametrize(
     "q",
     [
+        "Who won the IPL final last night and what was the score?",
+        "What is the latest news about the US presidential election?",
+        "What is the price of Bitcoin right now?",
+        "Who won the football match yesterday?",
+        "What's Reliance's share price today?",
+        "Will it rain tomorrow in Mumbai? weather forecast please",
+        "Give me the cricket score of India vs Australia",
+        "breaking news today",
+    ],
+)
+def test_live_fact_questions_are_refused_with_no_llm_call(q: str) -> None:
+    llm = FakeLLM()
+    final = run(solve(deps(llm, tools=Notes()), question=q))[0]
+    assert final["answer_md"] == loop.OFF_TOPIC_REPLY
+    assert llm.calls == []
+
+
+@pytest.mark.parametrize(
+    "q",
+    [
+        "What is current density in a wire carrying 10 A with 2 mm diameter?",
+        "Why does a cricket ball swing - the physics?",
+        "What is the price elasticity of demand if price rises 10% and demand falls 5%?",
+        "Who won the Nobel Prize in Chemistry for the Haber process?",
+        "How do weather balloons measure pressure at altitude?",
+        "What is the latest design trend in heat exchanger fouling control?",
+        "Score the following: a pump lifts 0.02 m3/s through 30 m at 70% efficiency; what power?",
+        "How does a stock solution dilution work for 1 M to 0.1 M?",
+    ],
+)
+def test_live_lookalikes_still_reach_the_router(q: str) -> None:
+    llm = FakeLLM(("chat_json", {"study": False, "live": False, "kind": "calc"}))
+    run(solve(deps(llm, tools=Notes()), question=q))
+    assert len(llm.calls) == 1 and llm.calls[0][1] == "router"
+
+
+@pytest.mark.parametrize(
+    "q",
+    [
         "Write Python code to solve dy/dt = -2y numerically and plot it.",
         "Write a program to compute the LMTD of a counter-flow heat exchanger.",
         "Create a McCabe-Thiele plot for alpha 2.5 and xD 0.95.",
