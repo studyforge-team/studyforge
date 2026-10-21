@@ -560,3 +560,46 @@ def test_real_questions_still_reach_the_router(q: str) -> None:
     llm = FakeLLM(("chat_json", {"study": False, "live": False, "kind": "calc"}))
     run(solve(deps(llm, tools=Notes()), question=q))
     assert len(llm.calls) == 1 and llm.calls[0][1] == "router"
+
+
+@pytest.mark.parametrize(
+    "q",
+    [
+        "Write me a python web scraper that collects product prices from Amazon.",
+        "Build a website for my bakery",
+        "Create a discord bot that plays music",
+        "Make me a chrome extension that blocks ads",
+        "Develop an android app for tracking expenses",
+        "write a crawler for linkedin profiles",
+        "Code a login page in React",
+        "Can you build me an e-commerce online store?",
+    ],
+)
+def test_general_software_requests_are_refused_with_no_llm_call(q: str) -> None:
+    llm = FakeLLM()
+    final = run(solve(deps(llm, tools=Notes()), question=q))[0]
+    assert final["answer_md"] == loop.OFF_TOPIC_REPLY
+    assert llm.calls == []
+
+
+@pytest.mark.parametrize(
+    "q",
+    [
+        "Write Python code to solve dy/dt = -2y numerically and plot it.",
+        "Write a program to compute the LMTD of a counter-flow heat exchanger.",
+        "Create a McCabe-Thiele plot for alpha 2.5 and xD 0.95.",
+        "Build a material balance for a recycle reactor with 25% single-pass conversion.",
+        "How does a web crawler work?",
+        "Make a table of water viscosity from 0 to 100 C.",
+        "Generate a quiz on heat transfer.",
+        "How do I code a numerical solver for the heat equation?",
+        "Develop the energy balance for an adiabatic CSTR.",
+        "Write the rate law for a second-order reaction.",
+        "Make a crawler crane load table for 5 t at 10 m radius.",
+        "Make a website-style summary of fluid statics.",
+    ],
+)
+def test_engineering_code_requests_reach_the_router(q: str) -> None:
+    llm = FakeLLM(("chat_json", {"study": False, "live": False, "kind": "calc"}))
+    run(solve(deps(llm, tools=Notes()), question=q))
+    assert len(llm.calls) == 1 and llm.calls[0][1] == "router"
