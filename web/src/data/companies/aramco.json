@@ -412,7 +412,7 @@
           "The operator detected high vibration in the pump while it was running at maximum speed."
         ],
         "answer": 3,
-        "explain": "Option B avoids dangling modifiers by clearly placing the subject 'The operator' before the action and specifying that the pump was running at maximum speed."
+        "explain": "The correct sentence, 'The operator detected high vibration in the pump while it was running at maximum speed.', avoids dangling modifiers by placing the subject 'The operator' before the action and making clear that the pump was the thing running at maximum speed."
       }
     ]
   },

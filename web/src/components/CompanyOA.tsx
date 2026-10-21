@@ -651,6 +651,7 @@ export default function CompanyOA({ initial }: { initial?: string }) {
               </tbody>
             </table>
           </div>
+          <p className="text-xs text-muted-foreground">This practice draws {companyData.oa.draw} questions from the bank.</p>
           <p className="text-xs text-muted-foreground">
             Suggested time: {totalMinutes} min (keep time yourself)
           </p>

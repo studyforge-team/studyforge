@@ -152,3 +152,17 @@ test('unreadable photo shows a plain message and is not attached', async ({ page
   await expect(page.getByRole('button', { name: 'Solve' })).toBeDisabled()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
 })
+
+test('See it in 3D link appears for a CSTR question only', async ({ page }) => {
+  await page.goto('/#solve')
+  await page.getByLabel('Your question').fill(Q)
+  await page.getByRole('button', { name: 'Solve' }).click()
+  const link = page.getByRole('link', { name: 'See it in 3D in ChemLab' })
+  await expect(link).toBeVisible({ timeout: 120_000 })
+  await expect(link).toHaveAttribute('href', '#chemlab')
+  await page.goto('/#solve')
+  await page.getByLabel('Your question').fill('please fail')
+  await page.getByRole('button', { name: 'Solve' }).click()
+  await expect(page.getByText('Not verified — check this answer')).toBeVisible({ timeout: 120_000 })
+  await expect(page.getByRole('link', { name: 'See it in 3D in ChemLab' })).toHaveCount(0)
+})
