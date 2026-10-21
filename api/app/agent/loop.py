@@ -559,6 +559,8 @@ async def _capped(state: SolveState, deps: Deps) -> Step:
             with_numbers=False,
         )
     state.flags.append("cached")
+    if saved.get("confidence") == "high":  # an old answer is never re-checked: at most medium
+        saved["confidence"] = "medium"
     saved["answer_md"] = (
         "Today's AI limit is reached, so here is a saved answer to the same question:\n\n"
         + saved["answer_md"]

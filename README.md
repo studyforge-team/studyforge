@@ -29,10 +29,11 @@ Nebius integration**. <!-- TODO(F4): update status after G10 and the first live 
    questions get a prose answer with no computed numbers.
 2. **Notes.** The student's uploaded notes are searched once; hits enter the prompt as
    quoted data, never as instructions.
-3. **ChemLab or solver.** If the question fits a ChemLab template, the server builds the
-   `run_python` code itself from range-checked floats (no model-written string reaches
-   the code). Otherwise the `solver` role writes one Python script that computes the
-   answer by two independent methods. At most 4 tool steps and 90 s per solve.
+3. **Solver.** The `solver` role writes one Python script that computes the answer by two
+   independent methods; the answer is checked and verified. ChemLab templates are not
+   used here (they power the ChemLab page), so chat answers no longer include the
+   template's stable/unstable steady-state analysis; the ChemLab page shows it. At most 4
+   tool steps and 90 s per solve.
 4. **Sandbox.** The API returns a `run_python` step; the browser's Pyodide worker runs
    it and posts the result back. The server never executes model-written code.
 5. **Verify.** `verify()` requires `answer` and `check` with the same unit that agree
@@ -71,7 +72,7 @@ re-sanitised with DOMPurify.
 
 | Role | Used for | Models tried in order | Reasoning |
 | --- | --- | --- | --- |
-| `router` | classify, pick a ChemLab template | nano, super | off |
+| `router` | classify | nano, super | off |
 | `solver` | write the Python, explain, concept answers | super | on |
 | `cross_check` | re-solve by a different method | ultra, super | on |
 | `vision` | transcribe photos and scanned PDF pages | vision | not sent |
@@ -121,8 +122,8 @@ Plain numpy/scipy in `chemlab/templates/`, pytest-tested, and written to also ru
   (`chemlab/tools/export_compounds.py`).
 
 Every template's inputs are also exported to `api/app/agent/chemlab_specs.json`
-(`chemlab/tools/export_specs.py`), which the agent uses to pick a template; a test fails
-if the file is out of date.
+(`chemlab/tools/export_specs.py`), for the template picker (not used in solving for now); a
+test fails if the file is out of date.
 
 The ChemLab page (`#chemlab`) has a tab for each of the eight templates: CSTR, Batch, PFR,
 McCabe-Thiele, Heat exchanger, Flash drum, Recycle loop, and Pipe and pump.
