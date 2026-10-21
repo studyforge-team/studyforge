@@ -23,8 +23,8 @@ compute. <!-- TODO(F8): team's own story, in their words -->
 ## What it does
 
 - Solves quantitative engineering questions: Nemotron plans and writes Python, the student's
-  own browser computes it in a sealed Pyodide sandbox, two independent methods must agree,
-  and the written explanation is rejected if it contains a number the sandbox did not produce.
+  own browser computes it in a sealed Pyodide sandbox, the answer must agree with a check
+  value computed in the same script, and the written explanation is rejected if it contains a number the sandbox did not produce.
 - Gives plain-language answers for concept questions, with no computed numbers.
 - Reads a photo or scanned page of a question with a vision model; the transcript always goes
   to a confirm screen so a person fixes any misread digit before anything is solved.
