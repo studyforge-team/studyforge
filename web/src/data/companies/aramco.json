@@ -1,0 +1,527 @@
+{
+  "id": "aramco",
+  "company": "Saudi Aramco",
+  "roles": [
+    "Process Engineer",
+    "Operations Engineer"
+  ],
+  "note": "Practice set written for StudyForge from publicly reported hiring patterns and core chemical-engineering topics. Not official; actual tests may differ.",
+  "oa": {
+    "sections": [
+      {
+        "name": "Aptitude",
+        "questions": 15,
+        "minutes": 20
+      },
+      {
+        "name": "Technical",
+        "questions": 20,
+        "minutes": 30
+      }
+    ],
+    "draw": 15,
+    "marks_per_q": 1,
+    "bank": [
+      {
+        "id": "aramco-1",
+        "section": "Technical",
+        "topic": "Oil and gas processing",
+        "q": "In an upstream Gas-Oil Separation Plant (GOSP), what primary physical mechanism governs the separation of dissolved associated gas from live crude in the high-pressure separator?",
+        "options": [
+          "Equilibrium flash vaporization due to pressure reduction",
+          "Centrifugal cyclonic shearing",
+          "Thermal distillation at elevated reboiler temperature",
+          "Liquid-liquid membrane permeation"
+        ],
+        "answer": 0,
+        "explain": "When live crude enters the high-pressure separator from the wellhead, pressure drops below the fluid's bubble point, driving flash vaporization of dissolved light hydrocarbons (C1-C4)."
+      },
+      {
+        "id": "aramco-2",
+        "section": "Technical",
+        "topic": "Oil and gas processing",
+        "q": "What is the primary operational role of an electrostatic crude oil desalter installed upstream of the atmospheric distillation unit?",
+        "options": [
+          "Sweetening light naphtha streams",
+          "Removing emulsified water droplets and inorganic chloride salts using high-voltage AC/DC electric fields",
+          "Cracking heavy gas oil into middle distillates",
+          "Stripping dissolved hydrogen sulfide using low-pressure steam"
+        ],
+        "answer": 1,
+        "explain": "Electrostatic desalters apply electric fields (15-35 kV) to polarize and coalesce suspended brine droplets, removing corrosive magnesium and calcium chlorides before crude reaches refinery furnaces."
+      },
+      {
+        "id": "aramco-3",
+        "section": "Technical",
+        "topic": "Gas sweetening",
+        "q": "In a sour gas amine sweetening unit, why is methyldiethanolamine (MDEA) widely favored over monoethanolamine (MEA) for treating gas containing both H2S and CO2?",
+        "options": [
+          "MDEA has higher vapor pressure",
+          "MDEA forms irreversible salts with H2S",
+          "MDEA selectively absorbs H2S over CO2 and requires significantly lower regeneration steam duty",
+          "MDEA degrades rapidly at reboiler temperatures"
+        ],
+        "answer": 2,
+        "explain": "MDEA is a tertiary amine that cannot form carbamates with CO2, allowing it to selectively absorb toxic H2S kinetically while allowing CO2 to slip, saving substantial reboiler regeneration energy."
+      },
+      {
+        "id": "aramco-4",
+        "section": "Technical",
+        "topic": "Gas dehydration",
+        "q": "Which solvent is most universally utilized in absorption contactor towers to dehydrate wet natural gas and suppress pipeline hydrate formation?",
+        "options": [
+          "Sulfuric acid",
+          "Monoethanolamine",
+          "Methanol",
+          "Triethylene glycol (TEG)"
+        ],
+        "answer": 3,
+        "explain": "Triethylene glycol (TEG) offers high hygroscopicity, low vapor pressure, thermal stability at atmospheric regeneration temperatures (204 C), and low solvent vapor loss."
+      },
+      {
+        "id": "aramco-5",
+        "section": "Technical",
+        "topic": "Fluid mechanics",
+        "q": "A crude oil pipeline with inside diameter 0.50 m transports crude (density = 850 kg/m^3) at an average flow velocity of 2.0 m/s. What is the volumetric flow rate?",
+        "options": [
+          "0.393 m^3/s",
+          "0.785 m^3/s",
+          "1.571 m^3/s",
+          "3.142 m^3/s"
+        ],
+        "answer": 0,
+        "explain": "Cross-sectional area A = pi * D^2 / 4 = 3.14159 * (0.50)^2 / 4 = 0.19635 m^2. Volumetric flow rate Q = A * v = 0.19635 m^2 * 2.0 m/s = 0.3927 m^3/s (0.393 m^3/s)."
+      },
+      {
+        "id": "aramco-6",
+        "section": "Technical",
+        "topic": "Fluid mechanics",
+        "q": "According to the Joukowsky equation Delta P = rho * c * Delta v, what water hammer surge pressure is generated in a crude line (density = 800 kg/m^3, acoustic speed c = 1000 m/s) when flow velocity changes instantaneously by 2.0 m/s?",
+        "options": [
+          "800 kPa",
+          "1600 kPa",
+          "3200 kPa",
+          "4000 kPa"
+        ],
+        "answer": 1,
+        "explain": "Delta P = rho * c * Delta v = 800 kg/m^3 * 1000 m/s * 2.0 m/s = 1,600,000 Pa = 1600 kPa (1.6 MPa)."
+      },
+      {
+        "id": "aramco-7",
+        "section": "Technical",
+        "topic": "Thermodynamics",
+        "q": "What parameter is measured by the Reid Vapor Pressure (RVP) test on stabilized crude oil prior to tanker loading?",
+        "options": [
+          "Viscosity at 100 C",
+          "Flash point in an open cup",
+          "Vapor pressure exerted at 37.8 C (100 F) with a 4:1 vapor-to-liquid ratio",
+          "Auto-ignition temperature in air"
+        ],
+        "answer": 2,
+        "explain": "RVP (ASTM D323) measures the absolute vapor pressure exerted by volatile petroleum liquids at 37.8 C (100 F) at a standardized 4:1 vapor-to-liquid volume ratio, ensuring safe marine transit without vapor lock."
+      },
+      {
+        "id": "aramco-8",
+        "section": "Technical",
+        "topic": "Thermodynamics",
+        "q": "Natural gas hydrates are crystalline solid compounds formed under high pressure and low temperature when water molecules entrap gas molecules. Hydrates are classified chemically as:",
+        "options": [
+          "Coordination polymers",
+          "Ionic salts",
+          "Covalent macromolecules",
+          "Clathrate inclusion complexes"
+        ],
+        "answer": 3,
+        "explain": "Gas hydrates are non-stoichiometric clathrate inclusion compounds where hydrogen-bonded water host lattices physically cage small guest molecules like methane and ethane without chemical bonding."
+      },
+      {
+        "id": "aramco-9",
+        "section": "Technical",
+        "topic": "Pumps and compressors",
+        "q": "A multistage centrifugal crude export pump delivers 360 m^3/h against a total dynamic head of 100 m. With crude density 850 kg/m^3 and g = 9.81 m/s^2, what is the hydraulic power delivered to the fluid?",
+        "options": [
+          "83.4 kW",
+          "98.1 kW",
+          "125.0 kW",
+          "150.0 kW"
+        ],
+        "answer": 0,
+        "explain": "Flow rate Q = 360 m^3/3600 s = 0.10 m^3/s. Mass flow rate m_dot = 0.10 * 850 = 85.0 kg/s. Hydraulic power P = m_dot * g * H = 85.0 kg/s * 9.81 m/s^2 * 100 m = 83,385 W = 83.4 kW."
+      },
+      {
+        "id": "aramco-10",
+        "section": "Technical",
+        "topic": "Pumps and compressors",
+        "q": "In centrifugal gas compressor operations, what aerodynamic instability occurs when gas throughput drops below the minimum stable flow, resulting in violent flow reversal and severe mechanical vibration?",
+        "options": [
+          "Choking (Stonewall)",
+          "Compressor surge",
+          "Cavitation",
+          "Vortex shedding"
+        ],
+        "answer": 1,
+        "explain": "Compressor surge occurs when downstream pressure exceeds the pressure-generating capability of the impeller at low flow, causing violent flow oscillations, rapid thrust reversals, and potential seal/bearing destruction."
+      },
+      {
+        "id": "aramco-11",
+        "section": "Technical",
+        "topic": "Heat transfer",
+        "q": "Why are hair-pin or shell-and-tube heat exchangers preferred over plate-and-frame exchangers for cooling high-pressure sour gas streams?",
+        "options": [
+          "Plate exchangers have higher pressure ratings",
+          "Shell-and-tube exchangers have higher heat transfer coefficients",
+          "Shell-and-tube geometry accommodates high design pressures and allows robust metallurgy and mechanical rodding",
+          "Gasketed plate exchangers never leak toxic gas"
+        ],
+        "answer": 2,
+        "explain": "Cylindrical shells and welded tubes readily withstand internal gas pressures exceeding 100 bar and enable thick wall corrosion allowances required for toxic H2S service, unlike elastomer-gasketed plate frames."
+      },
+      {
+        "id": "aramco-12",
+        "section": "Technical",
+        "topic": "Heat transfer",
+        "q": "A crude preheater transfers 200 kW across an effective surface area of 20 m^2 with an overall heat transfer coefficient U = 250 W/(m^2*K). What is the required effective temperature driving force Delta T_m?",
+        "options": [
+          "10 K",
+          "20 K",
+          "30 K",
+          "40 K"
+        ],
+        "answer": 3,
+        "explain": "Q = U * A * Delta T_m -> Delta T_m = Q / (U * A) = 200,000 W / (250 W/(m^2*K) * 20 m^2) = 200,000 / 5,000 = 40 K."
+      },
+      {
+        "id": "aramco-13",
+        "section": "Technical",
+        "topic": "Reaction engineering",
+        "q": "In the Claus sulfur recovery unit, what reaction takes place in the high-temperature thermal reaction furnace at 1000-1400 C?",
+        "options": [
+          "Partial combustion of H2S: H2S + 1.5 O2 -> SO2 + H2O",
+          "Catalytic hydrolysis of COS: COS + H2O -> CO2 + H2S",
+          "Amine regeneration: R-NH3+ + HS- -> R-NH2 + H2S",
+          "Methane reforming: CH4 + H2O -> CO + 3 H2"
+        ],
+        "answer": 0,
+        "explain": "In the Claus thermal furnace, one-third of the feed H2S is combusted with air to form SO2, which subsequently reacts with the remaining two-thirds H2S in catalytic converters to produce elemental sulfur."
+      },
+      {
+        "id": "aramco-14",
+        "section": "Technical",
+        "topic": "Reaction engineering",
+        "q": "What catalyst is typically packed inside catalytic Claus reactors to promote the reversible reaction 2 H2S + SO2 <-> 3/x S_x + 2 H2O at 200-300 C?",
+        "options": [
+          "Platinum-rhenium on silica",
+          "Activated alumina or titania (TiO2)",
+          "Zeolite ZSM-5",
+          "Cobalt-molybdenum oxide"
+        ],
+        "answer": 1,
+        "explain": "High-surface-area activated alumina and titanium dioxide catalysts provide active Lewis acid sites that accelerate Claus equilibrium conversion while minimizing sulfate poisoning."
+      },
+      {
+        "id": "aramco-15",
+        "section": "Technical",
+        "topic": "Process safety",
+        "q": "What is the Immediately Dangerous to Life or Health (IDLH) atmospheric concentration threshold for hydrogen sulfide (H2S) according to NIOSH guidelines?",
+        "options": [
+          "5 ppm",
+          "20 ppm",
+          "100 ppm",
+          "500 ppm"
+        ],
+        "answer": 2,
+        "explain": "The NIOSH IDLH limit for H2S is 100 ppm. At this concentration, olfactory fatigue occurs rapidly, paralyzing the sense of smell and posing immediate fatal asphyxiation risks."
+      },
+      {
+        "id": "aramco-16",
+        "section": "Technical",
+        "topic": "Process safety",
+        "q": "In crude oil storage tanks, pyrophoric iron sulfide scale presents a severe ignition risk when tanks are opened for maintenance. Under what condition does iron sulfide spontaneously ignite?",
+        "options": [
+          "Contact with sub-zero chilled brine",
+          "Submersion in heavy fuel oil",
+          "Exposure to nitrogen blanket",
+          "Contact with atmospheric oxygen when dried"
+        ],
+        "answer": 3,
+        "explain": "Iron sulfide (FeS), formed by H2S reacting with carbon steel, oxidizes exothermically when exposed to atmospheric air: 4 FeS + 7 O2 -> 2 Fe2O3 + 4 SO2 + heat. In dry conditions, it incandesces and ignites surrounding vapors."
+      },
+      {
+        "id": "aramco-17",
+        "section": "Technical",
+        "topic": "Process control",
+        "q": "In a gas-oil three-phase separator, what measurement technology is standard for detecting the oil-water interface level inside the liquid settling compartment?",
+        "options": [
+          "Guided wave radar or differential pressure transmitters with displaced floats",
+          "Optical infrared cameras",
+          "Ultrasonic flowmeters on the gas outlet",
+          "Gas chromatography"
+        ],
+        "answer": 0,
+        "explain": "Guided wave radar (measuring dielectric constant shift) and differential pressure / displacer transmitters precisely detect the liquid-liquid interface between conductive brine and non-conductive crude."
+      },
+      {
+        "id": "aramco-18",
+        "section": "Technical",
+        "topic": "Process control",
+        "q": "Which control valve characteristic is typically selected for compressor anti-surge recycle valves to achieve rapid response when approaching the surge limit line?",
+        "options": [
+          "Equal percentage",
+          "Linear or quick opening",
+          "Square root",
+          "Hyperbolic"
+        ],
+        "answer": 1,
+        "explain": "Anti-surge valves require fast, immediate capacity upon opening to quickly dump high mass flow back to the suction scrubber, making quick-opening or linear trim essential."
+      },
+      {
+        "id": "aramco-19",
+        "section": "Aptitude",
+        "topic": "Quantitative",
+        "q": "An oil export pipeline operates at 1500 barrels/hour. If the pipeline throughput is increased by 20 %, how many barrels of crude oil will be transported in a 24-hour day at the new rate?",
+        "options": [
+          "36,000 barrels",
+          "40,000 barrels",
+          "43,200 barrels",
+          "45,000 barrels"
+        ],
+        "answer": 2,
+        "explain": "New hourly throughput = 1500 * 1.20 = 1800 barrels/hour. Daily throughput = 1800 * 24 = 43,200 barrels."
+      },
+      {
+        "id": "aramco-20",
+        "section": "Aptitude",
+        "topic": "Quantitative",
+        "q": "A production manifold receives crude from two wells. Well 1 flows at 400 m^3/day with 10 % water cut, while Well 2 flows at 600 m^3/day with 25 % water cut. What is the blended water cut of the combined stream?",
+        "options": [
+          "15.0 %",
+          "17.5 %",
+          "21.5 %",
+          "19.0 %"
+        ],
+        "answer": 3,
+        "explain": "Water from Well 1 = 400 * 0.10 = 40 m^3/day. Water from Well 2 = 600 * 0.25 = 150 m^3/day. Total water = 190 m^3/day. Total liquid = 1000 m^3/day. Water cut = (190 / 1000) * 100 = 19.0 %."
+      },
+      {
+        "id": "aramco-21",
+        "section": "Aptitude",
+        "topic": "Quantitative",
+        "q": "A storage tank has two filling valves and one drainage valve. Valve A fills the tank in 8 hours, Valve B fills it in 12 hours, and Drain C empties it in 6 hours. If all three valves are opened simultaneously, in how many hours will the empty tank be filled?",
+        "options": [
+          "24 hours",
+          "16 hours",
+          "20 hours",
+          "12 hours"
+        ],
+        "answer": 0,
+        "explain": "Net filling rate = 1/8 + 1/12 - 1/6 = 3/24 + 2/24 - 4/24 = 1/24 tank per hour. Therefore, time to fill = 24 hours."
+      },
+      {
+        "id": "aramco-22",
+        "section": "Aptitude",
+        "topic": "Quantitative",
+        "q": "A maintenance helicopter flies 300 km from an offshore platform to an onshore base at 150 km/h and returns at 100 km/h. What is the average speed for the complete round trip?",
+        "options": [
+          "125 km/h",
+          "120 km/h",
+          "130 km/h",
+          "135 km/h"
+        ],
+        "answer": 1,
+        "explain": "Outbound time = 300 / 150 = 2 h. Inbound time = 300 / 100 = 3 h. Total distance = 600 km, total time = 5 h. Average speed = 600 / 5 = 120 km/h."
+      },
+      {
+        "id": "aramco-23",
+        "section": "Aptitude",
+        "topic": "Logical reasoning",
+        "q": "Identify the next number in the pump maintenance series: 4, 12, 36, 108, ?",
+        "options": [
+          "216",
+          "432",
+          "324",
+          "540"
+        ],
+        "answer": 2,
+        "explain": "Each term is multiplied by 3: 4*3 = 12, 12*3 = 36, 36*3 = 108, and 108*3 = 324."
+      },
+      {
+        "id": "aramco-24",
+        "section": "Aptitude",
+        "topic": "Logical reasoning",
+        "q": "Consider the statements: 'All GOSP units have emergency shutdown valves' and 'All offshore facilities contain GOSP units.' Which statement must be true?",
+        "options": [
+          "No offshore facilities have emergency shutdown valves",
+          "Some GOSP units lack emergency shutdown valves",
+          "Only offshore facilities have emergency shutdown valves",
+          "All offshore facilities have emergency shutdown valves"
+        ],
+        "answer": 3,
+        "explain": "By categorical syllogism: Offshore facilities subset of GOSP units, which is a subset of units with ESD valves. Therefore, all offshore facilities have emergency shutdown valves."
+      },
+      {
+        "id": "aramco-25",
+        "section": "Aptitude",
+        "topic": "Logical reasoning",
+        "q": "Four offshore platforms W, X, Y, Z are located in a line. Platform W is 10 km west of X. Platform Y is 15 km east of X. Platform Z is 5 km west of Y. What is the distance between Platform W and Platform Z?",
+        "options": [
+          "20 km",
+          "15 km",
+          "25 km",
+          "30 km"
+        ],
+        "answer": 0,
+        "explain": "Set X as coordinate 0. W is at -10 km. Y is at +15 km. Z is 5 km west of Y, so Z is at +10 km. Distance from W (-10) to Z (+10) = 10 - (-10) = 20 km."
+      },
+      {
+        "id": "aramco-26",
+        "section": "Aptitude",
+        "topic": "Verbal",
+        "q": "Select the word that best fills the blank: 'The offshore pipeline inspection revealed that cathodic protection had successfully ______ external corrosion along the seabed.'",
+        "options": [
+          "aggravated",
+          "mitigated",
+          "fostered",
+          "induced"
+        ],
+        "answer": 1,
+        "explain": "'Mitigated' means reduced the severity or extent of, which aligns with cathodic protection protecting steel from seawater corrosion."
+      },
+      {
+        "id": "aramco-27",
+        "section": "Aptitude",
+        "topic": "Verbal",
+        "q": "Choose the most accurate synonym for the term 'HYGROSCOPIC' as applied to triethylene glycol in gas processing:",
+        "options": [
+          "Heat-absorbing",
+          "Pressure-resistant",
+          "Water-attracting",
+          "Corrosion-inducing"
+        ],
+        "answer": 2,
+        "explain": "'Hygroscopic' denotes the physical ability of a chemical substance to attract and absorb water molecules from its surrounding environment."
+      },
+      {
+        "id": "aramco-28",
+        "section": "Aptitude",
+        "topic": "Verbal",
+        "q": "Identify the sentence that is grammatically correct and free of ambiguity:",
+        "options": [
+          "Running at maximum speed, the vibration was detected by the operator in the pump.",
+          "In the pump, the vibration while running at maximum speed was detected by the operator.",
+          "While running at maximum speed, the operator detected in the pump vibration.",
+          "The operator detected high vibration in the pump while it was running at maximum speed."
+        ],
+        "answer": 3,
+        "explain": "Option B avoids dangling modifiers by clearly placing the subject 'The operator' before the action and specifying that the pump was running at maximum speed."
+      }
+    ]
+  },
+  "interview": {
+    "rounds": [
+      "Online Assessment & Cognitive Test",
+      "Technical Engineering Interview Panel",
+      "Management & Cultural Fit Interview"
+    ],
+    "about": "Saudi Aramco is the world's preeminent integrated energy and chemicals enterprise, producing roughly one in every eight barrels of global crude oil. It recruits chemical engineers to manage mega-scale upstream production facilities, petroleum refining complexes, and downstream petrochemical facilities.",
+    "looks_for": [
+      "Deep comprehension of upstream gas-oil separation, dehydration, and crude stabilization processes.",
+      "Strong command of fluid flow networks, pipeline hydraulics, and multiphase flow calculations.",
+      "Unwavering commitment to process safety management and handling hazardous sour hydrocarbon streams.",
+      "Willingness to undertake field assignments in remote operations and offshore oil and gas facilities.",
+      "Demonstrated leadership capabilities, cross-cultural collaboration, and communication skills.",
+      "First-principles reasoning when diagnosing operational upsets and transient equipment failures."
+    ],
+    "selection": [
+      "Online profile submission and automated screening against academic requirements and engineering discipline.",
+      "Standardized online assessment testing numerical reasoning, logical problem solving, and chemical engineering fundamentals.",
+      "Rigorous technical interview panel evaluating core unit operations, plant troubleshooting, and field project design.",
+      "Executive behavioral and cultural fit interview focusing on accountability, resilience, and safety values."
+    ],
+    "technical": [
+      {
+        "q": "How does a three-phase separator decouple oil, water, and gas from a live crude stream?",
+        "a": "A three-phase separator uses pressure reduction for flash gas disengagement, followed by gravity settling where differences in liquid densities cause immiscible water droplets to settle to the bottom and oil to form an upper layer over a weir or interface level controller."
+      },
+      {
+        "q": "What engineering methods are used to prevent hydrate formation in subsea pipelines?",
+        "a": "Hydrate prevention relies on maintaining operating pressure and temperature outside the hydrate formation envelope using thermal pipeline insulation, pre-heating, or thermodynamic inhibitor injection such as Monoethylene Glycol (MEG) or Methanol to depress hydrate crystallization temperature."
+      },
+      {
+        "q": "Describe the operational differences between lean amine and rich amine in a gas sweetening plant.",
+        "a": "Lean amine is regenerated solvent stripped of acid gases (H2S and CO2) fed to the top of the contactor. Rich amine is solvent loaded with dissolved acid gases leaving the contactor bottom, requiring heating and steam stripping in the regenerator column."
+      },
+      {
+        "q": "How do you calculate Net Positive Suction Head available (NPSHa) for a pump drawing from an atmospheric storage vessel?",
+        "a": "NPSHa is calculated as: NPSHa = P_atm / (rho * g) + Z_liquid - h_friction - P_vapor / (rho * g), where P_atm is atmospheric pressure, Z_liquid is static liquid elevation above pump centerline, h_friction is suction piping friction loss, and P_vapor is fluid vapor pressure."
+      },
+      {
+        "q": "What causes severe slugging in offshore riser systems and how can it be mitigated?",
+        "a": "Severe slugging occurs in downward-sloping flowlines followed by vertical risers at low flow rates when liquid accumulates at the riser base, blocking gas flow until pressure builds up and violently expels a liquid slug. It is mitigated by riser-top choking, gas lift injection, or slug catchers."
+      },
+      {
+        "q": "Explain the working mechanism of a crude oil desalting unit.",
+        "a": "Raw crude is blended with 3-8 % fresh wash water via a mixing valve to dissolve crystalline inorganic salts. The mixture enters the desalter vessel where an electrostatic AC/DC grid induces dipole coalescence of water droplets, separating brine at the bottom from desalted crude."
+      },
+      {
+        "q": "What parameters govern the sizing of a two-phase vertical separator demister pad?",
+        "a": "Demister pads are sized using the Souders-Brown equation for maximum allowable vapor velocity: v_max = K * sqrt((rho_liquid - rho_vapor) / rho_vapor), where K is an empirical factor (typically 0.07 to 0.11 m/s), ensuring entrained liquid droplets disengage without re-entrainment."
+      },
+      {
+        "q": "How does sour service metallurgy resist hydrogen-induced cracking (HIC)?",
+        "a": "Sour service metallurgy uses low-sulfur, vacuum-degassed carbon steel with calcium treatment for sulfide shape control, coupled with strict limits on hardness (maximum 22 HRC per NACE MR0175) to prevent atomic hydrogen recombination in internal microvoids."
+      },
+      {
+        "q": "What is the function of anti-surge control on large centrifugal export gas compressors?",
+        "a": "Anti-surge control monitors compressor operating point relative to the surge line and rapidly opens a recycle valve from discharge back to suction when throughput decreases, maintaining flow through the impeller above the surge limit line to prevent destructive mechanical surge."
+      },
+      {
+        "q": "Explain the role of the Claus process in petroleum refining and gas processing.",
+        "a": "The Claus process converts toxic hydrogen sulfide stripped from sour gas into harmless, saleable elemental sulfur via thermal oxidation (H2S + 1.5 O2 -> SO2 + H2O) followed by catalytic reaction stages (2 H2S + SO2 <-> 3 S + 2 H2O) over activated alumina catalyst."
+      }
+    ],
+    "hr": [
+      {
+        "q": "Why are you interested in joining Saudi Aramco's engineering workforce?",
+        "how": "Mention Aramco's unmatched global energy production capacity, its leadership in mega-project delivery, and its continuous investments in advanced process technology, carbon management, and world-class technical mentorship."
+      },
+      {
+        "q": "How would you handle living and working in a remote field location away from home?",
+        "how": "Highlight your resilience, adaptability, and enthusiasm for hands-on plant operations, emphasizing that living on-site provides the deepest practical engineering learning and professional growth."
+      },
+      {
+        "q": "Describe an engineering team project where members held opposing views on a solution.",
+        "how": "Use the STAR format: detail how you focused the debate on measurable engineering data, simulations, and safety criteria, leading the team to a technically verified consensus."
+      },
+      {
+        "q": "Tell me about a time you identified a safety hazard and took proactive corrective action.",
+        "how": "Describe the specific situation, your immediate intervention using stop-work responsibility, the hazard mitigation implemented, and the institutional safety lesson captured."
+      },
+      {
+        "q": "How do you prioritize competing deadlines across multiple operational projects?",
+        "how": "Explain your approach to risk-based prioritization: classifying tasks by safety impact, environmental compliance, critical-path status, and transparent stakeholder communication."
+      },
+      {
+        "q": "Where do you envision your career trajectory within Saudi Aramco in 5 to 7 years?",
+        "how": "Express an ambition to progress from plant operations contact engineer to senior process specialist or plant operations superintendent, contributing to facility optimization and emissions reduction."
+      }
+    ],
+    "present": [
+      "Demonstrate familiarity with large-scale upstream oil and gas terminology (GOSP, RVP, sour service, amine treating).",
+      "Present technical arguments using first principles of fluid hydraulics and thermodynamics.",
+      "Display strong respect for operational discipline, plant safety protocols, and environmental standards.",
+      "Highlight adaptability to multi-cultural teams and willingness to take field site postings.",
+      "Structure behavioral responses cleanly using the STAR methodology (Situation, Task, Action, Result)."
+    ],
+    "tips": [
+      "Master the calculation of NPSHa, pressure drop in pipelines, and separator sizing using Souders-Brown.",
+      "Understand the phase behavior of hydrocarbon mixtures and natural gas hydrate prevention techniques.",
+      "Review NACE standards for sour service metallurgy and the hazards of H2S.",
+      "Prepare detailed examples of academic or internship technical contributions and hands-on laboratory work.",
+      "Formulate insightful questions regarding Aramco's technological investments in GTL and carbon capture."
+    ]
+  },
+  "sources": [
+    "https://www.aramco.com/en/careers",
+    "https://www.glassdoor.com/Interview/Saudi-Aramco-Interview-Questions-E7506.htm"
+  ]
+}

@@ -20,8 +20,6 @@ from app.routers import solve
 pytestmark = pytest.mark.skipif(
     not os.environ.get("DATABASE_URL"), reason="needs DATABASE_URL"
 )
-# prod Deps now has templates, so each solve first makes a pick call; null falls through to the tool loop
-NO_TEMPLATE = {"template": None, "inputs": {}}
 CFG = Config(str(Path(__file__).parents[2] / "alembic.ini"))
 
 
@@ -31,7 +29,6 @@ async def _exercise(llm: FakeLLM, made: dict[str, Any]) -> None:
     due = (datetime.now(UTC) + timedelta(days=10)).isoformat()
     llm.script += [
         ("chat_json", {"study": True, "live": False, "kind": "calc"}),
-        ("chat_json", NO_TEMPLATE),
         ("chat_tools", tool("schedule_reminder", title="Thermo exam", due_at_utc=due)),
         ("chat_tools", tool("run_python", code="result = {}")),
     ]
@@ -71,7 +68,6 @@ async def _exercise(llm: FakeLLM, made: dict[str, Any]) -> None:
 def test_solve_mounted(monkeypatch: pytest.MonkeyPatch) -> None:
     made: dict[str, Any] = {}
     llm = calc(
-        ("chat_json", NO_TEMPLATE),
         ("chat_tools", tool("run_python", code="result = {}")),
         ("chat_json", {"answer_md": "X = 0.6667"}),
     )

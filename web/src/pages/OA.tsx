@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { run } from '@/sandbox/client'
+import CompanyOA from '@/components/CompanyOA'
 
 type Problem = {
   id: string
@@ -113,7 +114,7 @@ function load(): Saved {
   }
 }
 
-export default function OA() {
+function CodingOA() {
   const [selected, setSelected] = useState(0)
   const [codes, setCodes] = useState(() => {
     const saved = load().codes
@@ -283,5 +284,32 @@ export default function OA() {
         hidden tests or a security boundary.
       </p>
     </main>
+  )
+}
+
+const TAB = 'min-h-11 border-b-2 px-4 py-2 text-sm font-medium'
+const companyFromHash = () => /^#oa\?company=([^&]+)/.exec(location.hash)?.[1]
+
+export default function OA() {
+  const [company, setCompany] = useState(companyFromHash())
+  const [tab, setTab] = useState<'coding' | 'company'>(company ? 'company' : 'coding')
+  useEffect(() => {
+    const onHash = () => {
+      const c = companyFromHash()
+      if (c) { setCompany(c); setTab('company') }
+    }
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [])
+  return (
+    <>
+      <div role="group" aria-label="OA type" className="mx-auto flex max-w-4xl gap-2 border-b px-4 pt-4">
+        {([['coding', 'Coding'], ['company', 'Company OA']] as const).map(([k, label]) => (
+          <button key={k} type="button" aria-pressed={tab === k} onClick={() => setTab(k)}
+            className={`${TAB} ${tab === k ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'}`}>{label}</button>
+        ))}
+      </div>
+      {tab === 'coding' ? <CodingOA /> : <main className="mx-auto max-w-4xl px-4 py-6 sm:py-8"><CompanyOA initial={company} /></main>}
+    </>
   )
 }

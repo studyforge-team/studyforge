@@ -63,6 +63,13 @@ def test_cap_hit_serves_cached_answer() -> None:  # the T7 done-when
     assert run(d.store.cached("find x")) == SAVED
 
 
+def test_cap_hit_cached_answer_is_at_most_medium() -> None:
+    seed = SolveState(id="old", user_id="other", question="find x", status="done", last_step=SAVED)
+    _, step = run(loop.start("find x", capped_deps(seed), user_id=USER))
+    assert SAVED["confidence"] == "high" and step["confidence"] == "medium"
+    assert step["answer_md"].startswith(PREFIX)
+
+
 def test_cap_hit_without_cache_says_so() -> None:
     flagged = SolveState(id="old", user_id="o", question="find x", status="done",
                          last_step=SAVED, flags=["limit_reached"])

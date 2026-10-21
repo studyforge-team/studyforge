@@ -8,7 +8,6 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from app import db
-from app.agent.chemlab_pick import load_template_specs
 from app.agent.loop import Deps
 from app.agent.quiz_gen import QuizService
 from app.agent.tools import StubTools
@@ -54,7 +53,10 @@ def get_deps() -> Deps:
         # read_upload=None until C1/C2 merge; guard keeps its Deps default
         _cache = (engine, Deps(
             llm=llm, store=db.PgStateStore(engine), clock=time.monotonic,
-            tools=DbTools(engine, llm), templates=load_template_specs(),
+            tools=DbTools(engine, llm),
+            # ponytail: templates are unverified single-method answers (2/6 wrong picks shown high);
+            # the ChemLab page still uses them; turn back on only behind a verify step.
+            templates=None,
         ))
     return _cache[1]
 
