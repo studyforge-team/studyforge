@@ -5,6 +5,7 @@ POST /quizzes/{id}/answers (which reads only quiz["items"]) accepts it unchanged
 """
 
 import asyncio
+import re
 import time
 import uuid
 from typing import Annotated, Any, Literal
@@ -41,6 +42,12 @@ MAX_BATCHES = 8
 FOCUSES = ("definitions and laws", "design choices and trade-offs", "common mistakes and limiting cases",
            "applications and reasoning")
 SOLVE_CHARS = 4000  # the /solve question limit
+
+
+def _is_focus(topic: str) -> bool:
+    """True when an item topic is a batch focus label (or a word-phrase of one), not a real topic."""
+    t = " ".join(re.sub(r"[^a-z0-9 ]", "", topic.lower().replace("&", "and")).split())
+    return bool(t) and any(f" {t} " in f" {f} " for f in FOCUSES)
 
 
 class QuizRequest(BaseModel):
@@ -135,6 +142,8 @@ async def create_quiz(
                 key = _normalise(it["stem"])
                 if key not in seen:
                     seen.add(key)
+                    if _is_focus(it["topic"]):
+                        it["topic"] = body.topic
                     items.append(it)
         if not items:
             raise failed or QuizGenerationFailed("no usable questions")

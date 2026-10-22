@@ -216,3 +216,9 @@ def test_latex_command_glued_to_a_number_is_not_part_of_it() -> None:
     assert [f.value for f in parse_numbers(f"2.5{b}times10^{{5}}")] == [250000]
     assert [f.value for f in parse_numbers(f"3{b}cdot10^{{-4}}")] == [3e-4]
     assert [f.value for f in parse_numbers(f"{b}approx123")] == [123]
+
+
+def test_divisor_100_and_1000_not_flagged() -> None:
+    assert flagged("ln(1 - 90/100) and (200 / 1000) / 1.2", {"X": 90.0}, "200 1.2") == []
+    assert flagged("so 100 is the answer", {"X": 5.0}) == ["100"]
+    assert flagged("X is 5/37", {"X": 5.0}) == ["37"]
