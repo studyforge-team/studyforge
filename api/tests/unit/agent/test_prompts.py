@@ -38,3 +38,12 @@ def test_concept_states_no_numbers() -> None:
 
 def test_classify_defaults_to_calc() -> None:
     assert 'When unsure, reply "calc"' in prompts.CLASSIFY
+
+
+def test_explain_lists_assumed_values_and_verdict_words() -> None:
+    e = prompts.EXPLAIN
+    assert "that the question did not state" in e and "question's own word" in e
+    assert "conversion factor" in prompts.SOLVER and '"assumptions"' in prompts.SOLVER
+    assert "placeholders" in prompts.REGENERATE
+    assert "SAME quantity" in prompts.SOLVER and "limiting case" in prompts.SOLVER
+    prompts.REGENERATE.format(bad="1000")
