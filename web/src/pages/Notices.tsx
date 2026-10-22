@@ -5,6 +5,7 @@ import type { Notice } from '@/api/types'
 import { HttpError, friendly } from '@/lib/errors'
 import { clearShare, draftFrom, getShare, isHttpUrl, MAX_TEXT, MAX_TITLE, wellFormed } from '@/lib/share'
 import { supabase } from '@/lib/supabase'
+import { useSlow } from '@/lib/useSlow'
 
 const demo = !import.meta.env.VITE_API_URL // same switch as api/client.ts
 const field = 'mt-2 w-full rounded-lg border border-input bg-background px-3 py-2 text-base'
@@ -37,6 +38,7 @@ export default function Notices() {
   const [loadFailed, setLoadFailed] = useState(false)
   const cut = !!shared && draftFrom(shared).cut
   const items = list && list.owner === owner ? list.items : null
+  const slow = useSlow(!!owner && items === null && !loadFailed)
 
   useEffect(() => {
     if (demo || !supabase) return
@@ -128,7 +130,7 @@ export default function Notices() {
           {items === null ? (
             loadFailed
               ? <Button variant="outline" className="mt-2 min-h-11" onClick={() => { setErr(''); setLoadFailed(false); setTries((t) => t + 1) }}>Try again</Button>
-              : <p className="mt-2 text-sm text-muted-foreground">Loading…</p>
+              : <><p className="mt-2 text-sm text-muted-foreground">Loading…</p>{slow && <p className="mt-1 text-sm text-muted-foreground">Waking up the server…</p>}</>
           ) : items.length === 0 ? (
             <p className="mt-2 text-sm text-muted-foreground">No notices yet.</p>
           ) : (

@@ -263,3 +263,24 @@ def test_defaults_are_fast_and_match_spec() -> None:
     assert r["ok"] and r["template"] == "mccabe"
     assert r["inputs"]["alpha"] == {"value": SPEC["alpha"]["default"], "unit": "-"}
     assert out(r, "R") == pytest.approx(1.3 * 1.1)
+
+
+def test_feed_clamped_to_column_extent() -> None:
+    # Feed used to land on the reboiler: feed_stage 2 of 1 theoretical, feed_tray 3 of 2.
+    r = run({"q": -2, "alpha": 25.75}, series=False)
+    assert r["ok"]
+    assert out(r, "feed_stage") <= out(r, "theoretical_trays")
+    g = r["geometry"]
+    assert 1 <= g["feed_tray"] <= g["n_trays"]
+
+
+@pytest.mark.parametrize("q", [-2.0, -1.0, 0.0, 0.5, 1.0, 2.0, 3.0])
+@pytest.mark.parametrize("alpha", [1.5, 2.5, 10.0, 25.75, 60.0])
+def test_feed_never_exceeds_column(q: float, alpha: float) -> None:
+    r = run({"q": q, "alpha": alpha}, series=False)
+    if not r["ok"]:
+        return
+    assert out(r, "feed_stage") <= out(r, "theoretical_trays")
+    g = r["geometry"]
+    if g["n_trays"] > 0:
+        assert 1 <= g["feed_tray"] <= g["n_trays"]

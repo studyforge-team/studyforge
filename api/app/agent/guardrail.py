@@ -143,12 +143,35 @@ def percents(text: str) -> list[float]:
     ]
 
 
+def _prefix_slip(
+    f: Flagged,
+    answer_md: str,
+    end: int,
+    hits: Sequence[float],
+    quantities: Sequence[tuple[float, str]],
+) -> bool:
+    """True when the bare-number match is only a sandbox quantity written with a
+    different prefix of the same unit (2.5 kPa -> "2.5 MPa"): the value is not rescaled."""
+    m = _AFTER_UNIT.match(answer_md, end)
+    uw = parse_unit(m[1] + m[2]) if m else None
+    if uw is None:
+        return False
+    same_value = [(v, parse_unit(u)) for v, u in quantities if _close(f.value, v)]
+    if not same_value or any(not any(_close(a, v) for v, _ in same_value) for a in hits):
+        return False  # also matches a question/assumption number, or no quantity
+    return all(
+        up is not None and up[0] == uw[0] and up[2] == uw[2] and up[1] != uw[1]
+        for _, up in same_value
+    )
+
+
 def _fits(
     f: Flagged, answer_md: str, pool: Sequence[float], quantities: Sequence[tuple[float, str]]
 ) -> bool:
-    if any(_close(f.value, a) for a in pool):
-        return True
     end = f.start + len(f.text)
+    hits = [a for a in pool if _close(f.value, a)]
+    if hits and not _prefix_slip(f, answer_md, end, hits, quantities):
+        return True
     if _TEN.fullmatch(f.text) and abs(round(math.log10(f.value))) <= 12:
         return True  # bare power of ten: a conversion factor, not a result
     if _AFTER_PCT.match(answer_md, end) and any(_close(f.value / 100, a) for a in pool):

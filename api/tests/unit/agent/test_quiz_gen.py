@@ -165,6 +165,52 @@ def test_empty_topic_items_dropped() -> None:
     assert [i.stem for i in quiz.items] == ["ok", "ok2", "ok3"]
 
 
+def numeric_mcq(
+    key: int, explanation: str, options: list[str] | None = None
+) -> dict[str, Any]:
+    item = mcq("Carnot efficiency between 500 K and 300 K?")
+    item["options"] = options or ["20%", "40%", "60%", "80%"]
+    item["correct_index"] = key
+    item["misconceptions"] = {str(i): "m" for i in range(4) if i != key}
+    item["explanation"] = explanation
+    return item
+
+
+CARNOT = "eta = 1 - Tc/Th = 1 - 0.6 = 0.4, i.e. 40%."
+
+
+def stems_after_tidy(item: dict[str, Any]) -> list[str]:
+    data = quiz_of(item, mcq("ok"), mcq("ok2"), mcq("ok3"))
+    return [i.stem for i in run(generate_quiz(FakeLLM(data), "t", 5)).items]
+
+
+def test_numeric_mcq_key_contradicting_explanation_dropped() -> None:
+    assert "Carnot" not in " ".join(stems_after_tidy(numeric_mcq(2, CARNOT)))
+
+
+def test_numeric_mcq_key_matching_explanation_kept() -> None:
+    assert len(stems_after_tidy(numeric_mcq(1, CARNOT))) == 4
+
+
+def test_non_numeric_mcq_kept() -> None:
+    assert len(stems_after_tidy(mcq("Which law?"))) == 4
+
+
+def test_numeric_mcq_explanation_matching_no_option_kept() -> None:
+    assert len(stems_after_tidy(numeric_mcq(2, "So eta = 0.35 overall."))) == 4
+
+
+def test_numeric_mcq_percent_equivalence() -> None:
+    item = numeric_mcq(2, "So eta = 0.4.")  # 0.4 is the 40% option, key says 60%
+    assert len(stems_after_tidy(item)) == 3
+    assert len(stems_after_tidy(numeric_mcq(1, "So eta = 0.4."))) == 4
+
+
+def test_numeric_mcq_with_units_and_exponent() -> None:
+    opts = ["-100 J", "1.5e3 kPa", "250 J", "7 J"]
+    assert len(stems_after_tidy(numeric_mcq(3, "Net work = -100 J", opts))) == 3
+
+
 def test_nothing_left_raises() -> None:
     with pytest.raises(QuizGenerationFailed):
         run(generate_quiz(FakeLLM(quiz_of(subj("a"), subj("b"))), "t", 3))
