@@ -270,3 +270,41 @@ def test_service_survives_notes_failure() -> None:
 
     svc = QuizService(FakeLLM(quiz_of(mcq("a"))), InMemoryQuizStore(), notes_for)
     assert "ready" in run(svc.make_quiz("u", "t", 1))
+
+
+def blank(stem: str) -> dict[str, Any]:
+    return {
+        "type": "blank",
+        "topic": "Thermo",
+        "stem": stem,
+        "answers": ["entropy"],
+        "explanation": "because",
+    }
+
+
+def types_for(kinds: Any, *items: dict[str, Any]) -> list[str]:
+    quiz = run(generate_quiz(FakeLLM(quiz_of(*items)), "t", 5, kinds=kinds))
+    return [i.type for i in quiz.items]
+
+
+MIXED_SET = (blank("The ____ law."), numerical("Find T."), mcq("Which law?"))
+
+
+def test_blank_kinds_drops_mcq_keeps_blank_and_numerical() -> None:
+    assert types_for("blank", *MIXED_SET, blank("____ rises.")) == [
+        "blank",
+        "numerical",
+        "blank",
+    ]
+
+
+def test_mcq_kinds_drops_blanks() -> None:
+    assert types_for("mcq", *MIXED_SET, mcq("Two")) == ["numerical", "mcq", "mcq"]
+
+
+def test_mixed_kinds_keeps_all_three() -> None:
+    assert types_for("mixed", *MIXED_SET) == ["blank", "numerical", "mcq"]
+
+
+def test_no_kinds_unchanged() -> None:
+    assert types_for(None, *MIXED_SET) == ["blank", "numerical", "mcq"]

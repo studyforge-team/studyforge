@@ -72,16 +72,25 @@ KINDS_RULES = {
         'Write only fill-in-the-blank items (type "blank"): "stem" contains the gap as "____", '
         '"answers" lists 1 to 5 accepted words or short phrases (each at most 60 characters), '
         'and "explanation" teaches the concept. The blank is a word or short phrase, never a '
-        'number: when the answer is a number, write a numerical item instead.'
+        "number: when the answer is a number, write a numerical item instead. "
+        "At least half of the items must be word or short-phrase blanks; prefer conceptual "
+        "statements (laws, definitions, named effects) for the blanks."
     ),
     "mixed": (
         'Write about half multiple choice (mcq) and half fill-in-the-blank (type "blank") items. '
         'A blank item has "____" in "stem", "answers" (1 to 5 accepted words or short phrases, '
         'each at most 60 characters) and "explanation". The blank is never a number: when the '
-        "answer is a number, write a numerical item instead."
+        "answer is a number, write a numerical item instead. At least a third of the items must be "
+        "word or short-phrase blanks."
     ),
 }
 DEFAULT_RULE = 'Do not use the type "blank".'
+# Item types kept per requested kind (a blank quiz must not contain multiple choice).
+ALLOWED_TYPES = {
+    "mcq": {"mcq", "numerical"},  # numerical allowed: unchanged from before, already computed in the sandbox
+    "blank": {"blank", "numerical"},
+    "mixed": {"mcq", "blank", "numerical"},
+}
 
 
 class _Loose(BaseModel):
@@ -132,11 +141,19 @@ def _normalise(stem: str) -> str:
     return re.sub(r"\s+", " ", stem.strip().lower())
 
 
-def _tidy(items: Sequence[QuizItem], n: int) -> list[QuizItem]:
+def _tidy(
+    items: Sequence[QuizItem],
+    n: int,
+    kinds: Literal["mcq", "blank", "mixed"] | None = None,
+) -> list[QuizItem]:
+    allowed = None if kinds is None else ALLOWED_TYPES[kinds]
     seen: set[str] = set()
     kept: list[QuizItem] = []
     for item in items:
         if item.type == "subjective" or not item.topic.strip():
+            continue
+        if allowed is not None and item.type not in allowed:
+            log.info("quiz item dropped: type %s not allowed for %s", item.type, kinds)
             continue
         key = _normalise(item.stem)
         if key in seen:
@@ -196,7 +213,7 @@ async def generate_quiz(
         log.info(
             "quiz attempt %d: %d valid, %d rejected", attempt, len(items), len(reasons)
         )
-        items = _tidy(items, n)
+        items = _tidy(items, n, kinds)
         if len(items) >= need:
             break
         messages = [
