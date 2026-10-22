@@ -472,7 +472,7 @@ export default function CompanyOA({ initial }: { initial?: string }) {
       }))
 
       setExamTitle(`${companyData.company} practice (your material)`)
-      setExamSaveTopic(`OA: ${companyData.company}`)
+      setExamSaveTopic(`OA (my material): ${companyData.company}`)
       setExamQuestions(converted)
       setExamActive(true)
     } catch (e) {
@@ -489,7 +489,8 @@ export default function CompanyOA({ initial }: { initial?: string }) {
         title={examTitle}
         questions={examQuestions}
         saveTopic={examSaveTopic}
-        strengthsKey={companyData?.id}
+        // Only bank tests feed the company's topic strengths; own-material tests are tracked apart.
+        strengthsKey={examSaveTopic.startsWith('OA: ') ? companyData?.id : undefined}
         onDone={() => {
           setExamActive(false)
           setSelectedCompanyId(null)
@@ -505,6 +506,10 @@ export default function CompanyOA({ initial }: { initial?: string }) {
     const topicTarget = `OA: ${companyData.company}`
     const matchingTopic = attempts?.topics?.find((t) => t.topic === topicTarget)
     const companyAttempts = matchingTopic?.attempts || []
+    const ownAttempts = attempts?.topics?.find((t) => t.topic === `OA (my material): ${companyData.company}`)?.attempts || []
+    // The bank practice draws fewer questions than the real test: scale its time to match.
+    const totalQs = companyData.oa.sections.reduce((acc, s) => acc + s.questions, 0)
+    const drawMinutes = totalQs > 0 ? Math.max(1, Math.round((totalMinutes * Math.min(companyData.oa.draw, totalQs)) / totalQs)) : totalMinutes
 
     const pcts = companyAttempts.map((a) => (a.total > 0 ? (a.score / a.total) * 100 : 0))
     const lastPct = pcts.at(-1) ?? 0
@@ -602,6 +607,13 @@ export default function CompanyOA({ initial }: { initial?: string }) {
               )}
             </div>
 
+            {ownAttempts.length > 0 && (
+              <p className="text-xs text-muted-foreground" data-testid="own-material-progress">
+                Tests from your own material (not in the chart): {ownAttempts.length}, last{' '}
+                {Math.round((ownAttempts[ownAttempts.length - 1].score / Math.max(1, ownAttempts[ownAttempts.length - 1].total)) * 100)}%
+              </p>
+            )}
+
             {/* Topic strengths */}
             {topicStrengths.length > 0 && (
               <div className="border-t pt-3">
@@ -653,7 +665,7 @@ export default function CompanyOA({ initial }: { initial?: string }) {
           </div>
           <p className="text-xs text-muted-foreground">This practice draws {companyData.oa.draw} questions from the bank.</p>
           <p className="text-xs text-muted-foreground">
-            Suggested time: {totalMinutes} min (keep time yourself)
+            Suggested time: {drawMinutes} min for {companyData.oa.draw} questions (keep time yourself)
           </p>
         </section>
 

@@ -642,3 +642,26 @@ def test_engineering_code_requests_reach_the_router(q: str) -> None:
     llm = FakeLLM(("chat_json", {"study": False, "live": False, "kind": "calc"}))
     run(solve(deps(llm, tools=Notes()), question=q))
     assert len(llm.calls) == 1 and llm.calls[0][1] == "router"
+
+
+def test_energy_sign_trip_is_low_with_warning_and_twin_stays_high() -> None:
+    from tests.unit.agent.test_verify_tools import REAL_Q
+
+    def go(t_exit: float) -> dict[str, Any]:
+        r = {
+            "answer": {"value": 0.28, "unit": "-"},
+            "check": {"value": 0.28, "unit": "-", "method": "numeric"},
+            "values": {"exit_temperature": {"value": t_exit, "unit": "K"}},
+        }
+        llm = calc(
+            ("chat_tools", tool("run_python", code="r")),
+            ("chat_json", {"answer_md": "Done"}),
+        )
+        return run(solve(deps(llm), {"result": r}, question=REAL_Q))[1]  # type: ignore[no-any-return]
+
+    bad = go(291.7)
+    assert bad["confidence"] == "low"
+    assert (
+        "outlet temperature (291.7 K) is below the feed (300.0 K)" in bad["answer_md"]
+    )
+    assert go(326.2)["confidence"] == "high"
