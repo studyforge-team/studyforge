@@ -265,7 +265,7 @@ _SOFTWARE = re.compile(
 # live/current facts (sports results, news, prices, weather): phrase-level so "score", "price elasticity", "current density" pass
 _LIVE = re.compile(
     r"\bwho\s+(?:won|wins)\b(?:\W+\w+){0,5}?\W+(?:match|game|final|league|cup|series|tournament|ipl|last\s+night|yesterday|today)\b"
-    r"|\b(?:final|match|cricket|football|live)\s+(?:score|result)s?\b|\bipl\b|\bworld\s+cup\b|\b(?:premier|champions)\s+league\b"
+    r"|\b(?:match|cricket|football|live)\s+(?:score|result)s?\b|\bfinal\s+scores?\b|\bipl\b|\bworld\s+cup\b|\b(?:premier|champions)\s+league\b"
     r"|\b(?:nba|nfl)\b|\b(?:match|game|final)\b[^.?]{0,30}\blast\s+night\b|\blast\s+night\b[^.?]{0,30}\b(?:match|game|final)\b"
     r"|\b(?:latest|breaking)\s+news\b|\belection\s+results?\b"
     r"|\b(?:stock|share)\s+price\b|\b(?:current|currently|latest|live|today|now)\s+price\s+of\s+(?:bitcoin|crypto\w*|gold|petrol|diesel)\b(?!\s*(?:is|=|:|at|of)?\s*(?:rs\.?|inr|usd)?\s*[₹$]?\s*\d)"

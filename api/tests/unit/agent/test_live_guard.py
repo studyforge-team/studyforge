@@ -18,9 +18,13 @@ LIVE_QUESTIONS = [
     "price of diesel now",
     "who won the IPL final yesterday",
     "stock price of Tesla",
+    "What was the final score of the match?",
+    "cricket score please",
 ]
 
 STUDY_QUESTIONS = [
+    "Derive the semi-infinite diffusion solution and state the final result.",
+    "Simplify the expression and give the final result in SI units.",
     "price elasticity of demand",
     "current density in the wire",
 ]
