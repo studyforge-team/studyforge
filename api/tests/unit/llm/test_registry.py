@@ -61,3 +61,7 @@ def test_missing_role_is_rejected(tmp_path: Path) -> None:
     )
     with pytest.raises(ValueError, match="router"):
         load_registry(path)
+
+
+def test_repo_config_vision_thinking_is_off() -> None:
+    assert load_registry().roles["vision"].reasoning is False
