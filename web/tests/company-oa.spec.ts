@@ -48,7 +48,8 @@ test.describe('Company OA Practice', () => {
     await page.goto('/#oa?company=chevron')
 
     await expect(page.getByRole('heading', { name: 'Chevron', exact: true })).toBeVisible()
-    await expect(page.getByText('Suggested time:')).toBeVisible()
+    // 50 min for 35 questions, scaled to the 15 drawn
+    await expect(page.getByText('Suggested time: 21 min for 15 questions (keep time yourself)')).toBeVisible()
     await expect(page.getByRole('button', { name: 'Start practice' })).toBeVisible()
     expect(await noOverflow(page)).toBe(true)
   })
@@ -88,6 +89,12 @@ test.describe('Company OA Practice', () => {
                 },
               ],
             },
+            {
+              topic: 'OA (my material): ExxonMobil',
+              attempts: [
+                { quiz_id: 'practice:own', score: 3, total: 4, marks_per_q: 1, created_at: '2026-10-20T10:00:00Z' },
+              ],
+            },
           ],
         }),
       })
@@ -105,6 +112,9 @@ test.describe('Company OA Practice', () => {
 
     // Chart rendered
     await expect(page.locator('svg[role="img"]')).toBeVisible()
+
+    // Own-material tests are listed apart from the bank chart
+    await expect(page.getByTestId('own-material-progress')).toHaveText('Tests from your own material (not in the chart): 1, last 75%')
 
     // Sections table
     await expect(page.getByText('Suggested time:')).toBeVisible()

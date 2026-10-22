@@ -43,7 +43,13 @@ from app.agent.tools import (
     hits_as_data,
     parse_args,
 )
-from app.agent.verify import AGREE_REL, clean, flat_numbers, verify
+from app.agent.verify import (
+    AGREE_REL,
+    clean,
+    energy_sign_problem,
+    flat_numbers,
+    verify,
+)
 from app.llm.client import LLMResult, Message
 from app.llm.errors import BudgetExceeded, LLMError
 
@@ -535,6 +541,15 @@ async def _explain(state: SolveState, deps: Deps) -> Step:
         )
     if bad:
         state.flags.append("unsupported_numbers: " + ", ".join(bad))
+    if isinstance(state.result, dict) and (
+        trip := energy_sign_problem(flat_numbers(state.result), state.question)
+    ):  # after the guardrail, so the warning's own numbers are not checked
+        state.flags.append("energy_balance_sign")
+        answer += (
+            "\n\n**Warning:** this reactor is adiabatic and exothermic, yet the computed "
+            f"outlet temperature ({trip[0]:.1f} K) is below the feed ({trip[1]:.1f} K). "
+            "The heat-of-reaction sign is probably wrong, so don't trust these numbers."
+        )
     if set(state.flags) - {_SOFT_FLAG}:
         confidence: Literal["high", "medium", "low"] = "low"
     elif (
