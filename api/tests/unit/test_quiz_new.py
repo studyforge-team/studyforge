@@ -1,6 +1,8 @@
 """T1: POST /api/v1/quizzes with a fake model, fake vision, fake storage and a fake engine."""
 
 import io
+import re
+import time
 from collections.abc import Iterator
 from contextlib import asynccontextmanager
 from typing import Any
@@ -37,13 +39,15 @@ class FakeLLM:
                  error: Exception | None = None) -> None:
         self.items, self.error, self.vision_text = items, error, vision_text
         self.prompts: list[list[Any]] = []
-        self.vision_calls = 0
+        self.vision_calls = self.served = 0
 
     async def chat_json(self, role: str, messages: list[Any], schema: type[Any], **_: Any) -> tuple[Any, Any]:
         self.prompts.append(messages)
         if self.error:
             raise self.error
-        return schema(title="Quiz", items=self.items), None
+        size = int(re.search(r"n_items: (\d+)", messages[1]["content"])[1])  # type: ignore[index]
+        start, self.served = self.served, self.served + size  # each batch gets the next slice
+        return schema(title="Quiz", items=self.items[start : start + size]), None
 
     async def vision(self, image_url: str, prompt: str, **_: Any) -> LLMResult:
         self.vision_calls += 1
@@ -190,7 +194,7 @@ def test_errors(env: dict[str, Any]) -> None:
     for bad in ({}, {"topic": ""}, {"topic": "x" * 81}, {"topic": "a", "n_items": 2}, {"topic": "a", "n_items": 21},
                 {"topic": "a", "kinds": "essay"}, {"topic": "a", "marks_per_q": 3}, {"topic": "a", "extra": 1}):
         assert post(bad).status_code == 422, bad
-    env["llm"] = FakeLLM([mcq(0)])  # fewer than 3 usable questions
+    env["llm"] = FakeLLM([])  # no usable questions (one is enough now: batches ask for 2)
     assert post({"topic": "CSTR"}).status_code == 502
     env["llm"] = FakeLLM([], error=ModelUnavailable("down"))
     assert post({"topic": "CSTR"}).status_code == 502
@@ -232,38 +236,148 @@ def test_generate_quiz_default_kinds_is_the_old_behaviour() -> None:
 
 
 class BatchLLM(FakeLLM):
-    """Each call returns 10 new stems (offset by call number), or fails from call `fail_from` on."""
+    """Each call returns as many new stems as it was asked for (n_items in the prompt), or fails from call
+    `fail_from` on. dup=True: every call returns the same stems. short: return only this many per call."""
 
-    def __init__(self, fail_from: int = 99, overlap: int = 0) -> None:
+    def __init__(self, fail_from: int = 99, dup: bool = False, short: int | None = None) -> None:
         super().__init__([])
-        self.fail_from, self.overlap = fail_from, overlap
+        self.fail_from, self.dup, self.short, self.next = fail_from, dup, short, 0
+        self.kwargs: list[dict[str, Any]] = []
 
-    async def chat_json(self, role: str, messages: list[Any], schema: type[Any], **_: Any) -> tuple[Any, Any]:
+    async def chat_json(self, role: str, messages: list[Any], schema: type[Any], **kw: Any) -> tuple[Any, Any]:
         n = len(self.prompts)
         self.prompts.append(messages)
+        self.kwargs.append(kw)
         if n >= self.fail_from:
             raise ModelUnavailable("down")
-        start = n * (10 - self.overlap)
-        return schema(title=f"Quiz {n}", items=[mcq(start + i) for i in range(10)]), None
+        size = int(re.search(r"n_items: (\d+)", messages[1]["content"])[1])  # type: ignore[index]
+        size = min(size, self.short or size)
+        start = 0 if self.dup else self.next
+        self.next += size
+        return schema(title=f"Quiz {n}", items=[mcq(start + i) for i in range(size)]), None
+
+    def sizes(self) -> list[int]:
+        return [int(re.search(r"n_items: (\d+)", p[1]["content"])[1]) for p in self.prompts]  # type: ignore[index]
 
 
-def test_20_items_are_two_batches(env: dict[str, Any]) -> None:
+@pytest.mark.parametrize(("n", "sizes"), [
+    (5, [2, 2, 2]), (10, [2] * 6), (15, [3, 3] + [2] * 6), (20, [3] * 8)])
+def test_batches_of_two_with_global_over_ask(env: dict[str, Any], n: int, sizes: list[int]) -> None:
     env["llm"] = llm = BatchLLM()
-    b = post({"topic": "CSTR", "n_items": 20}).json()
-    assert len(llm.prompts) == 2 and len(b["items"]) == 20 and b["total_marks"] == 20 and b["title"] == "Quiz 0"
-    env["llm"] = llm = BatchLLM()
-    assert len(post({"topic": "CSTR", "n_items": 15}).json()["items"]) == 15 and len(llm.prompts) == 2
+    b = post({"topic": "CSTR", "n_items": n}).json()
+    assert llm.sizes() == sizes and sum(sizes) == n + -(-n // 5) and len(sizes) <= 8
+    assert len(b["items"]) == n and b["total_marks"] == n and b["title"] == "Quiz 0"
+
+
+def test_each_batch_gets_a_focus_and_a_deadline_and_min_items_is_one(env: dict[str, Any]) -> None:
+    env["llm"] = llm = BatchLLM(short=1)  # one valid item per batch must not trigger a serial retry
+    before = time.monotonic()
+    post({"topic": "CSTR", "n_items": 10})
+    assert len(llm.prompts) == 6
+    focus = [p[1]["content"].split("focus: ")[1].split("\n")[0] for p in llm.prompts]
+    assert len(set(focus[:4])) == 4 and focus[4] == focus[0]
+    assert all(before + 70 < k["deadline"] < time.monotonic() + 81 for k in llm.kwargs)
 
 
 def test_duplicates_across_batches_are_dropped(env: dict[str, Any]) -> None:
-    env["llm"] = BatchLLM(overlap=4)
+    env["llm"] = BatchLLM(dup=True)
     stems = [i["stem"] for i in post({"topic": "CSTR", "n_items": 20}).json()["items"]]
-    assert len(stems) == 16 == len(set(stems))
+    assert len(stems) == 3 == len(set(stems))
 
 
-def test_failing_second_batch_returns_the_first(env: dict[str, Any]) -> None:
+def test_failing_later_batches_return_the_first(env: dict[str, Any]) -> None:
     env["llm"] = BatchLLM(fail_from=1)
     r = post({"topic": "CSTR", "n_items": 20})
-    assert r.status_code == 200 and len(r.json()["items"]) == 10
+    assert r.status_code == 200 and len(r.json()["items"]) == 3
     env["llm"] = BatchLLM(fail_from=0)  # the first batch failing is still a 502
     assert post({"topic": "CSTR", "n_items": 20}).status_code == 502
+
+
+def put_read(env: dict[str, Any], data: bytes, mime: str) -> None:
+    env["storage"].objs[f"u1/{PHOTO}"] = (data, mime)
+
+
+def read() -> Any:
+    return TestClient(app).post(f"/api/v1/uploads/{PHOTO}/read")
+
+
+EMPTY = {"text": "", "latex": "", "figure_description": "", "confidence": "low"}
+
+
+def test_read_text_pdf_needs_no_model(env: dict[str, Any]) -> None:
+    put_read(env, text_pdf("A heat exchanger has area A. Find the heat duty. " * 8), "application/pdf")
+    b = read().json()
+    assert "heat exchanger" in b["text"] and b["confidence"] == "medium" and b["latex"] == ""
+    assert env["llm"].vision_calls == 0
+
+
+def test_read_scan_joins_text_latex_and_figure(env: dict[str, Any]) -> None:
+    llm = env["llm"]
+
+    async def vision(image_url: str, prompt: str, **_: Any) -> LLMResult:
+        llm.vision_calls += 1
+        body = ('{"text": "Find Q.", "latex": "Q = U A \\\\Delta T", "figure_description": "a pipe", '
+                '"confidence": "high"}')
+        return LLMResult(text=body, reasoning=None, tool_calls=[], model_id="v", role="vision",
+                         cost_usd=0.0, attempts=1)
+
+    llm.vision = vision
+    put_read(env, blank_pdf(2), "application/pdf")
+    r = read()
+    assert r.status_code == 200 and llm.vision_calls == 1  # page 1 only
+    b = r.json()
+    assert b["text"] == "Find Q.\n\n$$\nQ = U A \\Delta T\n$$\n\nFigure: a pipe" and b["confidence"] == "high"
+
+
+def test_read_photo_uses_vision(env: dict[str, Any]) -> None:
+    put_read(env, png(), "image/png")
+    assert "scanned notes" in read().json()["text"] and env["llm"].vision_calls == 1
+
+
+def test_read_unreadable_or_empty_is_200_with_empty_text(env: dict[str, Any]) -> None:
+    put_read(env, b"not an image", "image/png")
+    r = read()
+    assert r.status_code == 200 and r.json() == EMPTY
+    put_read(env, png(), "image/png")
+    env["llm"].vision_text = ""
+    env["llm"].vision = lambda *a, **k: _empty_read()  # type: ignore[assignment]
+    assert read().json() == EMPTY
+
+
+async def _empty_read() -> LLMResult:
+    body = '{"text": "", "latex": "", "figure_description": "", "confidence": "low"}'
+    return LLMResult(text=body, reasoning=None, tool_calls=[], model_id="v", role="vision",
+                     cost_usd=0.0, attempts=1)
+
+
+def test_read_errors(env: dict[str, Any]) -> None:
+    assert read().status_code == 404
+    put_read(env, png(), "image/png")
+    for err, code in ((BudgetExceeded("cap"), 429), (ModelUnavailable("down"), 502)):
+        async def boom(*a: Any, _e: Exception = err, **k: Any) -> LLMResult:
+            raise _e
+
+        env["llm"].vision = boom
+        assert read().status_code == code
+    env["storage"].fail = True
+    assert read().status_code == 502
+    env["storage"].fail = False
+    env["llm"] = None
+    assert read().status_code == 503
+    env["llm"], env["storage"] = FakeLLM([]), None
+    assert read().status_code == 503
+
+
+def test_read_trims_to_4000_at_a_line_boundary(env: dict[str, Any]) -> None:
+    llm = env["llm"]
+    long = "\\n".join(f"line {i:04d} " + "x" * 90 for i in range(60))  # 6000 chars
+
+    async def vision(*a: Any, **k: Any) -> LLMResult:
+        body = '{"text": "' + long + '", "latex": "", "figure_description": "", "confidence": "high"}'
+        return LLMResult(text=body, reasoning=None, tool_calls=[], model_id="v", role="vision",
+                         cost_usd=0.0, attempts=1)
+
+    llm.vision = vision
+    put_read(env, png(), "image/png")
+    text = read().json()["text"]
+    assert 3800 < len(text) <= 4000 and text.splitlines()[-1].endswith("x" * 90)

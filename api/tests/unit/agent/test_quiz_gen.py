@@ -270,3 +270,62 @@ def test_service_survives_notes_failure() -> None:
 
     svc = QuizService(FakeLLM(quiz_of(mcq("a"))), InMemoryQuizStore(), notes_for)
     assert "ready" in run(svc.make_quiz("u", "t", 1))
+
+
+def keyed(stem: str, correct: str) -> dict[str, Any]:
+    """An mcq whose correct option (index 0) is `correct`; the distractors carry invented numbers."""
+    return {**mcq(stem), "options": [correct, "12.3 kW", "99 kW", "none"]}
+
+
+def kept(stem: str, correct: str, notes: tuple[str, ...] = (), topic: str = "t") -> bool:
+    data = quiz_of(keyed(stem, correct), mcq("pad one"), mcq("pad two"))
+    quiz = run(generate_quiz(FakeLLM(data), topic, 3, notes=notes, min_items=1))
+    return stem in [i.stem for i in quiz.items]
+
+
+def test_mcq_key_with_an_invented_number_is_dropped() -> None:
+    assert not kept("Find the LMTD.", "47.6°C")
+    assert not kept("Find the duty.", "8 kW")
+    stem = "Water cp 4.18 kJ/kgK, 0.5 kg/s heated from 25 to 65 C. Find Q."
+    assert not kept(stem, "16.72 kW")
+    assert kept(stem, "4.18 kJ/kgK")  # a number copied from the stem is fine
+    assert kept("Find the LMTD.", "47.6°C", notes=("The LMTD is 47.6 C here.",))
+
+
+def test_mcq_key_that_is_not_a_bare_quantity_goes_through_the_guardrail() -> None:
+    notes = ("Fouling factors are 0.0002 to 0.0004 m2K/W in practice.",)
+    assert kept("Typical fouling?", "0.0002 to 0.0004 m²K/W", notes=notes)
+    assert not kept("Typical fouling?", "0.0002 to 0.0004 m²K/W")
+    for ok in ("U = (hi*ho)/(hi+ho)", "Counter flow", "H2O", "2nd law"):
+        assert kept("Which one?", ok)
+
+
+def test_recalled_constants_are_dropped_without_notes_pinned() -> None:
+    # known false drops (SV9 plan D): a textbook constant is not in the notes or the stem
+    assert not kept("Laminar limit?", "Re < 2100")
+    assert not kept("Laminar Nu?", "Nu = 3.66")
+    assert kept("Laminar limit?", "Re < 2100", notes=("Flow is laminar below Re 2100.",))
+
+
+def test_blank_answers_get_the_same_guard() -> None:
+    bl = {"type": "blank", "topic": "t", "stem": "The LMTD is ____ here.", "answers": ["47.6"],
+          "explanation": "e"}
+    quiz = run(generate_quiz(FakeLLM(quiz_of(bl, mcq("p1"), mcq("p2"))), "t", 3, min_items=1))
+    assert [i.stem for i in quiz.items] == ["p1", "p2"]
+
+
+def test_dropped_key_is_named_in_the_retry_message() -> None:
+    llm = Seq(quiz_of(keyed("bad", "47.6°C")), quiz_of(mcq("b"), mcq("c"), mcq("d")))
+    run(generate_quiz(llm, "t", 5))
+    assert "item 0: the correct option has a number not in the notes or the question" in (
+        llm.calls[1]["messages"][-1]["content"])
+
+
+def test_focus_min_items_and_prompt_rules() -> None:
+    llm = FakeLLM(quiz_of(mcq("only")))
+    quiz = run(generate_quiz(llm, "t", 2, min_items=1, focus="common mistakes"))
+    assert len(quiz.items) == 1 and len(llm.calls) == 1
+    assert "focus: common mistakes" in llm.calls[0]["messages"][1]["content"]
+    assert "at most two sentences" in QUIZ_PROMPT and "never put a calculated number" in QUIZ_PROMPT
+    run(generate_quiz(llm, "t", 1, min_items=1))
+    assert "focus:" not in llm.calls[1]["messages"][1]["content"]

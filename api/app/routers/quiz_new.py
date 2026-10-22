@@ -5,6 +5,7 @@ POST /quizzes/{id}/answers (which reads only quiz["items"]) accepts it unchanged
 """
 
 import asyncio
+import time
 import uuid
 from typing import Annotated, Any, Literal
 
@@ -14,7 +15,6 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from app.agent.quiz_gen import (
-    MAX_ITEMS,
     ChatJSON,
     QuizGenerationFailed,
     _normalise,
@@ -37,6 +37,10 @@ PDF_PAGES = 10  # text layer: first pages only
 PDF_CHARS = 12_000
 MIN_TEXT = 200  # less text than this: a scan or handwriting, read it with the vision model
 VISION_PAGES = 3
+MAX_BATCHES = 8
+FOCUSES = ("definitions and laws", "design choices and trade-offs", "common mistakes and limiting cases",
+           "applications and reasoning")
+SOLVE_CHARS = 4000  # the /solve question limit
 
 
 class QuizRequest(BaseModel):
@@ -110,11 +114,14 @@ async def create_quiz(
         title = ""
         items: list[dict[str, Any]] = []
         seen: set[str] = set()
-        sizes = [min(MAX_ITEMS, body.n_items - k) for k in range(0, body.n_items, MAX_ITEMS)]
-        # generate_quiz writes at most MAX_ITEMS per call; batches run at once so 20 questions
-        # take about as long as 10 (the browser gives up after 90 s)
+        # batches of 2 run at once (about 6 s each); ask n + n/5 over all batches to survive drops and dupes
+        total = body.n_items + -(-body.n_items // 5)
+        count = min(MAX_BATCHES, -(-total // 2))
+        sizes = [total // count + (k < total % count) for k in range(count)]
+        deadline = time.monotonic() + 80  # the browser gives up after 90 s
         results = await asyncio.gather(
-            *(generate_quiz(llm, body.topic, size, notes=notes, kinds=body.kinds) for size in sizes),
+            *(generate_quiz(llm, body.topic, size, notes=notes, kinds=body.kinds, focus=FOCUSES[k % 4],
+                            min_items=1, deadline=deadline) for k, size in enumerate(sizes)),
             return_exceptions=True)
         failed: BaseException | None = None
         for res in results:
@@ -145,3 +152,53 @@ async def create_quiz(
     return {"id": quiz_id, "title": title, "items": items, "topic": body.topic,
             "marks_per_q": body.marks_per_q, "total_marks": n * body.marks_per_q,
             "suggested_minutes": n * (2 if body.kinds == "mcq" else 3)}
+
+
+def _page_one(data: bytes) -> str:
+    try:
+        return next((t for n, t in pdf_pages(data) if n == 1), "")
+    except pdfium.PdfiumError:
+        return ""
+
+
+def _trim(text: str) -> str:
+    cut = text[:SOLVE_CHARS]
+    if len(text) > SOLVE_CHARS and "\n" in cut:
+        cut = cut[: cut.rindex("\n")]
+    return cut
+
+
+@router.post("/uploads/{upload_id}/read", dependencies=[Depends(spend_context)])
+async def read_upload(
+    upload_id: str, user: Annotated[str, Depends(current_user)],
+    llm: Annotated[ChatJSON | None, Depends(get_llm)],
+    storage: Annotated[Storage | None, Depends(get_storage_opt)],
+) -> dict[str, str]:
+    """Question text from page 1 of an upload, for the Solve confirm screen. Never solves."""
+    if llm is None or storage is None or not hasattr(llm, "vision"):
+        raise HTTPException(503, "reading not available")
+    try:
+        data, mime = await fetch_upload(storage, user, upload_id)
+    except LookupError:
+        raise HTTPException(404, "no such upload") from None
+    except StorageError:
+        raise HTTPException(502, "storage unavailable, try again") from None
+    empty = {"text": "", "latex": "", "figure_description": "", "confidence": "low"}
+    try:
+        if mime == "application/pdf":
+            text = await asyncio.to_thread(_page_one, data)
+            if len(text) >= MIN_TEXT:  # no model call; a text layer can mangle maths, so "medium"
+                return {**empty, "text": _trim(text), "confidence": "medium"}
+        q = await read_question(llm, data, mime, 1)  # type: ignore[arg-type]
+    except UnsupportedUpload:
+        return empty
+    except BudgetExceeded:
+        raise HTTPException(429, "today's model budget is used up; try again tomorrow") from None
+    except LLMError:
+        raise HTTPException(502, "could not read this file, try again") from None
+    parts = [q.text]
+    if q.latex and q.latex not in q.text:
+        parts.append(f"$$\n{q.latex}\n$$")
+    if q.figure_description:
+        parts.append(f"Figure: {q.figure_description}")
+    return {**q.model_dump(), "text": _trim("\n\n".join(x.strip() for x in parts if x.strip()))}

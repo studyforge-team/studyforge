@@ -290,3 +290,17 @@ def test_router_timeout_moves_to_super_without_retry(registry: Registry) -> None
     assert res.model_id == "test/super"
     assert [server.body(i)["model"] for i in (0, 1)] == ["test/nano", "test/super"]
     assert len(server.requests) == 2 and clock.sleeps == []
+
+
+def test_vision_with_reasoning_false_sends_enable_thinking_false(tmp_path: Any) -> None:
+    from conftest import TEST_REGISTRY
+
+    from app.llm.registry import load_registry
+
+    path = tmp_path / "m.yaml"
+    path.write_text(TEST_REGISTRY.replace("vision: {models: [vision], timeout_s: 45}",
+                                          "vision: {models: [vision], timeout_s: 45, reasoning: false}"))
+    server = FakeServer().ok(completion("x"))
+    client, _ = make(load_registry(path), server, FakeClock())
+    run(client.vision("data:image/png;base64,AA", "Read it."))
+    assert server.body(0)["chat_template_kwargs"]["enable_thinking"] is False
