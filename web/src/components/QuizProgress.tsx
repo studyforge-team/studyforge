@@ -15,6 +15,8 @@ function trend(attempts: QuizAttempt[]): 'improving' | 'dropping' | 'steady' | n
   return d > 5 ? 'improving' : d < -5 ? 'dropping' : 'steady'
 }
 
+const OTHER = ['OA: ', 'OA (my material): ', 'Interview: ']
+
 // T4 "My progress". Shown only when the server returns attempts: signed out (401), demo mode and no attempts all render nothing.
 export function QuizProgress() {
   const [data, setData] = useState<QuizAttempts>()
@@ -23,12 +25,14 @@ export function QuizProgress() {
     getQuizAttempts().then((d) => live && setData(d), () => {})
     return () => { live = false }
   }, [])
-  if (!data?.topics.length) return null
+  // OA and Interview attempts share this endpoint; they have their own progress on those pages.
+  const topics = data?.topics.filter((t) => !OTHER.some((p) => t.topic.startsWith(p))) ?? []
+  if (!topics.length) return null
   return (
     <section aria-labelledby="progress-h" className="mt-4">
       <h2 id="progress-h" className="text-lg font-semibold">My progress</h2>
       <div className="mt-2 space-y-3">
-        {data.topics.map((t) => {
+        {topics.map((t) => {
           const tr = trend(t.attempts)
           return (
             <article key={t.topic} className="rounded-lg border bg-card p-4">
