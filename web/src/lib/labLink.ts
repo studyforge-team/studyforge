@@ -1,6 +1,5 @@
-import type { Step } from '@/api/types'
-
-type Final = Extract<Step, { type: 'final' }>
+// Pure on purpose (no '@/' imports) so `node --test` can load it, like lib/errors.ts.
+type Final = { answer_md: string }
 
 // question keyword -> ChemLab page (first match wins)
 const LAB_LINKS: [RegExp, string][] = [
