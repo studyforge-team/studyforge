@@ -108,13 +108,16 @@ test.describe('live API (mocked with page.route)', () => {
     await page.route(`${API}/quiz-attempts`, (r) => r.fulfill({ json: { topics: [{ topic: 'Heat transfer', attempts: [
       { quiz_id: 'a', score: 6, total: 10, marks_per_q: 2, created_at: '2026-10-10T09:00:00Z' },
       { quiz_id: 'b', score: 9, total: 10, marks_per_q: 2, created_at: '2026-10-18T09:00:00Z' },
-    ] }] } }))
+    ] }, ...['OA: Shell', 'OA (my material): Shell', 'Interview: Shell'].map((topic) => ({ topic, attempts: [
+      { quiz_id: 'c', score: 1, total: 15, marks_per_q: 1, created_at: '2026-10-19T09:00:00Z' },
+    ] }))] } }))
     await page.goto('/#quiz')
     await expect(page.getByRole('heading', { name: 'My progress' })).toBeVisible()
     await expect(page.getByText('12 / 20 marks (60 %) · 10 Oct')).toBeVisible()
     await expect(page.getByText('18 / 20 marks (90 %) · 18 Oct')).toBeVisible()
     await expect(page.getByRole('img', { name: 'Heat transfer: score per attempt' })).toBeVisible()
     await expect(page.getByText('improving')).toBeVisible()
+    await expect(page.getByText(/Shell/)).toHaveCount(0) // OA and Interview attempts stay on their own pages
     expect(await noHScroll(page)).toBe(true)
   })
 })
