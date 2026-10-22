@@ -32,6 +32,27 @@ def test_database_and_sign_in_required(monkeypatch: pytest.MonkeyPatch) -> None:
     assert c.get("/api/v1/prep/0123456789abcdef").status_code == 401
 
 
+@pytest.mark.anyio
+async def test_build_asks_for_the_most_and_needs_five(monkeypatch: pytest.MonkeyPatch) -> None:
+    from app.agent.quiz import Quiz
+    from app.agent.quiz_gen import MAX_ITEMS
+
+    seen: dict[str, object] = {}
+
+    async def fake(llm: object, topic: str, n: int, **kw: object) -> Quiz:
+        seen.update(n=n, **kw)
+        return Quiz.model_construct(title="t", items=[])
+
+    async def hits(*_: object, **__: object) -> list[dict[str, object]]:
+        return []
+
+    monkeypatch.setattr(prep, "generate_quiz", fake)
+    monkeypatch.setattr(prep.notes, "search", hits)
+    with pytest.raises(prep.QuizGenerationFailed):
+        await prep.build(None, object(), "u", "k", "CRE")  # type: ignore[arg-type]
+    assert seen["n"] == MAX_ITEMS and seen["min_items"] == prep.N_QUESTIONS == 5
+
+
 def test_common_words_never_link() -> None:
     assert prep._words("What is the heat calculate value of THIS exchanger?") == {"heat", "exchanger"}
 

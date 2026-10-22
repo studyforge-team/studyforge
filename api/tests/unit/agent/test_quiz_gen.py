@@ -10,10 +10,12 @@ from pydantic import BaseModel
 
 from app.agent.quiz import Quiz, quiz_json_schema
 from app.agent.quiz_gen import (
+    KINDS_RULES,
     QUIZ_PROMPT,
     InMemoryQuizStore,
     QuizGenerationFailed,
     QuizService,
+    _calc_key,
     _Loose,
     generate_quiz,
 )
@@ -367,3 +369,65 @@ def test_mixed_kinds_keeps_all_three() -> None:
 
 def test_no_kinds_unchanged() -> None:
     assert types_for(None, *MIXED_SET) == ["blank", "numerical", "mcq"]
+
+
+# --- SV10: arithmetic keys are dropped ---------------------------------------------
+
+CALC_KEYS = [
+    "(150-25)-(100-65)/ln[(150-100)/(25-65)]",
+    "(90 - 50)/ln(90/50)",
+    "η = 1 − 300/500",
+    "10-25%",  # known false drop: hyphen range
+    "KE = 1/2 m v²",  # known false drop
+    "3/4",  # known false drop
+]
+PLAIN_KEYS = [
+    "(ΔT1−ΔT2)/ln(ΔT1/ΔT2)",
+    "1/U = 1/hi + 1/ho",
+    "U = (hi*ho)/(hi+ho)",
+    "0.0002 to 0.0004",
+    "10–25%",
+    "H2O",
+    "CO2 + H2O",
+    "2nd law",
+    "1:20",
+    "-100 J",
+    "1.5e3 kPa",
+    "10^5 Pa",
+    "2.5 × 10^5",
+    "2.5 × 10^{-3} m",
+    "Re < 2100",
+]
+
+
+@pytest.mark.parametrize("option", CALC_KEYS)
+def test_arithmetic_option_is_a_calculation(option: str) -> None:
+    assert _calc_key(option)
+
+
+@pytest.mark.parametrize("option", PLAIN_KEYS)
+def test_symbolic_range_and_quantity_options_are_not(option: str) -> None:
+    assert not _calc_key(option)
+
+
+def test_calculated_key_is_dropped_with_its_own_reason() -> None:
+    stem = "Hot 150 to 25 C, cold 100 to 65 C. LMTD?"
+    llm = Seq(quiz_of(keyed(stem, "(150-25)-(100-65)")), quiz_of(mcq("b"), mcq("c"), mcq("d")))
+    run(generate_quiz(llm, "t", 5))
+    sent = llm.calls[1]["messages"][-1]["content"]
+    assert "item 0: the correct option is a calculation; ask about the method" in sent
+    assert "not in the notes" not in sent
+
+
+def test_calculation_copied_verbatim_from_the_notes_is_kept() -> None:
+    option = "ΔT1 = 140 − 50 = 90 K"
+    note = "Worked example:  ΔT1 =  140 − 50\n= 90 K, so the driving force is large."
+    assert kept("Find the first end difference.", option, notes=(note,))
+    assert not kept("Find the first end difference.", option, notes=("ΔT1 = 140 K, 50 K, 90 K",))
+
+
+def test_mcq_rule_points_calculations_to_numerical_items() -> None:
+    assert KINDS_RULES["mcq"] == (
+        "Write multiple choice (mcq) items. When a question needs a calculation, "
+        "write a numerical item instead (its key is computed and checked)."
+    )

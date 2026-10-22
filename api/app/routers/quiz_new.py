@@ -114,8 +114,8 @@ async def create_quiz(
         title = ""
         items: list[dict[str, Any]] = []
         seen: set[str] = set()
-        # batches of 2 run at once (about 6 s each); ask n + n/5 over all batches to survive drops and dupes
-        total = body.n_items + -(-body.n_items // 5)
+        # batches of 2 run at once (about 6 s each); ask n + n/2 over all batches to survive drops and dupes
+        total = body.n_items + -(-body.n_items // 2)
         count = min(MAX_BATCHES, -(-total // 2))
         sizes = [total // count + (k < total % count) for k in range(count)]
         deadline = time.monotonic() + 80  # the browser gives up after 90 s

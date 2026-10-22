@@ -54,6 +54,11 @@ _TOKEN = re.compile(
 )
 _FENCE = re.compile(r"```.*?```", re.DOTALL)
 _INLINE = re.compile(r"`[^`\n]*`")
+# a LaTeX command glued to a number ("\approx79.8957") must not leak its letters/number into the tokens;
+# \times and \cdot before "10" stay (scientific notation)
+_GLUED = re.compile(
+    r"\\(?:approx|simeq|sim|leq?|geq?|neq?|pm|mp|equiv|quad|qquad|(?:times|cdot)(?!\s*10))(?![A-Za-z])(?=[0-9.])"
+)
 
 
 def _blank(m: re.Match[str]) -> str:
@@ -74,6 +79,7 @@ def _exp(s: str) -> str:
 def parse_numbers(text: str) -> list[Flagged]:
     """Numbers written in ``text`` (code and identifiers excluded), in order."""
     text = _INLINE.sub(_blank, _FENCE.sub(_blank, text))
+    text = _GLUED.sub(_blank, text)
     out: list[Flagged] = []
     for m in _TOKEN.finditer(text):
         if m["sci"]:

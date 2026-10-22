@@ -7,6 +7,7 @@ import re
 _MATH = re.compile(r"\$\$.*?\$\$|\$(?!\\n[A-Z*\-\d\s=])[^$\n]*\$", re.DOTALL)
 _BLOCK = re.compile(r"\\\[(.*?)\\\]", re.DOTALL)
 _INLINE = re.compile(r"\\\((.*?)\\\)", re.DOTALL)
+_DISPLAY = re.compile(r"\$\$.*?\$\$", re.DOTALL)
 # outside maths a literal "\n" is a line break unless it starts a LaTeX command (\nabla, \nu, \neq...)
 _LITERAL_NL = re.compile(r"\\n(?!(?:abla|u|e|eq|ewline|ot|i)\b)")
 # model over-escapes inside JSON: two backslashes before a letter or bracket become one
@@ -32,6 +33,9 @@ def _plain(s: str) -> str:
 def tidy_markdown(md: str) -> str:
     md = _DOUBLE.sub(lambda _: chr(92), md)
     md = _BLOCK.sub(lambda m: f"$${m.group(1)}$$", md)
+    # a stray \( or \) in display maths would pair with a later inline \(...\) and corrupt the text
+    # ponytail: also strips the paren of a row break followed by one ("\\(b+c)"); rare, fix if seen
+    md = _DISPLAY.sub(lambda m: re.sub(r"\\[()]", "", m.group()), md)
     md = _INLINE.sub(lambda m: f"${m.group(1).strip()}$", md)
     out, last = [], 0
     for m in _MATH.finditer(md):

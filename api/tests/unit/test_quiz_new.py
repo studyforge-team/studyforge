@@ -261,11 +261,11 @@ class BatchLLM(FakeLLM):
 
 
 @pytest.mark.parametrize(("n", "sizes"), [
-    (5, [2, 2, 2]), (10, [2] * 6), (15, [3, 3] + [2] * 6), (20, [3] * 8)])
+    (5, [2, 2, 2, 2]), (10, [2] * 7 + [1]), (15, [3] * 7 + [2]), (20, [4] * 6 + [3, 3])])
 def test_batches_of_two_with_global_over_ask(env: dict[str, Any], n: int, sizes: list[int]) -> None:
     env["llm"] = llm = BatchLLM()
     b = post({"topic": "CSTR", "n_items": n}).json()
-    assert llm.sizes() == sizes and sum(sizes) == n + -(-n // 5) and len(sizes) <= 8
+    assert llm.sizes() == sizes and sum(sizes) == n + -(-n // 2) and len(sizes) <= 8
     assert len(b["items"]) == n and b["total_marks"] == n and b["title"] == "Quiz 0"
 
 
@@ -273,7 +273,7 @@ def test_each_batch_gets_a_focus_and_a_deadline_and_min_items_is_one(env: dict[s
     env["llm"] = llm = BatchLLM(short=1)  # one valid item per batch must not trigger a serial retry
     before = time.monotonic()
     post({"topic": "CSTR", "n_items": 10})
-    assert len(llm.prompts) == 6
+    assert len(llm.prompts) == 8
     focus = [p[1]["content"].split("focus: ")[1].split("\n")[0] for p in llm.prompts]
     assert len(set(focus[:4])) == 4 and focus[4] == focus[0]
     assert all(before + 70 < k["deadline"] < time.monotonic() + 81 for k in llm.kwargs)
@@ -282,13 +282,13 @@ def test_each_batch_gets_a_focus_and_a_deadline_and_min_items_is_one(env: dict[s
 def test_duplicates_across_batches_are_dropped(env: dict[str, Any]) -> None:
     env["llm"] = BatchLLM(dup=True)
     stems = [i["stem"] for i in post({"topic": "CSTR", "n_items": 20}).json()["items"]]
-    assert len(stems) == 3 == len(set(stems))
+    assert len(stems) == 4 == len(set(stems))
 
 
 def test_failing_later_batches_return_the_first(env: dict[str, Any]) -> None:
     env["llm"] = BatchLLM(fail_from=1)
     r = post({"topic": "CSTR", "n_items": 20})
-    assert r.status_code == 200 and len(r.json()["items"]) == 3
+    assert r.status_code == 200 and len(r.json()["items"]) == 4
     env["llm"] = BatchLLM(fail_from=0)  # the first batch failing is still a 502
     assert post({"topic": "CSTR", "n_items": 20}).status_code == 502
 

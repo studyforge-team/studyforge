@@ -24,7 +24,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 
 from app import notes
 from app.agent.quiz import Quiz
-from app.agent.quiz_gen import ChatJSON, QuizGenerationFailed, generate_quiz
+from app.agent.quiz_gen import MAX_ITEMS, ChatJSON, QuizGenerationFailed, generate_quiz
 from app.db import quizzes
 from app.llm.errors import BudgetExceeded
 
@@ -91,8 +91,10 @@ async def link(engine: AsyncEngine, user_id: str, quiz: Quiz) -> Quiz:
 async def build(engine: AsyncEngine, llm: ChatJSON, user_id: str, key: str, title: str) -> Quiz:
     topic = " ".join(title.split())[:200]  # one line: a title cannot add fields to the prompt
     hits = await notes.search(engine, user_id, topic, limit=5)
-    # ask for a few spare: the generator drops duplicates and unusable items
-    quiz = await generate_quiz(llm, topic, N_QUESTIONS + 2, notes=[str(h["text"]) for h in hits])
+    # ask for the most: the generator drops duplicates, calculated keys and unusable items
+    quiz = await generate_quiz(
+        llm, topic, MAX_ITEMS, notes=[str(h["text"]) for h in hits], min_items=N_QUESTIONS
+    )
     if len(quiz.items) < N_QUESTIONS:
         raise QuizGenerationFailed(f"only {len(quiz.items)} usable questions")  # nothing stored; 502
     quiz = quiz.model_copy(update={"title": f"Prep pack: {topic}", "items": quiz.items[:N_QUESTIONS]})
