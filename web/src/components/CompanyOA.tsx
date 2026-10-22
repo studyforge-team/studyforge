@@ -65,12 +65,14 @@ export function Exam({
   saveTopic,
   strengthsKey,
   onDone,
+  onNewSet,
 }: {
   title: string
   questions: BankQ[]
   saveTopic: string
   strengthsKey?: string // company id: OA attempts feed that company's topic strengths
   onDone: () => void
+  onNewSet?: () => void // draws fresh questions; without it the same set is retried
 }) {
   const [currentIdx, setCurrentIdx] = useState(0)
   const [answers, setAnswers] = useState<Record<number, number>>({})
@@ -200,9 +202,10 @@ export function Exam({
                 setCurrentIdx(0)
                 setSubmitted(false)
                 setSaveStatus(null)
+                onNewSet?.()
               }}
             >
-              Try another set
+              {onNewSet ? 'Try another set' : 'Try again'}
             </Button>
             <Button onClick={onDone}>Choose another company</Button>
           </div>
@@ -345,6 +348,7 @@ export default function CompanyOA({ initial }: { initial?: string }) {
   // Exam view state
   const [examActive, setExamActive] = useState(false)
   const [examQuestions, setExamQuestions] = useState<BankQ[]>([])
+  const [fromBank, setFromBank] = useState(false) // only a bank draw can offer a fresh set
   const [examTitle, setExamTitle] = useState('')
   const [examSaveTopic, setExamSaveTopic] = useState('')
 
@@ -419,6 +423,7 @@ export default function CompanyOA({ initial }: { initial?: string }) {
   const handleStartPractice = () => {
     if (!companyData) return
     const drawn = shuffle(companyData.oa.bank).slice(0, companyData.oa.draw)
+    setFromBank(true)
     setExamTitle(`${companyData.company} OA Practice`)
     setExamSaveTopic(`OA: ${companyData.company}`)
     setExamQuestions(drawn)
@@ -476,6 +481,7 @@ export default function CompanyOA({ initial }: { initial?: string }) {
       setExamTitle(`${companyData.company} practice (your material)`)
       setExamSaveTopic(`OA (my material): ${companyData.company}`)
       setExamQuestions(converted)
+      setFromBank(false)
       setExamActive(true)
     } catch (e) {
       setOwnError(friendly(e))
@@ -493,6 +499,7 @@ export default function CompanyOA({ initial }: { initial?: string }) {
         saveTopic={examSaveTopic}
         // Only bank tests feed the company's topic strengths; own-material tests are tracked apart.
         strengthsKey={examSaveTopic.startsWith('OA: ') ? companyData?.id : undefined}
+        onNewSet={fromBank ? handleStartPractice : undefined}
         onDone={() => {
           setExamActive(false)
           setSelectedCompanyId(null)
