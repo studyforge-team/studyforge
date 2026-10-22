@@ -18,7 +18,7 @@ const links: [string, string, (h: string) => boolean][] = [
   ['#pyq-predictor', 'PYQ Predictor', (h) => h === '#pyq-predictor'],
   ['#time-to-finish', 'Time to Finish', (h) => h === '#time-to-finish'],
   ['#chemlab', 'ChemLab', (h) => h.startsWith('#chemlab')],
-  ['#oa', 'OA Prep', (h) => h === '#oa'],
+  ['#oa', 'OA Prep', (h) => h === '#oa' || h.startsWith('#oa?')],
   ['#settings', 'Settings', (h) => h === '#settings'], // in the menu for everyone, so the theme is reachable signed out too
 ]
 const other = (h: string) => links.some(([, , m]) => m(h)) || extra.some(([k]) => h.startsWith(k)) // not Today

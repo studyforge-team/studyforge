@@ -357,6 +357,18 @@ def test_guardrail_regeneration_that_fixes_it_stays_high() -> None:
     assert (final["answer_md"], final["confidence"]) == ("X = 0.6667", "high")
 
 
+def test_regeneration_with_placeholders_keeps_first_draft() -> None:
+    llm = calc(
+        ("chat_tools", tool("run_python", code="r")),
+        ("chat_json", {"answer_md": "X = 0.7"}),
+        ("chat_json", {"answer_md": "$$$ X = {<number>} $$$ **Answer:** {<final_number>}"}),
+    )
+    d = deps(llm, guard=guard_flags(["0.7"]))
+    final = run(solve(d, {"result": GOOD}))[1]
+    assert final["answer_md"] == "X = 0.7"
+    assert final["confidence"] == "low"
+
+
 def test_flag_only_mode_does_not_regenerate() -> None:
     llm = calc(
         ("chat_tools", tool("run_python", code="r")),

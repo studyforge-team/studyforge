@@ -271,10 +271,11 @@ _SOFTWARE = re.compile(
 # live/current facts (sports results, news, prices, weather): phrase-level so "score", "price elasticity", "current density" pass
 _LIVE = re.compile(
     r"\bwho\s+(?:won|wins)\b(?:\W+\w+){0,5}?\W+(?:match|game|final|league|cup|series|tournament|ipl|last\s+night|yesterday|today)\b"
-    r"|\b(?:final|match|cricket|football|live)\s+(?:score|result)s?\b|\bipl\b|\bworld\s+cup\b|\b(?:premier|champions)\s+league\b"
+    r"|\b(?:match|cricket|football|live)\s+(?:score|result)s?\b|\bfinal\s+scores?\b|\bipl\b|\bworld\s+cup\b|\b(?:premier|champions)\s+league\b"
     r"|\b(?:nba|nfl)\b|\b(?:match|game|final)\b[^.?]{0,30}\blast\s+night\b|\blast\s+night\b[^.?]{0,30}\b(?:match|game|final)\b"
     r"|\b(?:latest|breaking)\s+news\b|\belection\s+results?\b"
-    r"|\b(?:stock|share)\s+price\b|\bprice\s+of\s+(?:bitcoin|crypto\w*|gold|petrol|diesel)\b"
+    r"|\b(?:stock|share)\s+price\b|\b(?:current|currently|latest|live|today|now)\s+price\s+of\s+(?:bitcoin|crypto\w*|gold|petrol|diesel)\b(?!\s*(?:is|=|:|at|of)?\s*(?:rs\.?|inr|usd)?\s*[₹$]?\s*\d)"
+    r"|\bprice\s+of\s+(?:bitcoin|crypto\w*|gold|petrol|diesel)\b[^.?!;,\d₹$]{0,25}\b(?:today|now|currently)\b"
     r"|\bprice\b[^.?]{0,20}\bright\s+now\b|\bright\s+now\b[^.?]{0,20}\bprice\b|\btoday'?s\s+price\b"
     r"|\bexchange\s+rate\s+today\b|\bweather\s+(?:today|tomorrow|forecast)\b|\b(?:today|tomorrow)'?s\s+weather\b",
     re.IGNORECASE,
@@ -510,6 +511,22 @@ async def _settle_cross_check(state: SolveState, result: Any, deps: Deps) -> Ste
     return await _explain(state, deps)
 
 
+_PLACEHOLDER = re.compile(r"<[a-z]+(?:_[a-z]+)*>|\{<[^{}]*>\}|\${3,}")
+
+
+def _has_placeholder(md: str) -> bool:
+    """Unfilled template text such as <number>, {<value>} or a run of $$$."""
+    return _PLACEHOLDER.search(md) is not None
+
+
+def _shows_answer(md: str, result: Any) -> bool:
+    node = result.get("answer") if isinstance(result, dict) else None
+    value = node.get("value") if isinstance(node, dict) else None
+    if not isinstance(value, int | float) or isinstance(value, bool):
+        return True
+    return f"{value:g}" in md.replace(",", "").replace("{,}", "")
+
+
 async def _explain(state: SolveState, deps: Deps) -> Step:
     deadline = (state.started_at or deps.clock()) + BUDGET_S
     data = json.dumps(state.result, ensure_ascii=False)
@@ -535,10 +552,18 @@ async def _explain(state: SolveState, deps: Deps) -> Step:
             "solver", messages, Explanation, deadline=deadline, solve_id=state.id
         )
         _spend(state, res)
-        answer = exp.answer_md
-        bad = (
-            list(deps.guard(answer, state.result, state.question)) if deps.guard else []
-        )
+        retry = exp.answer_md
+        if not _has_placeholder(retry) and (
+            _shows_answer(retry, state.result) or not _shows_answer(answer, state.result)
+        ):
+            answer = retry
+            bad = (
+                list(deps.guard(answer, state.result, state.question))
+                if deps.guard
+                else []
+            )
+    if _has_placeholder(answer):
+        state.flags.append("placeholder_text")
     if bad:
         state.flags.append("unsupported_numbers: " + ", ".join(bad))
     if isinstance(state.result, dict) and (

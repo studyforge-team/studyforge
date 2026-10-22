@@ -186,6 +186,7 @@ def _run(inputs: dict[str, Any], want_series: bool) -> dict[str, Any]:
         return finish(out)
     n_frac = (n - 1) + (x_prev - p["xB"]) / (x_prev - x)
     theo = n - 1
+    feed = min(feed, theo)  # feed on the reboiler stage is reported on the last column stage
     real = math.ceil(theo / p["Eo"])
     D = F * (p["zF"] - p["xB"]) / (p["xD"] - p["xB"])
     V = (R + 1.0) * D
@@ -218,7 +219,7 @@ def _run(inputs: dict[str, Any], want_series: bool) -> dict[str, Any]:
         "diameter_m": diameter,
         "height_m": real * TRAY_SPACING,
         "n_trays": real,
-        "feed_tray": max(1, round(feed / p["Eo"])),
+        "feed_tray": min(max(1, round(feed / p["Eo"])), real) if real > 0 else 1,
     }
     if want_series:
         xe = np.linspace(0.0, 1.0, N_EQ)

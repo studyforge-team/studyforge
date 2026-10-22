@@ -6,16 +6,10 @@ import { ConfirmQuestion } from '@/components/ConfirmQuestion'
 import { FilePick } from '@/components/FilePick'
 import { Button } from '@/components/ui/button'
 import { friendly, PlainError } from '@/lib/errors'
+import { labLink } from '@/lib/labLink'
 import { run, warm } from '@/sandbox/client'
 
 // Keeps react-markdown and KaTeX out of the main chunk; download starts when Solve is pressed.
-// question keyword -> ChemLab page (first match wins)
-const LAB_LINKS: [RegExp, string][] = [
-  [/cstr|stirred tank|continuous stirred/i, '#chemlab'],
-  [/distillation|mccabe|reflux|\btrays?\b/i, '#chemlab/mccabe'],
-  [/heat exchanger|shell[- ]and[- ]tube|lmtd|\bntu\b/i, '#chemlab/hx'],
-]
-
 const loadCard = () => import('../components/AnswerCard')
 const AnswerCard = lazy(loadCard)
 
@@ -168,7 +162,7 @@ export default function Solve() {
           <AnswerCard a={end} ran={rows.length > 0 && rows.every((r) => r.status === 'ok')} />
         </Suspense>
         {(() => {
-          const lab = LAB_LINKS.find(([re]) => re.test(question))?.[1]
+          const lab = labLink(question, end)
           return lab && (
             <a href={lab} className="print:hidden mt-3 inline-block rounded-md border px-3 py-1.5 text-sm font-medium hover:bg-muted">
               See it in 3D in ChemLab
