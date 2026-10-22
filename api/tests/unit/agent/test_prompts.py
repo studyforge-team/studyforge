@@ -38,3 +38,8 @@ def test_concept_states_no_numbers() -> None:
 
 def test_classify_defaults_to_calc() -> None:
     assert 'When unsure, reply "calc"' in prompts.CLASSIFY
+
+
+def test_solver_guards_correlation_units() -> None:
+    s = prompts.SOLVER
+    assert "units they are written in" in s and "physically sensible size" in s

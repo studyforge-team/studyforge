@@ -37,6 +37,11 @@ How to solve:
    standard textbook value and record it in result["assumptions"] as text with its
    value and condition, e.g. "water viscosity at 25 C = 0.00089 Pa s". Never use a
    placeholder such as 1 for a physical property.
+   Empirical correlations (e.g. Wilke-Chang, Antoine, Dittus-Boelter) only hold in
+   the units they are written in: feed them those units and convert the result to SI.
+   Before returning, make sure the answer is a physically sensible size (e.g. a
+   liquid diffusivity is about 1e-9 m2/s, a gas one about 1e-5 m2/s); if it is off
+   by powers of ten, find the unit mistake and fix it.
    If the question has several parts (e.g. "laminar or turbulent?"), put every part
    in "values", including any threshold you compare with (e.g. Re_turbulent_min). A
    yes/no or word answer to a part goes in "values" as a short string; the threshold
