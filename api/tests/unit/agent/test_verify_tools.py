@@ -13,7 +13,13 @@ from app.agent.tools import (
     check_mermaid,
     parse_args,
 )
-from app.agent.verify import MAX_STDOUT, clean, flat_numbers, verify
+from app.agent.verify import (
+    MAX_STDOUT,
+    clean,
+    energy_sign_problem,
+    flat_numbers,
+    verify,
+)
 
 OK = {
     "answer": {"value": 2.0, "unit": "m"},
@@ -143,3 +149,75 @@ def test_clean_rejects_oversized_or_non_json_result() -> None:
     )
     assert clean(ResultBody(result=float("nan"))).result is None
     assert clean(ResultBody(error="e" * 5000)).error == "e" * 2000
+
+
+REAL_Q = (
+    "Liquid A -> B (first order, k = 3.0e11 exp(-75000/(R T)) s^-1, R = 8.314 J/(mol K)) "
+    "flows through an adiabatic PFR of volume 400 L. Feed: v0 = 20 L/s, CA0 = 2.0 mol/L, "
+    "T0 = 300 K; heat of reaction -60 kJ/mol, volumetric heat capacity rho*Cp = 4000 J/(L K), "
+    "constant. Integrate the PFR numerically, plot T and X versus volume, and report the "
+    "exit conversion (main answer) and exit temperature in K (second value)."
+)
+EXIT = "exit_temperature_K (K)"
+SIGN_CASES = [  # (question, numbers, trips)
+    (REAL_Q, {"answer": 0.277, "check": 0.2775, EXIT: 291.68}, True),  # live 22 Oct
+    (
+        "Adiabatic CSTR, ΔH_rxn = −60 kJ/mol, feed T0 = 350 K.",
+        {"exit_T (K)": 330.0},
+        True,
+    ),
+    ("Adiabatic exothermic reactor, feed 300 K.", {"T_out (°C)": 20.0}, True),
+    (REAL_Q, {"answer": 0.87, EXIT: 326.247, "T_ref (K)": 298.15}, False),
+    (REAL_Q, {EXIT: 326.247, "T_ad (K)": 60.0}, False),
+    (REAL_Q, {EXIT: 326.247, "outlet_temperature_rise (K)": 26.2}, False),
+    (
+        "Adiabatic exothermic reactor, feed at 300 K. How much does it heat up?",
+        {"answer (K)": 60.0},
+        False,
+    ),
+    ("Adiabatic exothermic A -> 2 C, feed 400 K.", {"T_exit (K)": 450.0}, False),
+    (
+        "Adiabatic reactor, ΔH = -80 kJ/mol at 298 K, feed 400 K.",
+        {"T_exit (K)": 450.0},
+        False,
+    ),
+    ("Adiabatic exothermic reactor, feed 1,200 K.", {"T_exit (K)": 1250.0}, False),
+    (
+        "Adiabatic exothermic beds with an intercooler, feed 400 K.",
+        {"T_exit (K)": 380.0},
+        False,
+    ),
+    (
+        "Adiabatic exothermic beds with a cold-shot quench, feed 400 K.",
+        {"T_exit (K)": 380.0},
+        False,
+    ),
+    (
+        REAL_Q.replace("adiabatic PFR", "PFR with a coolant jacket"),
+        {EXIT: 291.68},
+        False,
+    ),
+    (
+        REAL_Q.replace("reaction -60", "reaction +50"),
+        {EXIT: 291.68},
+        False,
+    ),  # endothermic
+    (
+        "Adiabatic exothermic reactor, feed 400 K. Find the temperature rise.",
+        {"T_exit (K)": 380.0},
+        False,
+    ),
+    (
+        "Adiabatic exothermic reactor at 400 K.",
+        {"T_exit (K)": 380.0},
+        False,
+    ),  # no feed label
+    ("Adiabatic exothermic reactor, feed 300 K.", {"T_out (°C)": 40.0}, False),
+]
+
+
+@pytest.mark.parametrize(("question", "numbers", "trips"), SIGN_CASES)
+def test_energy_sign_problem(
+    question: str, numbers: dict[str, float], trips: bool
+) -> None:
+    assert (energy_sign_problem(numbers, question) is not None) is trips

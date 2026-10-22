@@ -212,7 +212,7 @@ class PgStateStore:
         sql = text(
             "select state->'last_step' from app.solves "
             "where state->>'status'='done' and state->'last_step' is not null "
-            "and not (state->'flags' ?| array['limit_reached','cached','spend_cap']) "
+            "and not (state->'flags' ?| array['limit_reached','cached','spend_cap','energy_balance_sign']) "
             "and lower(btrim(regexp_replace(state->>'question', '\\s+', ' ', 'g'))) = :q "
             "order by updated_at desc limit 1"
         )
