@@ -329,3 +329,41 @@ def test_focus_min_items_and_prompt_rules() -> None:
     assert "at most two sentences" in QUIZ_PROMPT and "never put a calculated number" in QUIZ_PROMPT
     run(generate_quiz(llm, "t", 1, min_items=1))
     assert "focus:" not in llm.calls[1]["messages"][1]["content"]
+
+
+def blank(stem: str) -> dict[str, Any]:
+    return {
+        "type": "blank",
+        "topic": "Thermo",
+        "stem": stem,
+        "answers": ["entropy"],
+        "explanation": "because",
+    }
+
+
+def types_for(kinds: Any, *items: dict[str, Any]) -> list[str]:
+    quiz = run(generate_quiz(FakeLLM(quiz_of(*items)), "t", 5, kinds=kinds))
+    return [i.type for i in quiz.items]
+
+
+MIXED_SET = (blank("The ____ law."), numerical("Find T."), mcq("Which law?"))
+
+
+def test_blank_kinds_drops_mcq_keeps_blank_and_numerical() -> None:
+    assert types_for("blank", *MIXED_SET, blank("____ rises.")) == [
+        "blank",
+        "numerical",
+        "blank",
+    ]
+
+
+def test_mcq_kinds_drops_blanks() -> None:
+    assert types_for("mcq", *MIXED_SET, mcq("Two")) == ["numerical", "mcq", "mcq"]
+
+
+def test_mixed_kinds_keeps_all_three() -> None:
+    assert types_for("mixed", *MIXED_SET) == ["blank", "numerical", "mcq"]
+
+
+def test_no_kinds_unchanged() -> None:
+    assert types_for(None, *MIXED_SET) == ["blank", "numerical", "mcq"]
