@@ -511,7 +511,7 @@ async def _settle_cross_check(state: SolveState, result: Any, deps: Deps) -> Ste
     return await _explain(state, deps)
 
 
-_PLACEHOLDER = re.compile(r"<[a-z]+(?:_[a-z]+)*>|\{<[^{}]*>\}|\${3,}")
+_PLACEHOLDER = re.compile(r"<(?!(?:br|sub|sup)>)[a-z]+(?:_[a-z]+)*>|\{<[^{}]*>\}|\${3,}")
 
 
 def _has_placeholder(md: str) -> bool:

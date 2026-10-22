@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from app.agent.markup import _DOUBLE, _MATH, tidy_markdown
+from app.agent.markup import _DECIMAL, _DOUBLE, _MATH, _round, tidy_markdown
 
 # Real snippets from the live baseline (1019).
 CONCEPT = (
@@ -76,8 +76,8 @@ def test_real_answers_have_no_raw_markup_outside_maths(name: str) -> None:
     outside = _MATH.sub("", out)
     for bad in ("\\n", "\\cdot", "\\mu", "\\times", "\\text{"):
         assert bad not in outside
-    want = [  # SV10: paren escapes inside display maths are stripped
-        re.sub(r"\\[()]", "", s) if s.startswith("$$") else s
+    want = [  # SV10: paren escapes inside display maths are stripped; SV11: float noise is rounded
+        _DECIMAL.sub(_round, re.sub(r"\\[()]", "", s) if s.startswith("$$") else s)
         for s in _segs(_DOUBLE.sub(lambda _: chr(92), src))
     ]
     assert _segs(out) == want
@@ -131,3 +131,40 @@ def test_stray_paren_escapes_inside_display_maths_are_removed() -> None:
     # a lone opener in display maths must not pair with a later inline one
     src = f"$$a {b}( b$$ and {b}(x{b}) end"
     assert tidy_markdown(src) == "$$a  b$$ and $x$ end"
+
+
+def test_br_sub_sup_outside_maths() -> None:
+    assert tidy_markdown("a<br>b<br/>c<br />d") == "a\n\nb\n\nc\n\nd"
+    assert tidy_markdown("$$A$$<br>$$B$$") == "$$A$$\n\n$$B$$"
+    assert tidy_markdown("| x<br>y | z |") == "| x\n\ny | z |"
+    assert tidy_markdown("x<sub>f</sub> and R<sub>min</sub> and 10<sup>5</sup>") == "x_f and R_min and 10^5"
+    assert tidy_markdown("$a<br>b$") == "$a b$"
+
+
+@pytest.mark.parametrize(
+    ("src", "want"),
+    [
+        ("4.18545550038196", "4.185"),
+        ("3183098.861837907", "3183099"),
+        ("98099.99999998641", "98100"),
+        ("0.003926990816987242", "0.003927"),
+        ("2.1999999999999997", "2.2"),
+        ("1.23456789e-5", "1.235e-5"),
+        ("is 0.2538267219801087.", "is 0.2538."),
+        ("$x = 4.18545550038196$", "$x = 4.185$"),
+        ("8.314462618", "8.314"),
+    ],
+)
+def test_long_decimals_rounded(src: str, want: str) -> None:
+    assert tidy_markdown(src) == want
+
+
+@pytest.mark.parametrize(
+    "s",
+    [
+        "0.018015", "1211.033", "0.00089", "2500", "8.314", "v1.2.3",
+        "```\nx = 4.18545550038196\n```", "use `4.18545550038196` here", "1,234.5678901234",
+    ],
+)
+def test_short_decimals_and_code_untouched(s: str) -> None:
+    assert tidy_markdown(s) == s

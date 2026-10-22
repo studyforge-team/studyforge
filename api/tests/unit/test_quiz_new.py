@@ -381,3 +381,10 @@ def test_read_trims_to_4000_at_a_line_boundary(env: dict[str, Any]) -> None:
     put_read(env, png(), "image/png")
     text = read().json()["text"]
     assert 3800 < len(text) <= 4000 and text.splitlines()[-1].endswith("x" * 90)
+
+
+def test_focus_labels_in_item_topics_become_the_quiz_topic(env: dict[str, Any]) -> None:
+    topics = ["Definitions and laws", "Common mistakes", "Design choices", "Applications", "Reactor sizing"]
+    env["llm"] = FakeLLM([{**mcq(i), "topic": t} for i, t in enumerate(topics)])
+    got = [i["topic"] for i in post({"topic": "Heat transfer"}).json()["items"]]
+    assert got == ["Heat transfer"] * 4 + ["Reactor sizing"]

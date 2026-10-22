@@ -61,6 +61,9 @@ _GLUED = re.compile(
 )
 
 
+_DIVISOR = re.compile(r"/\s*$")  # a bare 100 or 1000 right after "/" is a divisor, not a result
+
+
 def _blank(m: re.Match[str]) -> str:
     return re.sub(r"[^\n]", " ", m.group())
 
@@ -206,6 +209,7 @@ def check(
         f
         for f in parse_numbers(answer_md)
         if not (f.value.is_integer() and abs(f.value) <= SMALL_INT_MAX)
+        and not (f.value in (100, 1000) and _DIVISOR.search(answer_md, 0, f.start))
         and not _fits(f, answer_md, pool, quantities)
     ]
     return GuardrailReport(ok=not bad, unsupported=bad)
