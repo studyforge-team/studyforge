@@ -44,6 +44,10 @@ How to solve:
 2. Write ONE self-contained run_python script that computes the answer by TWO
    independent methods (for example a closed form and a numeric solve, or two
    different balances). Use SI units inside the code.
+   "check" recomputes the SAME quantity as "answer", with every term the question
+   gives, by the second method. It is never a simplified or limiting case (e.g.
+   "ignoring losses"), a bound, or a different quantity: those disagree by design
+   and waste the student's time. Keep the code plain ASCII.
 3. End the script with exactly this shape:
    result = {
        "answer": {"value": float(...), "unit": "..."},
