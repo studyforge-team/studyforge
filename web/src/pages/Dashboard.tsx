@@ -4,6 +4,8 @@ import type { Dashboard as Data } from '@/api/types'
 import { FilePick } from '@/components/FilePick'
 import { Button } from '@/components/ui/button'
 import PushReminders from '@/components/PushReminders'
+import { friendly } from '@/lib/errors'
+import { useSlow } from '@/lib/useSlow'
 import { warm } from '@/sandbox/client'
 
 const CHECKIN_LINK = /\/#(prep\/[0-9a-f]+\?checkin=\d+)/
@@ -44,6 +46,7 @@ export default function Dashboard() {
   const [note, setNote] = useState('') // upload status or error
   const [noteBad, setNoteBad] = useState(false)
   const inboxRef = useRef<HTMLDivElement>(null)
+  const slow = useSlow(!data && !error)
 
   useEffect(() => {
     const c = (navigator as { connection?: { saveData?: boolean; effectiveType?: string } }).connection
@@ -83,7 +86,7 @@ export default function Dashboard() {
       await uploadFile(f, 'notes') // ponytail: upload only, no read; the backend indexes notes itself
       setNote(demo ? `Demo mode — ${f.name} wasn't stored.` : `Added ${f.name} to your notes.`)
     } catch (e) {
-      setNoteBad(true); setNote(e instanceof Error ? e.message : 'Upload failed')
+      setNoteBad(true); setNote(friendly(e))
     }
   }
 
@@ -99,6 +102,7 @@ export default function Dashboard() {
     return (
       <main className={wrap} aria-busy="true">
         <p role="status" className="sr-only">Loading your dashboard…</p>
+        {slow && <p role="status" className="mb-3 text-sm text-muted-foreground">Waking up the server…</p>}
         <Shade className="h-4 w-40" />
         <Shade className="mt-4 h-48" />
         <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2"><Shade className="h-32" /><Shade className="h-32" /></div>
