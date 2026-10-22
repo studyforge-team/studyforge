@@ -203,3 +203,16 @@ def test_positions_point_at_token() -> None:
     for f in report.unsupported:
         assert answer[f.start : f.start + len(f.text)] == f.text
     assert report.unsupported[0].value == 77.7
+
+
+def test_latex_command_glued_to_a_number_is_not_part_of_it() -> None:
+    b = chr(92)
+    s = f"T {b}approx79.8957 K"
+    found = parse_numbers(s)
+    assert [f.value for f in found] == [79.8957]
+    assert s[found[0].start :].startswith("79.8957")
+    assert [f.value for f in parse_numbers(f"{b}tfrac12")] == []
+    assert [f.value for f in parse_numbers(f"3{b}times4.2")] == [3, 4.2]
+    assert [f.value for f in parse_numbers(f"2.5{b}times10^{{5}}")] == [250000]
+    assert [f.value for f in parse_numbers(f"3{b}cdot10^{{-4}}")] == [3e-4]
+    assert [f.value for f in parse_numbers(f"{b}approx123")] == [123]

@@ -72,7 +72,10 @@ Numerical (type "numerical"):
 
 
 KINDS_RULES = {
-    "mcq": "Write only multiple choice (mcq) items.",
+    "mcq": (
+        "Write multiple choice (mcq) items. When a question needs a calculation, "
+        "write a numerical item instead (its key is computed and checked)."
+    ),
     "blank": (
         'Write only fill-in-the-blank items (type "blank"): "stem" contains the gap as "____", '
         '"answers" lists 1 to 5 accepted words or short phrases (each at most 60 characters), '
@@ -183,6 +186,24 @@ def _invented(option: str, pool: list[float]) -> bool:
     return not check(option, pool).ok
 
 
+# an option that is arithmetic on numbers ("(90 - 50)/ln(90/50)") is a model-computed answer; scientific
+# notation ("2.5 × 10^5") is a quantity, not arithmetic
+_SCI = re.compile(
+    r"(?<![\w.])\d+(?:\.\d+)?\s*(?:×|\*|·|x|\\times|\\cdot)\s*10\s*"
+    r"(?:\^\s*\{?\s*[-−+]?\d+\s*\}?|[⁻⁺]?[⁰¹²³⁴⁵⁶⁷⁸⁹]+)"
+)
+_ARITH = re.compile(r"(?<![\w.])\d+(?:\.\d+)?\s*[)\]]*\s*[-−+×*/÷·]\s*[(\[]*\s*[-−]?\d")
+
+
+def _calc_key(option: str) -> bool:
+    # ponytail: known false drops "10-25%", "KE = 1/2 m v²", "3/4"
+    return _ARITH.search(_SCI.sub("N", option)) is not None
+
+
+def _ws(s: str) -> str:
+    return " ".join(s.split())
+
+
 def _key_invented(item: QuizItem, pool: list[float]) -> bool:
     # ponytail: only the key is checked (invented distractors are fine); numerical items run in the browser
     if item.type == "mcq":
@@ -242,6 +263,15 @@ async def generate_quiz(
                 item = _ITEM.validate_python(data)
                 if _key_invented(item, [*base, *(f.value for f in parse_numbers(item.stem))]):
                     reasons.append(f"item {i}: the correct option has a number not in the notes or the question")
+                elif (
+                    item.type == "mcq"
+                    and _calc_key(key := item.options[item.correct_index])
+                    and _ws(key) not in _ws(" ".join(_quoted(notes)))  # a calculation the notes show is fine
+                ):
+                    reasons.append(
+                        f"item {i}: the correct option is a calculation; ask about the method, "
+                        "or write a numerical item when allowed"
+                    )
                 else:
                     items.append(item)
             except ValidationError as err:

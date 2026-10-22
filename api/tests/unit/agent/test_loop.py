@@ -677,3 +677,48 @@ def test_energy_sign_trip_is_low_with_warning_and_twin_stays_high() -> None:
         "outlet temperature (291.7 K) is below the feed (300.0 K)" in bad["answer_md"]
     )
     assert go(326.2)["confidence"] == "high"
+
+
+# --- SV10: the Assumed line is guaranteed ----------------------------------------
+
+
+def explained(result: dict[str, Any], answer_md: str, question: str = "Find X") -> dict[str, Any]:
+    llm = calc(
+        ("chat_tools", tool("run_python", code="r")),
+        ("chat_json", {"answer_md": answer_md}),
+    )
+    return run(solve(deps(llm), {"result": result}, question=question))[1]  # type: ignore[no-any-return]
+
+
+def test_assumed_line_is_added_when_missing() -> None:
+    r = with_assumptions("steady state", "g = 9.81 m/s^2")
+    out = explained(r, "X = 0.6667")
+    assert out["answer_md"] == "X = 0.6667\n\n**Assumed:** steady state; g = 9.81 m/s^2"
+
+
+@pytest.mark.parametrize(
+    "answer", ["X = 0.6667\n\n**Assumed:** steady", "**Assumed**: steady", "Assumptions: steady", "so Assumed: steady"]
+)
+def test_assumed_line_is_not_doubled(answer: str) -> None:
+    out = explained(with_assumptions("steady state"), answer)
+    assert out["answer_md"] == answer
+
+
+def test_assumed_line_needs_a_non_empty_list_of_strings() -> None:
+    assert explained({**GOOD, "assumptions": []}, "X = 0.6667")["answer_md"] == "X = 0.6667"
+    assert explained({**GOOD, "assumptions": "steady"}, "X = 0.6667")["answer_md"] == "X = 0.6667"
+    assert explained({**GOOD, "assumptions": [1, 2]}, "X = 0.6667")["answer_md"] == "X = 0.6667"
+    assert explained(GOOD, "students assume X = 0.6667")["answer_md"] == "students assume X = 0.6667"
+
+
+def test_assumed_line_comes_before_the_energy_warning() -> None:
+    from tests.unit.agent.test_verify_tools import REAL_Q
+
+    r = {
+        "answer": {"value": 0.28, "unit": "-"},
+        "check": {"value": 0.28, "unit": "-", "method": "numeric"},
+        "values": {"exit_temperature": {"value": 291.7, "unit": "K"}},
+        "assumptions": ["steady state"],
+    }
+    md = explained(r, "Done", REAL_Q)["answer_md"]
+    assert md.index("**Assumed:**") < md.index("**Warning:**")

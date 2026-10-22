@@ -566,6 +566,15 @@ async def _explain(state: SolveState, deps: Deps) -> Step:
         state.flags.append("placeholder_text")
     if bad:
         state.flags.append("unsupported_numbers: " + ", ".join(bad))
+    if isinstance(state.result, dict):  # the write-up may skip the solver's assumptions: show them
+        given = state.result.get("assumptions")
+        if (
+            isinstance(given, list)
+            and given
+            and all(isinstance(a, str) for a in given)
+            and not re.search(r"(?i)\bassum(?:ed|ptions?)\s*\**\s*:", answer)
+        ):
+            answer += "\n\n**Assumed:** " + "; ".join(given)
     if isinstance(state.result, dict) and (
         trip := energy_sign_problem(flat_numbers(state.result), state.question)
     ):  # after the guardrail, so the warning's own numbers are not checked

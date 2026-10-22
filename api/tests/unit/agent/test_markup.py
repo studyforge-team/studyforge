@@ -76,7 +76,11 @@ def test_real_answers_have_no_raw_markup_outside_maths(name: str) -> None:
     outside = _MATH.sub("", out)
     for bad in ("\\n", "\\cdot", "\\mu", "\\times", "\\text{"):
         assert bad not in outside
-    assert _segs(out) == _segs(_DOUBLE.sub(lambda _: chr(92), src))
+    want = [  # SV10: paren escapes inside display maths are stripped
+        re.sub(r"\\[()]", "", s) if s.startswith("$$") else s
+        for s in _segs(_DOUBLE.sub(lambda _: chr(92), src))
+    ]
+    assert _segs(out) == want
 
 
 def test_bare_latex_and_text_outside_maths() -> None:
@@ -117,3 +121,13 @@ def test_double_backslash_and_sections() -> None:
     row = "$$" + b + "begin{aligned} a &= b " + bb + " c &= d " + b + "end{aligned}$$"
     assert tidy_markdown(row) == row
     assert tidy_markdown(f"{bb}[ x {bb}] y") == "$$ x $$ y"
+
+
+def test_stray_paren_escapes_inside_display_maths_are_removed() -> None:
+    b = chr(92)
+    assert tidy_markdown(f"$$a {b}( b + c$$") == "$$a  b + c$$"
+    keep = f"$${b}left( x {b}right) {b}big( y$$"
+    assert tidy_markdown(keep) == keep
+    # a lone opener in display maths must not pair with a later inline one
+    src = f"$$a {b}( b$$ and {b}(x{b}) end"
+    assert tidy_markdown(src) == "$$a  b$$ and $x$ end"
