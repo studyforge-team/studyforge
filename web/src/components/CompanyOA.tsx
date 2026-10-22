@@ -327,6 +327,8 @@ export function Exam({
   )
 }
 
+const companyFiles = import.meta.glob('../data/companies/*.json') // static at build time, so "not in here" means unknown id
+
 // ── CompanyOA Component ────────────────────────────────────────────────────────
 export default function CompanyOA({ initial }: { initial?: string }) {
   const [companies, setCompanies] = useState<CompanySummary[]>([])
@@ -340,7 +342,8 @@ export default function CompanyOA({ initial }: { initial?: string }) {
     }
   }
   const [companyData, setCompanyData] = useState<CompanyDetail | null>(null)
-  const loadingCompany = Boolean(selectedCompanyId && !companyData)
+  const notFound = Boolean(selectedCompanyId && (selectedCompanyId === 'index' || !(`../data/companies/${selectedCompanyId}.json` in companyFiles)))
+  const loadingCompany = Boolean(selectedCompanyId && !companyData && !notFound)
 
   // Exam view state
   const [examActive, setExamActive] = useState(false)
@@ -394,9 +397,8 @@ export default function CompanyOA({ initial }: { initial?: string }) {
   useEffect(() => {
     if (!selectedCompanyId) return
 
-    const files = import.meta.glob('../data/companies/*.json')
     const key = `../data/companies/${selectedCompanyId}.json`
-    const loader = files[key]
+    const loader = companyFiles[key]
 
     if (loader) {
       loader()
@@ -752,7 +754,14 @@ export default function CompanyOA({ initial }: { initial?: string }) {
         />
       </div>
 
-      {loadingCompany ? (
+      {notFound ? (
+        <div className="space-y-2 py-8 text-center text-sm text-muted-foreground">
+          <p role="status">Company not found</p>
+          <button type="button" className="text-xs font-medium text-primary hover:underline" onClick={() => setSelectedCompanyId(null)}>
+            ← Back to companies
+          </button>
+        </div>
+      ) : loadingCompany ? (
         <div className="py-8 text-center text-xs text-muted-foreground">Loading company...</div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

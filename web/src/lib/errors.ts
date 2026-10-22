@@ -13,7 +13,9 @@ export function friendly(e: unknown): string {
     const s = e.status
     if (s === 401) return 'Your session ended. Sign in again.'
     if (s === 404) return 'That question or session no longer exists. Start again.'
+    if (s === 409) return "You've reached the 20-file upload limit. Free space under Your data (Settings → Your data)."
     if (s === 413) return 'That result was too large for the server.'
+    if (s === 415) return "That file type isn't supported. Upload a PDF or an image."
     if (s === 422) return "The app sent something the server didn't understand. Reload the page."
     if (s === 429) return "You've hit today's limit. Try again tomorrow."
     if (s >= 500) return 'The server is having trouble. Try again in a minute.'
