@@ -2,8 +2,8 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { labLink } from '../src/lib/labLink.ts'
 
-const fin = (answer_md: string, numbers: Record<string, number> = {}): Parameters<typeof labLink>[1] =>
-  ({ type: 'final', answer_md, numbers, figures: [], sources: [], confidence: 'high' })
+const fin = (answer_md: string): Parameters<typeof labLink>[1] =>
+  ({ answer_md })
 const refusal = fin('I can only help with engineering, science and maths coursework. That question is outside what I do.')
 
 test('CSTR question gets the ChemLab link', () => {
