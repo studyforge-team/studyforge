@@ -6,7 +6,9 @@ const dom = (name: string) => new DOMException('x', name)
 const cases: [unknown, RegExp][] = [
   [new HttpError(401), /Sign in again/],
   [new HttpError(404), /no longer exists/],
+  [new HttpError(409), /20-file upload limit/],
   [new HttpError(413), /too large/],
+  [new HttpError(415), /file type isn't supported/],
   [new HttpError(422), /Reload/],
   [new HttpError(429), /today's limit/],
   [new HttpError(500), /Try again in a minute/],

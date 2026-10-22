@@ -130,12 +130,14 @@ def _x_isothermal(da: float, n: float) -> tuple[float, float]:
     otherwise, so conversions near 1 keep full precision."""
     if da <= 0.0:
         return 0.0, 1.0
+    if not math.isfinite(da):  # Da overflowed: conversion is complete
+        return 1.0, 0.0
     if n == 0.0:
         return (1.0, 0.0) if da >= 1.0 else (da, 1.0 - da)
     if 0.5 - da * 0.5**n >= 0.0:
-        x = float(brentq(lambda x: x - da * (1.0 - x) ** n, 0.0, 0.5, xtol=1e-300))
+        x = float(brentq(lambda x: x - da * (1.0 - x) ** n, 0.0, 0.5, xtol=1e-300, maxiter=2000))
         return x, 1.0 - x
-    u = float(brentq(lambda u: (1.0 - u) - da * u**n, 0.0, 0.5, xtol=1e-300))
+    u = float(brentq(lambda u: (1.0 - u) - da * u**n, 0.0, 0.5, xtol=1e-300, maxiter=2000))
     return 1.0 - u, u
 
 
@@ -249,7 +251,7 @@ def _s_curve_branches(
     (the curve varies V at fixed v0), so the labels match the steady_states rule.
     A fold (where tau turns back) is a stability change, so tau is monotonic inside a
     branch: draw each branch as its own line and nothing zig-zags."""
-    if iso:  # T fixed: only the mole balance, which is always stable for n >= 0
+    if iso or p["Ea"] == 0.0:  # T fixed: only the mole balance, always stable (n >= 0)
         return [{"stable": True, "start": 0, "stop": len(X)}]
     labels = []
     for t, x, temp in zip(tau_X, X, T_X, strict=True):
@@ -308,6 +310,9 @@ def _series(p: Values, tau: float, T_op: float, iso: bool) -> dict[str, Any]:
     # S-curve: conversion against residence time, every branch (X parametrises it)
     T_X = np.full_like(X, p["T0"]) if iso else _t_energy(p, X)
     tau_X = X / (_k(p, T_X) * p["CA0"] ** (p["n"] - 1) * (1.0 - X) ** p["n"])
+    # strongly endothermic: the energy balance gives T <= 0 K (or k underflows); drop
+    keep = (T_X > 0.0) & np.isfinite(tau_X)
+    X, T_X, tau_X = X[keep], T_X[keep], tau_X[keep]
     out["s_curve"] = series(tau_X, X, "s", "-")
     out["s_curve"]["branches"] = _s_curve_branches(p, tau_X, X, T_X, iso)
     # Levenspiel plot at the operating temperature: CSTR volume = v0*CA0*X/(-rA)

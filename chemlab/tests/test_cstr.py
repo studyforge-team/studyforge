@@ -408,3 +408,48 @@ def test_s_curve_splits_a_fold_between_two_unstable_branches() -> None:
     for b in branches:
         d = np.diff(tau[b["start"] : b["stop"]])
         assert np.all(d > 0) or np.all(d < 0)
+
+
+def _all_finite(obj: object) -> bool:
+    if isinstance(obj, bool) or obj is None or isinstance(obj, str):
+        return obj is not None  # a null in the output means a non-finite number
+    if isinstance(obj, (int, float)):
+        return math.isfinite(obj)
+    if isinstance(obj, dict):
+        return all(_all_finite(v) for v in obj.values())
+    return all(_all_finite(v) for v in obj)  # list
+
+
+EDGE_CASES = {
+    "ea_zero": {"Ea": 0.0},
+    "da_huge_n2": {"k0": 1e30, "n": 2.0, "V": 1.0, "v0": 1e-9, "CA0": 1e5},
+    "da_huge_n4": {"k0": 1e30, "n": 4.0, "V": 1e5, "v0": 1e-9, "CA0": 1e5},
+    "endothermic_1e6": {"dHr": 1e6},
+    "endothermic_1e7": {"dHr": 1e7},
+}
+
+
+@pytest.mark.parametrize("over", EDGE_CASES.values(), ids=EDGE_CASES.keys())
+def test_edge_inputs_finite_no_exception(over):
+    r = run(over, series=True)
+    assert r["ok"]
+    assert _all_finite(r["outputs"]) and _all_finite(r["steady_states"])
+    assert _all_finite(r["series"])  # no null (non-finite) point anywhere
+    assert 0.0 <= r["outputs"]["X"]["value"] <= 1.0
+    assert r["outputs"]["T"]["value"] > 0.0
+
+
+def test_huge_damkohler_is_complete_conversion():
+    r = run(EDGE_CASES["da_huge_n2"])
+    assert r["outputs"]["X"]["value"] == pytest.approx(1.0, abs=1e-12)
+
+
+def test_endothermic_s_curve_has_no_nonphysical_points():
+    for dhr in (1e6, 1e7):
+        r = run({"dHr": dhr}, series=True)
+        assert all(b["stable"] for b in r["series"]["s_curve"]["branches"])
+
+
+def test_defaults_still_three_steady_states():
+    r = run({}, series=True)
+    assert [round(s["T"]) for s in r["steady_states"]] == [301, 349, 391]
