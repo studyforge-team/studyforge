@@ -30,8 +30,11 @@ _BLANK = {"type": "blank", "topic": "CSTR", "stem": "A CSTR is ____.", "answers"
 
 
 class FakeLLM:
+    calls = 0  # quizzes are written in parallel batches: each call gets new stems, or de-dupe leaves too few
+
     async def chat_json(self, role: str, messages: list[Any], schema: type[Any], **_: Any) -> tuple[Any, Any]:
-        return schema(title="CSTR quiz", items=[_mcq(0), _mcq(1), _BLANK]), None
+        k, self.calls = self.calls, self.calls + 1
+        return schema(title="CSTR quiz", items=[_mcq(2 * k), _mcq(2 * k + 1), _BLANK]), None
 
 
 def test_quiz_route_then_answers() -> None:
