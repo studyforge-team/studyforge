@@ -3,6 +3,7 @@ import { getSolves, getSolveStep } from '@/api/client'
 import type { SolveItem, Step } from '@/api/types'
 import { Button } from '@/components/ui/button'
 import { friendly, HttpError } from '@/lib/errors'
+import { useSlow } from '@/lib/useSlow'
 
 const AnswerCard = lazy(() => import('@/components/AnswerCard')) // keeps markdown/KaTeX out of the list's chunk
 const wrap = 'mx-auto max-w-3xl px-4 py-6 sm:py-8'
@@ -17,6 +18,7 @@ const ORDER = ['Today', 'Yesterday', 'Last 7 days', 'Older']
 
 function Detail({ id }: { id: string }) {
   const [res, setRes] = useState<{ step?: Step; err?: string } | null>(null)
+  const slow = useSlow(!res)
   useEffect(() => {
     let live = true
     getSolveStep(decodeURIComponent(id)).then(
@@ -30,6 +32,7 @@ function Detail({ id }: { id: string }) {
       <a href="#history" className="inline-flex min-h-11 items-center text-sm font-medium text-primary">← All history</a>
       <h1 className="text-2xl font-semibold tracking-tight">Past solve</h1>
       {!res && <p role="status" className="mt-4 text-sm text-muted-foreground">Loading…</p>}
+      {!res && slow && <p className="mt-1 text-sm text-muted-foreground">Waking up the server…</p>}
       {res?.err && <p role="alert" className="mt-4 text-sm font-medium text-destructive">{res.err}</p>}
       {res?.step?.type === 'final' && <Suspense fallback={null}><AnswerCard a={res.step} /></Suspense>}
       {res?.step && res.step.type !== 'final' && <p className="mt-4 text-sm text-muted-foreground">This solve did not finish.</p>}
@@ -44,6 +47,7 @@ function List() {
   const [next, setNext] = useState<string | null>(null)
   const [state, setState] = useState<'loading' | 'ready' | 'more'>('loading')
   const [err, setErr] = useState('')
+  const slow = useSlow(state === 'loading')
 
   useEffect(() => {
     const t = setTimeout(() => setQ(input.trim()), 300)
@@ -77,6 +81,7 @@ function List() {
       />
       {err && <p role="alert" className="mt-4 text-sm font-medium text-destructive">{err}</p>}
       {state === 'loading' && <p role="status" className="mt-4 text-sm text-muted-foreground">Loading…</p>}
+      {state === 'loading' && slow && <p className="mt-1 text-sm text-muted-foreground">Waking up the server…</p>}
       {state !== 'loading' && !err && items.length === 0 && (
         <p className="mt-4 text-sm text-muted-foreground">{q ? 'No questions match.' : 'No solves yet. Ask your first question.'}</p>
       )}

@@ -37,6 +37,11 @@ How to solve:
    standard textbook value and record it in result["assumptions"] as text with its
    value and condition, e.g. "water viscosity at 25 C = 0.00089 Pa s". Never use a
    placeholder such as 1 for a physical property.
+   Empirical correlations (e.g. Wilke-Chang, Antoine, Dittus-Boelter) only hold in
+   the units they are written in: feed them those units and convert the result to SI.
+   Before returning, make sure the answer is a physically sensible size (e.g. a
+   liquid diffusivity is about 1e-9 m2/s, a gas one about 1e-5 m2/s); if it is off
+   by powers of ten, find the unit mistake and fix it.
    If the question has several parts (e.g. "laminar or turbulent?"), put every part
    in "values", including any threshold you compare with (e.g. Re_turbulent_min). A
    yes/no or word answer to a part goes in "values" as a short string; the threshold
@@ -44,6 +49,10 @@ How to solve:
 2. Write ONE self-contained run_python script that computes the answer by TWO
    independent methods (for example a closed form and a numeric solve, or two
    different balances). Use SI units inside the code.
+   "check" recomputes the SAME quantity as "answer", with every term the question
+   gives, by the second method. It is never a simplified or limiting case (e.g.
+   "ignoring losses"), a bound, or a different quantity: those disagree by design
+   and waste the student's time. Keep the code plain ASCII.
 3. End the script with exactly this shape:
    result = {
        "answer": {"value": float(...), "unit": "..."},
@@ -54,7 +63,10 @@ How to solve:
    - "answer" and "check" use the same unit, the unit the question asks for.
      Dimensionless quantities use unit "-".
    - Put every number the explanation will show into "values", in the unit it will
-     be shown in. If you will show a percentage, store it (e.g. X_percent); if you
+     be shown in, including any unit-conversion factor you will show (e.g.
+     "kPa_per_MPa": {"value": 1000.0, "unit": "-"}).
+   - Every property, constant or table value you chose yourself (not given in the
+     question) also goes in "assumptions" as text with its value and condition. If you will show a percentage, store it (e.g. X_percent); if you
      will show °C and K, store both. The explanation may not convert anything.
 
 Sandbox rules (break them and the run fails):
@@ -103,9 +115,11 @@ that step symbolically, with no number. Never spell numbers out as words; use a 
 (e.g. 1 - X) instead.
 **Answer:** the result with its unit, in bold.
 **Check:** how the second method agrees (when the result has a check).
-Answer every part of the question. Only when result["assumptions"] is non-empty, list
-each entry under **Assumed:**, with its value; otherwise write no **Assumed:** line at
-all. Mention any warnings in the result in plain words. If there are
+Answer every part of the question. When a part asks whether something is A or B
+(laminar or turbulent, valid or not), give the verdict using the question's own word.
+List under **Assumed:** each result["assumptions"] entry, with its value, and every
+property, constant or table value under **Given:** that the question did not state;
+when there are none, write no **Assumed:** line at all. Mention any warnings in the result in plain words. If there are
 several steady states, say which are stable and what that means in practice.
 
 Number rule: use ONLY numbers that appear in the sandbox result or in the question.
@@ -115,4 +129,6 @@ Reply as JSON: {"answer_md": "..."}"""
 
 REGENERATE = """These numbers in your answer are not in the sandbox result or the
 question: {bad}. Rewrite the answer so that every number is copied from the result
-or the question. If a number is not available, describe it in words."""
+or the question. If a number is not available, describe it in words. Keep the final
+answer value exactly as it appears in the result. Never write placeholders such as
+<number> or <value>."""

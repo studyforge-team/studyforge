@@ -65,12 +65,14 @@ export function Exam({
   saveTopic,
   strengthsKey,
   onDone,
+  onNewSet,
 }: {
   title: string
   questions: BankQ[]
   saveTopic: string
   strengthsKey?: string // company id: OA attempts feed that company's topic strengths
   onDone: () => void
+  onNewSet?: () => void // draws fresh questions; without it the same set is retried
 }) {
   const [currentIdx, setCurrentIdx] = useState(0)
   const [answers, setAnswers] = useState<Record<number, number>>({})
@@ -200,9 +202,10 @@ export function Exam({
                 setCurrentIdx(0)
                 setSubmitted(false)
                 setSaveStatus(null)
+                onNewSet?.()
               }}
             >
-              Try another set
+              {onNewSet ? 'Try another set' : 'Try again'}
             </Button>
             <Button onClick={onDone}>Choose another company</Button>
           </div>
@@ -324,6 +327,8 @@ export function Exam({
   )
 }
 
+const companyFiles = import.meta.glob('../data/companies/*.json') // static at build time, so "not in here" means unknown id
+
 // ── CompanyOA Component ────────────────────────────────────────────────────────
 export default function CompanyOA({ initial }: { initial?: string }) {
   const [companies, setCompanies] = useState<CompanySummary[]>([])
@@ -337,11 +342,13 @@ export default function CompanyOA({ initial }: { initial?: string }) {
     }
   }
   const [companyData, setCompanyData] = useState<CompanyDetail | null>(null)
-  const loadingCompany = Boolean(selectedCompanyId && !companyData)
+  const notFound = Boolean(selectedCompanyId && (selectedCompanyId === 'index' || !(`../data/companies/${selectedCompanyId}.json` in companyFiles)))
+  const loadingCompany = Boolean(selectedCompanyId && !companyData && !notFound)
 
   // Exam view state
   const [examActive, setExamActive] = useState(false)
   const [examQuestions, setExamQuestions] = useState<BankQ[]>([])
+  const [fromBank, setFromBank] = useState(false) // only a bank draw can offer a fresh set
   const [examTitle, setExamTitle] = useState('')
   const [examSaveTopic, setExamSaveTopic] = useState('')
 
@@ -390,9 +397,8 @@ export default function CompanyOA({ initial }: { initial?: string }) {
   useEffect(() => {
     if (!selectedCompanyId) return
 
-    const files = import.meta.glob('../data/companies/*.json')
     const key = `../data/companies/${selectedCompanyId}.json`
-    const loader = files[key]
+    const loader = companyFiles[key]
 
     if (loader) {
       loader()
@@ -417,6 +423,7 @@ export default function CompanyOA({ initial }: { initial?: string }) {
   const handleStartPractice = () => {
     if (!companyData) return
     const drawn = shuffle(companyData.oa.bank).slice(0, companyData.oa.draw)
+    setFromBank(true)
     setExamTitle(`${companyData.company} OA Practice`)
     setExamSaveTopic(`OA: ${companyData.company}`)
     setExamQuestions(drawn)
@@ -474,6 +481,7 @@ export default function CompanyOA({ initial }: { initial?: string }) {
       setExamTitle(`${companyData.company} practice (your material)`)
       setExamSaveTopic(`OA (my material): ${companyData.company}`)
       setExamQuestions(converted)
+      setFromBank(false)
       setExamActive(true)
     } catch (e) {
       setOwnError(friendly(e))
@@ -491,6 +499,7 @@ export default function CompanyOA({ initial }: { initial?: string }) {
         saveTopic={examSaveTopic}
         // Only bank tests feed the company's topic strengths; own-material tests are tracked apart.
         strengthsKey={examSaveTopic.startsWith('OA: ') ? companyData?.id : undefined}
+        onNewSet={fromBank ? handleStartPractice : undefined}
         onDone={() => {
           setExamActive(false)
           setSelectedCompanyId(null)
@@ -745,7 +754,14 @@ export default function CompanyOA({ initial }: { initial?: string }) {
         />
       </div>
 
-      {loadingCompany ? (
+      {notFound ? (
+        <div className="space-y-2 py-8 text-center text-sm text-muted-foreground">
+          <p role="status">Company not found</p>
+          <button type="button" className="text-xs font-medium text-primary hover:underline" onClick={() => setSelectedCompanyId(null)}>
+            ← Back to companies
+          </button>
+        </div>
+      ) : loadingCompany ? (
         <div className="py-8 text-center text-xs text-muted-foreground">Loading company...</div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

@@ -10,6 +10,7 @@ quiz and drops items that fail ``check_key``. Nothing in this module evaluates `
 
 import json
 import logging
+import math
 import re
 import uuid
 from collections.abc import Awaitable, Callable, Sequence
@@ -137,11 +138,44 @@ def _normalise(stem: str) -> str:
     return re.sub(r"\s+", " ", stem.strip().lower())
 
 
+_NUM = r"[-+\u2212]?(?:\d+(?:\.\d+)?|\.\d+)(?:[eE][-+]?\d+)?"
+_UNIT = r"(?:[A-Za-z\u00b0\u00b5\u03a9][A-Za-z\u00b0\u00b5\u03a9/\u00b7.\-]*(?:\^?-?\d)?\s*){1,3}"
+_OPTION = re.compile(rf"\s*({_NUM})\s*(%)?\s*(?:{_UNIT})?")
+
+
+def _key_contradicts_explanation(item: QuizItem) -> bool:
+    """True when an all-numeric MCQ's keyed option is not the one its explanation ends on."""
+    if item.type != "mcq":
+        return False
+    values: list[float] = []
+    for opt in item.options:
+        m = _OPTION.fullmatch(opt)
+        if not m:
+            return False
+        values.append(float(m.group(1).replace("\u2212", "-")))
+    found = re.findall(_NUM, item.explanation)
+    if not found:
+        return False
+    last = float(found[-1].replace("\u2212", "-"))
+    hits = [
+        i
+        for i, v in enumerate(values)
+        if any(
+            math.isclose(c, v, rel_tol=0.005, abs_tol=1e-12)
+            for c in (last, last * 100, last / 100)
+        )
+    ]
+    return len(hits) == 1 and hits[0] != item.correct_index
+
+
 def _tidy(items: Sequence[QuizItem], n: int) -> list[QuizItem]:
     seen: set[str] = set()
     kept: list[QuizItem] = []
     for item in items:
         if item.type == "subjective" or not item.topic.strip():
+            continue
+        if _key_contradicts_explanation(item):
+            log.info("quiz item dropped: key contradicts its explanation")
             continue
         key = _normalise(item.stem)
         if key in seen:
