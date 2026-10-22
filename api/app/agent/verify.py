@@ -9,6 +9,7 @@ import base64
 import binascii
 import json
 import math
+import re
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -117,3 +118,50 @@ def flat_numbers(result: dict[str, Any]) -> dict[str, float]:
         if q is not None:
             out[f"{name} ({q[1]})" if q[1] not in ("-", "") else name] = q[0]
     return out
+
+
+# SV8: an adiabatic exothermic reactor never leaves colder than its feed. Narrow on
+# purpose: any doubt about the question (cooling, a temperature-change ask, no feed
+# label) means no check rather than a false alarm.
+_ADIABATIC = re.compile(r"(?i)\badiabatic")
+_EXO = re.compile(
+    r"(?i)exotherm|(?:heat|enthalpy) of reaction\D{0,15}[-−]\d"
+    r"|(?:ΔH|delta ?H)\w*\s*[=:]?\s*[-−]\s*\d"
+)
+_SKIP = re.compile(
+    r"(?i)cool(?:ant|ing|ed|er)|jacket|heat exchang|quench|steam|heating (?:medium|fluid)"
+    r"|temperature (?:rise|change|increase|difference|drop|jump)"
+    r"|(?:rise|increase|change) in temperature|Δ ?T\b|delta[ _]?T\b|\bdT\b"
+)
+# first temperature within 30 chars of a feed label; no sentence break, decimals ok
+_FEED = re.compile(
+    r"(?i)\b(?:T_?0|T_in|feed|inlet|enter|initial|starting)(?:[^.]|(?<=\d)\.(?=\d)){0,30}?"
+    r"(\d+(?:\.\d+)?)(?:\s*(K)\b|\s*°\s*C|\s*deg\s*C\b|C\b)"
+)
+_TEMP_KEY = re.compile(r"^(.*) \((K|°C|degC|C)\)$")
+_OUTLET = re.compile(r"(?i)exit|outlet|out\b|final|product|end\b")
+_NOT_OUTLET = re.compile(
+    r"(?i)ref|std|standard|feed|inlet|initial|T_?0|rise|delta|change|diff|\bdT|increase|drop|ad\b"
+)
+
+
+def energy_sign_problem(
+    numbers: dict[str, float], question: str
+) -> tuple[float, float] | None:
+    """(outlet T, feed T) in K when a named outlet temperature of an adiabatic
+    exothermic reactor is below its feed temperature, else None."""
+    if not (_ADIABATIC.search(question) and _EXO.search(question)):
+        return None
+    if _SKIP.search(question):
+        return None
+    m = _FEED.search(re.sub(r"(?<=\d),(?=\d{3}\b)", "", question))
+    if not m:
+        return None
+    t0 = float(m.group(1)) + (0 if m.group(2) else 273.15)
+    for key, value in numbers.items():
+        k = _TEMP_KEY.match(key)
+        if k and _OUTLET.search(k.group(1)) and not _NOT_OUTLET.search(k.group(1)):
+            t = value + (0 if k.group(2) == "K" else 273.15)
+            if t < t0 - 0.5:
+                return t, t0
+    return None
