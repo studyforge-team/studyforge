@@ -4,6 +4,7 @@ import type { Step, UploadRead } from '@/api/types'
 import { Check, Cross } from '@/components/icons'
 import { ConfirmQuestion } from '@/components/ConfirmQuestion'
 import { FilePick } from '@/components/FilePick'
+import { VoiceInput } from '@/components/VoiceInput'
 import { Button } from '@/components/ui/button'
 import { friendly, PlainError } from '@/lib/errors'
 import { labLink } from '@/lib/labLink'
@@ -46,6 +47,7 @@ function StepRow({ r }: { r: Row }) {
 
 export default function Solve() {
   const [question, setQuestion] = useState('')
+  const [voiceActive, setVoiceActive] = useState(false)
   const [busy, setBusy] = useState(false)
   const [rows, setRows] = useState<Row[]>([])
   const [end, setEnd] = useState<Step>()
@@ -77,7 +79,7 @@ export default function Solve() {
   }
 
   async function submit(text = question, confirmed = false) {
-    if (busy || !text.trim()) return
+    if (busy || voiceActive || !text.trim()) return
     setBusy(true); setRows([]); setEnd(undefined); setError(''); setSlow(false)
     void loadCard() // fire and forget: fetch the answer-card chunk while Python runs
     const onSlow = () => setSlow(true)
@@ -110,17 +112,19 @@ export default function Solve() {
         <label htmlFor="q" className="block text-sm font-medium">Your question</label>
         <p id="q-help" className="mt-1 text-sm text-muted-foreground">Ask anything from your course — numbers are computed, not guessed.</p>
         <textarea
-          id="q" rows={4} value={question} disabled={busy} aria-describedby="q-help"
+          id="q" rows={4} value={question} disabled={busy || voiceActive} aria-describedby="q-help"
           onChange={(e) => setQuestion(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) void submit() }}
           className="mt-3 w-full rounded-lg border border-input bg-background p-3 text-base placeholder:text-muted-foreground disabled:opacity-60"
           placeholder="e.g. Conversion in a CSTR for a first-order reaction, k = 0.2 1/min, tau = 10 min"
         />
+        <VoiceInput disabled={busy || !!upStatus || !!read || end?.type === 'need_confirm'} onActiveChange={setVoiceActive}
+          onTranscript={(text) => setQuestion((draft) => `${draft}${draft && !/\s$/.test(draft) ? ' ' : ''}${text}`)} />
         <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-          <Button className="w-full sm:w-auto" onClick={() => void submit()} disabled={busy || !question.trim()}>
+          <Button className="w-full sm:w-auto" onClick={() => void submit()} disabled={busy || voiceActive || !question.trim()}>
             {busy ? 'Solving…' : 'Solve'}
           </Button>
-          <FilePick label="Attach PDF or photo" className="w-full sm:w-auto" disabled={busy || !!upStatus} onFile={(f) => void attach(f)} onError={setError} />
+          <FilePick label="Attach PDF or photo" className="w-full sm:w-auto" disabled={busy || voiceActive || !!upStatus} onFile={(f) => void attach(f)} onError={setError} />
         </div>
         <p aria-live="polite" className="mt-2 text-sm text-muted-foreground">{upStatus}</p>
         {file && (
