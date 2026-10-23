@@ -8,20 +8,29 @@ explanation must come from the sandbox output or the question. Around the solver
 reminders, quizzes, prep packs, cited web answers, and ChemLab reactor and distillation
 simulations.
 
-**Status: work in progress, hackathon build** (Nebius x NVIDIA Global AI Hackathon, Track 2).
-Live site: https://studyforge-ten-alpha.vercel.app. It runs in **demo/mock mode** until the
-Render and Vercel environment variables and the model key are set (see Demo mode below), so
-it is not a fully live solver yet.
+**Status: hackathon build, live** (Nebius x NVIDIA Global AI Hackathon, Track 2).
+Live site: https://studyforge-ten-alpha.vercel.app (press "Try demo", no account needed). It
+runs on Nemotron via Nebius Token Factory: the web app on Vercel, the API on Render, and
+Supabase for auth, Postgres and storage.
+
+Measured on the live site, 23 Oct 2026:
+
+- **Accuracy:** 32 of 32 questions in our dev set were answered correctly
+  (`docs/eval/sv_questions.json`, run with `web/eval/eval_live.mjs`). No wrong number was shown
+  at high confidence, and all 12 plain calculations were answered at high confidence.
+- **Speed:** the median solve takes 15 s, including the browser sandbox run.
+- **Cost:** the median solve costs $0.0017 and the mean is $0.0030 (155 live solves,
+  22–23 Oct).
+- **Known limit:** about 1 in 10 harder questions comes back low confidence or is refused
+  ("not verified") instead of answered. That is the design: it says so rather than guess.
 
 `main` holds the web app, the engine (the Nemotron client, the agent loop, the number
-guardrail, photo and PDF reading, the quiz engine) and eight ChemLab templates. On the
-backend, the FastAPI app, the solve route (mounted with `get_deps`), the Postgres schema
-(Alembic migrations under `api/migrations/`), uploads, notes full-text search, notices,
-reminders and phone push, prep packs and the hardened CI runner are merged, and CI runs on
-every pull request. The solve route answers 503 ("solver not available") until
-`DATABASE_URL` and the Token Factory key are set. The Nemotron models have **not been
-called yet**, so this README makes no claims about accuracy, latency or cost: **TBD after
-Nebius integration**. <!-- TODO(F4): update status after G10 and the first live run -->
+guardrail, photo and PDF reading, the quiz engine) and eight ChemLab templates. It also holds
+the backend: the FastAPI app, the solve route, the Postgres schema (Alembic migrations under
+`api/migrations/`), uploads, notes full-text search, notices, reminders and phone push, prep
+packs, and the hardened CI runner. CI runs on every pull request. Run locally without
+`DATABASE_URL` and the Token Factory key, the solve route answers 503 ("solver not
+available").
 
 ## How a solve works
 
@@ -78,20 +87,27 @@ re-sanitised with DOMPurify.
 | `router` | classify | nano, super | off |
 | `solver` | write the Python, explain, concept answers | super | on |
 | `cross_check` | re-solve by a different method | ultra, super | on |
-| `vision` | transcribe photos and scanned PDF pages | vision | not sent |
+| `vision` | transcribe photos and scanned PDF pages | vision | off |
 
 JSON calls always force reasoning off. The client (`api/app/llm/client.py`) uses the
 `openai` SDK against the Token Factory base URL with SDK retries disabled, so it can do
 its own: up to 3 retries with backoff, a per-role timeout, an absolute per-solve deadline,
 fallback down the role's model list, JSON repair, and a cost row per attempt (tokens,
-latency, USD once prices are known). A record/replay HTTP transport lets CI run
-model-dependent tests without a key.
+latency, USD). A record/replay HTTP transport lets CI run model-dependent tests without a
+key.
 
-Model IDs: only `super` (`nvidia/nemotron-3-super-120b-a12b`) is filled in; `nano`,
-`ultra`, `vision` and all prices are `null` until ticket G10 confirms them from
-`GET /v1/models`. A null model is skipped in its role's chain. Confirmed model IDs,
-measured latency and cost per solve: **TBD after Nebius integration**.
-<!-- TODO(F4): fill model IDs, measured latency and cost after G10 / first live run -->
+Models confirmed from Token Factory's `GET /v1/models` (ticket G10), with live numbers from
+`app.llm_calls` for 22–23 Oct (median latency of one successful call, mean cost of one call):
+
+| Name | Model ID | USD per 1M tokens (in / out) | Median latency | Mean cost per call |
+| --- | --- | --- | --- | --- |
+| `nano` | `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B` | 0.06 / 0.24 | 0.6 s | $0.00003 |
+| `super` | `nvidia/nemotron-3-super-120b-a12b` | 0.30 / 0.90 | 3.0 s | $0.0009 |
+| `ultra` | `nvidia/Nemotron-3-Ultra-550b-a55b` | 1.00 / 3.00 | 3.8 s | $0.008 |
+| `vision` | `nvidia/Nemotron-3.5-Super-VL` | 0.30 / 0.90 | 2.1 s | $0.001 |
+
+A typical solve makes one `nano` call and a few `super` calls. `ultra` only runs when the
+answer and the check disagree. A model set to `null` is skipped in its role's chain.
 
 The agent has exactly six tools: `run_python`, `search_my_notes`, `web_search`,
 `make_quiz`, `schedule_reminder`, `draw_diagram`. Unknown tools are refused in code. In the
@@ -137,13 +153,33 @@ drawings for the CSTR, the distillation column, the shell-and-tube exchanger and
 
 ## Setup
 
+Needs Git, Node 20 or newer (tested on 24), and Python 3.12 or newer. You don't need to install
+anything to try it: the live site is at https://studyforge-ten-alpha.vercel.app.
+
+**Web app (demo mode, no backend):**
+
 ```bash
-git clone https://github.com/studyforge-team/studyforge.git && cd studyforge       # https://github.com/studyforge-team/studyforge
-cd web && npm install && npm run dev        # demo mode, no backend needed
-pip install -e "./chemlab[dev]" -e "./api[dev]"   # from the repo root
-cd api && uvicorn app.main:app --reload     # solve answers 503 without DATABASE_URL and the model key
-cp .env.example .env                        # then fill the names (never commit values)
+git clone https://github.com/studyforge-team/studyforge.git
+cd studyforge/web
+npm install
+npm run dev        # http://localhost:5173, leave this terminal running
 ```
+
+**API (in a second terminal, from the repo root):**
+
+```bash
+python -m venv .venv          # then activate it: source .venv/bin/activate (Windows: .venv\Scripts\activate)
+pip install -e "./chemlab[dev]" -e "./api[dev]"
+cd api
+uvicorn app.main:app --reload # http://localhost:8000/health
+```
+
+Without the variables below, `/health` works but the solve route answers 503. The API reads
+plain environment variables and doesn't load a `.env` file, so export them in your shell.
+`.env.example` lists every name: the API needs `TF_API_KEY`, `DATABASE_URL`, `SUPABASE_URL` and
+`SUPABASE_SERVICE_ROLE_KEY`. To point the web app at your API, put `VITE_API_URL`,
+`VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `web/.env.local`, which Vite reads and git
+ignores. Never commit values.
 
 ## Demo mode
 
@@ -151,10 +187,8 @@ With `VITE_API_URL` unset, the web app uses a scripted mock (`web/src/api/mock.t
 only knows one built-in sample (a first-order CSTR: "CSTR first-order reaction, k = 0.2
 1/min, tau = 10 min. Find conversion."); the Python for it really runs in the Pyodide
 worker. Any other question gets an honest low-confidence reply saying the model is not
-connected. The mock also serves scripted data for the other pages, so the hosted site at
-https://studyforge-ten-alpha.vercel.app shows the screens but does not compute your own
-questions until `VITE_API_URL`, `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are set on
-Vercel and the Render API has its database and model key.
+connected. The mock also serves scripted data for the other pages. Demo mode is only for local
+runs. The hosted site has `VITE_API_URL` set and answers your own questions with Nemotron.
 
 ## Tests
 
