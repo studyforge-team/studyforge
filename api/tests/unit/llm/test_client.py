@@ -269,10 +269,45 @@ def test_vision_sends_no_thinking_flag(registry: Registry) -> None:
     assert "chat_template_kwargs" not in server.body(0)
 
 
-def test_cut_off_reply_is_reported(registry: Registry) -> None:
-    server = FakeServer().ok(completion("result = {", finish_reason="length"))
+def test_cut_off_reply_retries_once_with_doubled_max_tokens(registry: Registry) -> None:
+    server = (
+        FakeServer()
+        .ok(completion("result = {", finish_reason="length"))
+        .ok(completion("done"))
+    )
+    client, rec = make(registry, server, FakeClock())
+    client.registry.roles["solver"].max_tokens = 100
+    res = run(client.chat("solver", MSG))
+    assert res.text == "done"
+    assert [server.body(i)["max_tokens"] for i in (0, 1)] == [100, 200]
+    assert len(rec.records) == 2  # the cut-off call is still logged (cost)
+
+
+def test_cut_off_without_max_tokens_retries_at_32000(registry: Registry) -> None:
+    server = FakeServer().ok(completion("x", finish_reason="length")).ok(completion())
     client, _ = make(registry, server, FakeClock())
-    assert run(client.chat("solver", MSG)).finish_reason == "length"
+    run(client.chat("solver", MSG))
+    assert "max_tokens" not in server.body(0)
+    assert server.body(1)["max_tokens"] == 32000
+
+
+def test_cut_off_twice_is_unavailable(registry: Registry) -> None:
+    server = (
+        FakeServer()
+        .ok(completion("x", finish_reason="length"))
+        .ok(completion("y", finish_reason="length"))
+    )
+    client, _ = make(registry, server, FakeClock())
+    with pytest.raises(ModelUnavailable, match="reply cut off"):
+        run(client.chat("solver", MSG))
+    assert len(server.requests) == 2
+
+
+def test_result_carries_reasoning_and_finish_reason(registry: Registry) -> None:
+    server = FakeServer().ok(completion("42", reasoning_content="12345"))
+    client, _ = make(registry, server, FakeClock())
+    res = run(client.chat("solver", MSG))
+    assert (res.reasoning, res.finish_reason) == ("12345", "stop")
 
 
 def test_reply_without_choices_is_unavailable(registry: Registry) -> None:
