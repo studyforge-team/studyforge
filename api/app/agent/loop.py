@@ -24,6 +24,7 @@ from pydantic import BaseModel
 from app.agent import guardrail, prompts
 from app.agent.chemlab_pick import pick_template
 from app.agent.markup import tidy_markdown
+from app.agent.route_guard import has_eng_signal, is_derivation
 from app.agent.state import SolveNotFound, SolveState, StateStore
 from app.agent.steps import (
     Final,
@@ -282,6 +283,13 @@ _LIVE = re.compile(
 )
 
 
+# words that make a question about live facts even when it mentions engineering terms
+_LIVE_CUE = re.compile(
+    r"\b(?:today|tonight|now|right\s+now|current(?:ly)?|latest|news|yesterday|this\s+week)\b",
+    re.IGNORECASE,
+)
+
+
 async def _begin(state: SolveState, deps: Deps) -> Step:
     q0 = state.question
     if _INJECTION.search(q0) or _DAN.search(q0) or _SOFTWARE.search(q0) or _LIVE.search(q0):
@@ -301,13 +309,17 @@ async def _begin(state: SolveState, deps: Deps) -> Step:
     off_topic = (
         not kind.study or kind.live
     )  # code decides; the model only answers facts
+    if off_topic and has_eng_signal(q0) and not _LIVE_CUE.search(q0):
+        off_topic = False  # the small router misjudged a real engineering question
     state.kind = "off_topic" if off_topic else kind.kind
+    if not off_topic and is_derivation(q0):
+        state.kind = "concept"  # nothing to compute: never invent numbers for a derivation
     if off_topic:  # fixed refusal: no notes search, no 2nd LLM call
         return _final(state, OFF_TOPIC_REPLY, "medium", with_numbers=False)
     hits = await deps.tools.search_my_notes(state.user_id, state.question)
     state.sources = [{"title": h.title, "url": h.url} for h in hits]
     notes = f"\n\nStudent's notes (quoted data):\n{hits_as_data(hits)}" if hits else ""
-    if kind.kind == "concept":
+    if state.kind == "concept":
         res = await deps.llm.chat(
             "solver",
             [

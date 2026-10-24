@@ -569,9 +569,13 @@ def test_prompt_injection_is_refused_with_no_llm_call(q: str) -> None:
     ],
 )
 def test_real_questions_still_reach_the_router(q: str) -> None:
-    llm = FakeLLM(("chat_json", {"study": False, "live": False, "kind": "calc"}))
+    # the router refuses; an engineering-signal question is then answered as a concept
+    llm = FakeLLM(
+        ("chat_json", {"study": False, "live": False, "kind": "concept"}),
+        ("chat", res("ok")),
+    )
     run(solve(deps(llm, tools=Notes()), question=q))
-    assert len(llm.calls) == 1 and llm.calls[0][1] == "router"
+    assert llm.calls[0][1] == "router"
 
 
 @pytest.mark.parametrize(
@@ -628,9 +632,13 @@ def test_live_fact_questions_are_refused_with_no_llm_call(q: str) -> None:
     ],
 )
 def test_live_lookalikes_still_reach_the_router(q: str) -> None:
-    llm = FakeLLM(("chat_json", {"study": False, "live": False, "kind": "calc"}))
+    # the router refuses; an engineering-signal question is then answered as a concept
+    llm = FakeLLM(
+        ("chat_json", {"study": False, "live": False, "kind": "concept"}),
+        ("chat", res("ok")),
+    )
     run(solve(deps(llm, tools=Notes()), question=q))
-    assert len(llm.calls) == 1 and llm.calls[0][1] == "router"
+    assert llm.calls[0][1] == "router"
 
 
 @pytest.mark.parametrize(
@@ -651,9 +659,13 @@ def test_live_lookalikes_still_reach_the_router(q: str) -> None:
     ],
 )
 def test_engineering_code_requests_reach_the_router(q: str) -> None:
-    llm = FakeLLM(("chat_json", {"study": False, "live": False, "kind": "calc"}))
+    # the router refuses; an engineering-signal question is then answered as a concept
+    llm = FakeLLM(
+        ("chat_json", {"study": False, "live": False, "kind": "concept"}),
+        ("chat", res("ok")),
+    )
     run(solve(deps(llm, tools=Notes()), question=q))
-    assert len(llm.calls) == 1 and llm.calls[0][1] == "router"
+    assert llm.calls[0][1] == "router"
 
 
 def test_energy_sign_trip_is_low_with_warning_and_twin_stays_high() -> None:
@@ -722,3 +734,31 @@ def test_assumed_line_comes_before_the_energy_warning() -> None:
     }
     md = explained(r, "Done", REAL_Q)["answer_md"]
     assert md.index("**Assumed:**") < md.index("**Warning:**")
+
+
+def test_router_refusal_of_engineering_question_is_overridden() -> None:
+    q = ("Estimate the diffusivity of dilute acetic acid in water at 25 C using the "
+         "Wilke-Chang correlation. Report in m^2/s.")
+    llm = FakeLLM(
+        ("chat_json", {"study": False, "live": True, "kind": "concept"}),
+        ("chat", res("Wilke-Chang relates ...")),
+    )
+    final = run(solve(deps(llm, tools=Notes()), question=q))[0]
+    assert final["answer_md"] != loop.OFF_TOPIC_REPLY
+
+
+def test_live_engineering_news_is_still_refused() -> None:
+    q = "What is the latest news about the reactor accident today?"
+    llm = FakeLLM(("chat_json", {"study": True, "live": True, "kind": "calc"}))
+    final = run(solve(deps(llm, tools=Notes()), question=q))[0]
+    assert final["answer_md"] == loop.OFF_TOPIC_REPLY
+
+
+def test_derivation_goes_to_concept_even_if_router_says_calc() -> None:
+    q = "Derive the Rachford-Rice equation for an isothermal flash from the component balances."
+    llm = FakeLLM(
+        ("chat_json", {"study": True, "live": False, "kind": "calc"}),
+        ("chat", res("Start from F zi = V yi + L xi ...")),
+    )
+    final = run(solve(deps(llm, tools=Notes()), question=q))[0]
+    assert (final["confidence"], final["numbers"]) == ("medium", {})
