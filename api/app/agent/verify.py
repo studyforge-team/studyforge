@@ -184,7 +184,7 @@ def missing_parts(result: Any, question: str) -> str | None:
     values = result.get("values")
     known = set(values) if isinstance(values, dict) else set()
     given = [p for p in raw if p == "answer" or p in known] if isinstance(raw, list) else []
-    if len(given) >= asked and len(given) == len(raw):
+    if isinstance(raw, list) and len(given) >= asked and len(given) == len(raw):
         return None
     return (
         f"The question asks for {asked} quantities; your result has {len(given)}. "
