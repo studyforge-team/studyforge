@@ -284,3 +284,30 @@ def test_feed_never_exceeds_column(q: float, alpha: float) -> None:
     g = r["geometry"]
     if g["n_trays"] > 0:
         assert 1 <= g["feed_tray"] <= g["n_trays"]
+
+
+@pytest.mark.parametrize(
+    ("inp", "n", "feed"),
+    [
+        (
+            {"alpha": 2.4, "zF": 0.5, "xD": 0.95, "xB": 0.05, "q": 1, "R_factor": 1.5},
+            13,
+            6,
+        ),
+        (
+            {"alpha": 3.0, "q": 0.5, "zF": 0.35, "xD": 0.90, "xB": 0.03, "R_factor": 2},
+            8,
+            4,
+        ),
+    ],
+)
+def test_eval_stage_counts(inp: dict[str, Any], n: int, feed: int) -> None:
+    r = run(inp, series=False)
+    assert r["ok"]
+    assert out(r, "N_theoretical") == n
+    assert out(r, "feed_stage") == feed
+
+
+def test_sizing_inputs_are_flagged() -> None:
+    flagged = {k for k, s in SPEC.items() if s.get("sizing")}
+    assert flagged == {"Eo", "F", "MW_top", "P", "rho_L", "T_top"}
