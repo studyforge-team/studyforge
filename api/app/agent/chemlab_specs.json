@@ -326,6 +326,7 @@
    "max": 1.0,
    "min": 0.05,
    "required": false,
+   "sizing": true,
    "unit": "-"
   },
   "F": {
@@ -334,6 +335,7 @@
    "max": 1000000000.0,
    "min": 1e-06,
    "required": false,
+   "sizing": true,
    "unit": "kmol/h"
   },
   "MW_top": {
@@ -342,6 +344,7 @@
    "max": 1000.0,
    "min": 1.0,
    "required": false,
+   "sizing": true,
    "unit": "kg/kmol"
   },
   "P": {
@@ -350,6 +353,7 @@
    "max": 100000000.0,
    "min": 1000.0,
    "required": false,
+   "sizing": true,
    "unit": "Pa"
   },
   "R": {
@@ -374,6 +378,7 @@
    "max": 1000.0,
    "min": 100.0,
    "required": false,
+   "sizing": true,
    "unit": "K"
   },
   "alpha": {
@@ -398,6 +403,7 @@
    "max": 5000.0,
    "min": 100.0,
    "required": false,
+   "sizing": true,
    "unit": "kg/m^3"
   },
   "xB": {

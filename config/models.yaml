@@ -36,13 +36,13 @@ roles:
     reasoning: false
   solver:
     models: [super]  # no fallback model: failure raises ModelUnavailable
-    timeout_s: 60
+    timeout_s: 90
     reasoning: true
     temperature: 1.0
     top_p: 0.95
   cross_check:
     models: [ultra, super]
-    timeout_s: 60
+    timeout_s: 90
     reasoning: true
     temperature: 1.0
     top_p: 0.95

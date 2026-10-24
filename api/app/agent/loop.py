@@ -22,8 +22,9 @@ from typing import Any, Literal, Protocol
 from pydantic import BaseModel
 
 from app.agent import guardrail, prompts
-from app.agent.chemlab_pick import pick_template
+from app.agent.chemlab_pick import drop_sizing_outputs, pick_template, required_inputs
 from app.agent.markup import tidy_markdown
+from app.agent.route_guard import has_eng_signal, is_derivation
 from app.agent.state import SolveNotFound, SolveState, StateStore
 from app.agent.steps import (
     Final,
@@ -53,8 +54,8 @@ from app.agent.verify import (
 from app.llm.client import LLMResult, Message
 from app.llm.errors import BudgetExceeded, LLMError
 
-MAX_STEPS = 4
-BUDGET_S = 90.0
+MAX_STEPS = 6
+BUDGET_S = 170.0
 MAX_VERIFY_FAILURES = 2
 MODEL_STDOUT_CHARS = 2000  # what the model sees of stdout
 _FENCED = re.compile(r"```(?:python|py)\s*\n(.*?)```", re.DOTALL)
@@ -282,6 +283,13 @@ _LIVE = re.compile(
 )
 
 
+# words that make a question about live facts even when it mentions engineering terms
+_LIVE_CUE = re.compile(
+    r"\b(?:today|tonight|now|right\s+now|current(?:ly)?|latest|news|yesterday|this\s+week)\b",
+    re.IGNORECASE,
+)
+
+
 async def _begin(state: SolveState, deps: Deps) -> Step:
     q0 = state.question
     if _INJECTION.search(q0) or _DAN.search(q0) or _SOFTWARE.search(q0) or _LIVE.search(q0):
@@ -301,13 +309,17 @@ async def _begin(state: SolveState, deps: Deps) -> Step:
     off_topic = (
         not kind.study or kind.live
     )  # code decides; the model only answers facts
+    if off_topic and has_eng_signal(q0) and not _LIVE_CUE.search(q0):
+        off_topic = False  # the small router misjudged a real engineering question
     state.kind = "off_topic" if off_topic else kind.kind
+    if not off_topic and is_derivation(q0):
+        state.kind = "concept"  # nothing to compute: never invent numbers for a derivation
     if off_topic:  # fixed refusal: no notes search, no 2nd LLM call
         return _final(state, OFF_TOPIC_REPLY, "medium", with_numbers=False)
     hits = await deps.tools.search_my_notes(state.user_id, state.question)
     state.sources = [{"title": h.title, "url": h.url} for h in hits]
     notes = f"\n\nStudent's notes (quoted data):\n{hits_as_data(hits)}" if hits else ""
-    if kind.kind == "concept":
+    if state.kind == "concept":
         res = await deps.llm.chat(
             "solver",
             [
@@ -332,8 +344,13 @@ async def _begin(state: SolveState, deps: Deps) -> Step:
             solve_id=state.id,
         )
         state.cost_usd += cost
-        if run is not None and _unsupplied(deps.templates[run.template], run.values):
-            run = None  # defaults would be invented inputs: use the normal solver
+        if run is not None:
+            spec = deps.templates[run.template]
+            need = required_inputs(run.template, spec, state.question)
+            if need is not None:  # sizing-only inputs may stay default when sizing isn't asked
+                spec = {k: v for k, v in spec.items() if k in need}
+            if _unsupplied(spec, run.values):
+                run = None  # defaults would be invented inputs: use the normal solver
         if run is not None:
             state.template = run.template
             state.steps_used += 1
@@ -433,6 +450,8 @@ async def _run_server_tool(
 async def _after_run(state: SolveState, body: ResultBody, deps: Deps) -> Step:
     run = clean(body)
     state.figures = (state.figures + run.figures)[:4]
+    if state.template is not None and isinstance(run.result, dict):
+        _strip_sizing(state.template, run.result, state.question)
     report = {
         "stdout": run.stdout[-MODEL_STDOUT_CHARS:],
         "result": run.result,
@@ -682,7 +701,8 @@ async def _out_of_budget(state: SolveState, deps: Deps) -> Step:
     state.flags.append("limit_reached")
     text = (
         "I couldn't finish a verified answer within the limits for one solve "
-        "(4 tool steps, 90 seconds), so I'm not giving a number I can't stand behind. "
+        f"({MAX_STEPS} tool steps, {int(BUDGET_S)} seconds), so I'm not giving a number "
+        "I can't stand behind. "
         "Try rephrasing the question, or split it into smaller parts."
     )
     return _final(state, text, "low", with_numbers=False)
@@ -743,6 +763,18 @@ def _final(
 
 
 _STEADY_UNITS = {"T": "K", "X": "-", "CA": "mol/m^3", "Da": "-"}
+
+
+def _strip_sizing(template: str, result: dict[str, Any], question: str) -> None:
+    """Sizing outputs computed from defaulted inputs are hidden from the model and the
+    answer (they would be invented numbers) unless the question asks for sizing."""
+    outputs = result.get("outputs")
+    if not isinstance(outputs, dict):
+        return
+    kept = drop_sizing_outputs(template, outputs, question)
+    if kept is not outputs:
+        result["outputs"] = kept
+        result.pop("geometry", None)
 
 
 def _template_result(result: Any) -> dict[str, Any] | None:

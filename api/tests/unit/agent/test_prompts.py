@@ -52,3 +52,15 @@ def test_explain_lists_assumed_values_and_verdict_words() -> None:
     assert "placeholders" in prompts.REGENERATE
     assert "SAME quantity" in prompts.SOLVER and "limiting case" in prompts.SOLVER
     prompts.REGENERATE.format(bad="1000")
+
+
+def test_classify_routes_derivations_and_lookups() -> None:
+    c = prompts.CLASSIFY
+    assert "obtain an expression" in c and "unless the question gives numbers" in c
+    assert "is study and" in c and "NOT live" in c
+
+
+def test_concept_has_derivation_structure() -> None:
+    k = prompts.CONCEPT
+    assert "final result as a display equation" in k and "Never invent numbers" in k
+    assert "define every symbol" in k
