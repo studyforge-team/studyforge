@@ -331,11 +331,13 @@ def test_wp8_second_miss_is_medium_with_no_second_repair() -> None:
     llm = calc(
         ("chat_tools", tool("run_python", code="a")),
         ("chat_tools", tool("run_python", code="b")),
+        ("chat_tools", tool("run_python", code="u")),  # the independent re-check still runs
         ("chat_json", {"answer_md": "ok"}),
     )
-    steps = run(solve(deps(llm), {"result": GOOD}, {"result": GOOD}, question=Q2))
+    steps = run(solve(deps(llm), {"result": GOOD}, {"result": GOOD}, {"result": GOOD}, question=Q2))
     assert steps[-1]["confidence"] == "medium"
-    assert [c[1] for c in llm.calls].count("solver") == 2  # one extra step only
+    # router, first run, the one repair, the re-check, the write-up
+    assert [c[1] for c in llm.calls] == ["router", "solver", "solver", "cross_check", "solver"]
 
 
 def test_at_most_four_tool_steps() -> None:
@@ -762,6 +764,7 @@ def test_energy_sign_trip_is_low_with_warning_and_twin_stays_high() -> None:
             "answer": {"value": 0.28, "unit": "-"},
             "check": {"value": 0.28, "unit": "-", "method": "numeric"},
             "values": {"exit_temperature": {"value": t_exit, "unit": "K"}},
+            "parts": ["answer", "exit_temperature"],
         }
         return explained(r, "Done", REAL_Q)
 
@@ -813,6 +816,7 @@ def test_assumed_line_comes_before_the_energy_warning() -> None:
         "answer": {"value": 0.28, "unit": "-"},
         "check": {"value": 0.28, "unit": "-", "method": "numeric"},
         "values": {"exit_temperature": {"value": 291.7, "unit": "K"}},
+        "parts": ["answer", "exit_temperature"],
         "assumptions": ["steady state"],
     }
     md = explained(r, "Done", REAL_Q)["answer_md"]
