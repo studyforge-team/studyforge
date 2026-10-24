@@ -86,9 +86,86 @@ def _quantity(node: Any) -> tuple[float, str] | None:
     return value, "-" if unit.lower() in ("", "dimensionless", "1") else unit
 
 
-def verify(result: Any) -> Verdict:
+# WP2 sanity limits, by key name (lower-cased) and unit. Unit guards keep a position
+# "x (m)" or a stress "yield (Pa)" out of the 0..1 rule.
+_FRACTION = re.compile(
+    r"conversion|efficien|fraction|mole_frac|yield|selectivity|(?:^|_)(?:eta|x|y)(?:_|\d|$)"
+)
+_PERCENT = re.compile(r"percent|pct")
+_FACTOR = re.compile(r"factor|_per_")  # "conversion_factor" = 1000 is not a fraction
+_STAGES = re.compile(r"stage|tray|n_min")
+_FEED_STAGE = re.compile(r"feed_?(?:stage|tray)")
+_STAGE_COUNT = re.compile(
+    r"^(?:n_?)?(?:total_)?(?:stages|trays)$|^n_(?:theoretical|total)"
+)
+_DELTA = re.compile(r"gauge|delta|drop|(?:^|_)d[tp](?:_|$)|rise|diff|change")
+_FLOW = re.compile(r"flow|volume")
+_SIGNED = re.compile(r"heat|work|energy|duty|power|enthalp")  # sign = direction
+_DELTA_Q = re.compile(
+    r"(?i)\b(?:change|rise|drop|differen|increase|decrease|loss|gauge|Δ|delta)"
+)
+_PRESSURE = {"pa", "kpa", "bar", "atm"}
+
+
+def _sanity_one(name: str, value: float, unit: str, delta_ok: bool) -> str | None:
+    key, u = name.lower(), unit.lower()
+    delta_ok = delta_ok or _DELTA.search(key) is not None
+    if _PERCENT.search(key):
+        if not 0 <= value <= 100:
+            return f"{name} = {value:g} is outside 0-100 %"
+    elif unit == "-" and _FRACTION.search(key) and not _FACTOR.search(key):
+        if not 0 <= value <= 1:
+            return f"{name} = {value:g} is a fraction and must be between 0 and 1"
+    elif (
+        (unit == "-" or u in ("stage", "stages", "tray", "trays"))
+        and _STAGES.search(key)
+        and not 1 <= value <= 150  # Gilliland/Kremser give fractional stages
+    ):
+        return f"{name} = {value:g} must be a whole number of stages from 1 to 150"
+    if not delta_ok and ((u == "k" and value <= 0) or (u in _PRESSURE and value <= 0)):
+        return f"{name} = {value:g} {unit} must be above zero"
+    if _FLOW.search(key) and not _DELTA.search(key) and not _SIGNED.search(key) and value < 0:
+        return f"{name} = {value:g} is a flow or volume and cannot be negative"
+    return None
+
+
+def sanity(result: Any, question: str = "") -> str | None:
+    """A rule the result breaks (physically impossible numbers), else None."""
+    if not isinstance(result, dict):
+        return None
+    named = [("answer", result.get("answer")), ("check", result.get("check"))]
+    named += [(str(k), v) for k, v in (result.get("values") or {}).items()]
+    delta_q = _DELTA_Q.search(question) is not None
+    stage_n: float | None = None
+    feed: float | None = None
+    for name, node in named:
+        if not isinstance(node, dict):
+            continue
+        raw = node.get("value")
+        if isinstance(raw, float) and not math.isfinite(raw):
+            return f"{name} is not a finite number"
+        q = _quantity(node)
+        if q is None:
+            continue
+        if why := _sanity_one(
+            name, q[0], q[1], delta_q and name in ("answer", "check")
+        ):
+            return why
+        key = name.lower()
+        if _FEED_STAGE.search(key):
+            feed = q[0]
+        elif _STAGE_COUNT.search(key):
+            stage_n = q[0]
+    if feed is not None and stage_n is not None and feed > stage_n:
+        return f"feed stage {feed:g} is beyond the {stage_n:g} stages"
+    if feed is not None and feed < 1:
+        return f"feed stage {feed:g} must be at least 1"
+    return None
+
+
+def verify(result: Any, question: str = "") -> Verdict:
     """Canonical result: {"answer": {value, unit}, "check": {value, unit, method},
-    "values": {name: {value, unit}}}. Both methods must agree."""
+    "values": {name: {value, unit}}}. Both methods must agree and be physically possible."""
     if not isinstance(result, dict):
         return Verdict(False, "result must be a dict")
     answer, check = _quantity(result.get("answer")), _quantity(result.get("check"))
@@ -100,6 +177,8 @@ def verify(result: Any) -> Verdict:
         )
     if answer[1] != check[1]:
         return Verdict(False, f"answer unit '{answer[1]}' != check unit '{check[1]}'")
+    if (why := sanity(result, question)) is not None:
+        return Verdict(False, f"impossible value: {why}")
     a, c = answer[0], check[0]
     if abs(a - c) > AGREE_REL * max(abs(a), abs(c)):
         return Verdict(

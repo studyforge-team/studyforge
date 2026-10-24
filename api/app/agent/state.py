@@ -29,6 +29,7 @@ class SolveState(BaseModel):
     result: Any = None  # last result that passed verify
     verify_failures: int = 0
     cross_check: Literal["none", "pending", "agreed", "disagreed"] = "none"
+    cc_messages: list[dict[str, Any]] = Field(default_factory=list)  # fresh cross-check context
     first_answer: float | None = None  # answer before the cross-check
     figures: list[str] = Field(default_factory=list)
     diagram: str | None = None
