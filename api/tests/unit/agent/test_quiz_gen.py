@@ -17,6 +17,7 @@ from app.agent.quiz_gen import (
     QuizService,
     _calc_key,
     _Loose,
+    _shuffled,
     generate_quiz,
 )
 from app.llm.errors import JSONRepairFailed
@@ -228,7 +229,8 @@ def test_fixture_survives_except_subjective() -> None:
     quiz = run(generate_quiz(FakeLLM(data), "t", 10))
     expected = Quiz.model_validate(data)
     assert quiz.title == expected.title
-    assert quiz.items == [i for i in expected.items if i.type != "subjective"]
+    # MCQ options are shuffled (FX10); same items once shuffled the same way
+    assert quiz.items == [_shuffled(i) for i in expected.items if i.type != "subjective"]
     assert len(quiz.items) == len(data["items"]) - 1
 
 
