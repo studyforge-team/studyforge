@@ -21,6 +21,7 @@ GOOD = {
     "check": {"value": 0.66671, "unit": "-", "method": "numeric"},
     "values": {"k": {"value": 0.25, "unit": "1/min"}},
 }
+GOOD_PARTS = {**GOOD, "parts": ["answer", "k"]}  # lists both asked quantities
 PNG = base64.b64encode(b"\x89PNG\r\n\x1a\n" + b"0" * 100).decode()
 
 
@@ -182,13 +183,13 @@ def test_sandbox_error_goes_back_to_the_model() -> None:
     llm = calc(
         ("chat_tools", tool("run_python", code="1/0")),
         ("chat_tools", tool("run_python", code="result = {}")),
-        ("chat_json", {"answer_md": "ok"}),
+        ("chat_tools", tool("run_python", code="u")),
     )
     steps = run(solve(deps(llm), {"error": "ZeroDivisionError"}, {"result": GOOD}))
     assert steps[1]["code"] == "result = {}"
     told = llm.calls[2][2][-1]
     assert told["role"] == "tool" and "ZeroDivisionError" in told["content"]
-    assert steps[2]["confidence"] == "high"
+    assert steps[2]["type"] == "run_python"  # two steps: the Ultra cross-check starts
 
 
 def test_shape_failure_is_explained_to_the_model() -> None:
@@ -196,11 +197,11 @@ def test_shape_failure_is_explained_to_the_model() -> None:
     llm = calc(
         ("chat_tools", tool("run_python", code="a")),
         ("chat_tools", tool("run_python", code="b")),
-        ("chat_json", {"answer_md": "ok"}),
+        ("chat_tools", tool("run_python", code="u")),
     )
     steps = run(solve(deps(llm), {"result": bad}, {"result": GOOD}))
     assert "failed its check" in llm.calls[2][2][-1]["content"]
-    assert steps[2]["confidence"] == "high"
+    assert steps[2]["type"] == "run_python"  # two steps: the Ultra cross-check starts
 
 
 def disagreeing(answer: float = 0.6667) -> dict[str, Any]:
@@ -238,6 +239,105 @@ def test_cross_check_that_disagrees_is_flagged_low() -> None:
     bodies = [{"result": disagreeing()}, {"result": disagreeing()}, {"result": other}]
     steps = run(solve(deps(llm), *bodies))
     assert steps[-1]["confidence"] == "low"
+
+
+# --- WP2: "high" is earned by an independent cross-check ---------------------------
+
+
+def test_wp2_cross_check_agrees_is_high_with_no_solver_turns_in_its_context() -> None:
+    llm = calc(
+        ("chat_tools", tool("run_python", code="a")),
+        ("chat_tools", tool("run_python", code="b")),
+        ("chat_tools", tool("run_python", code="u")),
+        ("chat_json", {"answer_md": "X = 0.6667"}),
+    )
+    bad = {"answer": {"value": "0.67", "unit": "-"}, "check": GOOD["check"]}
+    steps = run(solve(deps(llm), {"result": bad}, {"result": GOOD}, {"result": GOOD}))
+    assert steps[-1]["confidence"] == "high"
+    role, sent = llm.calls[3][1], llm.calls[3][2]
+    assert role == "cross_check"
+    assert [m["role"] for m in sent] == ["system", "user", "user"]
+    assert "0.6667" not in str(sent) and "result = {}" not in str(sent)
+    assert "Find X" in str(sent)
+
+
+def test_wp2_multi_part_question_cross_checks_after_one_step() -> None:
+    other = {**GOOD_PARTS, "answer": {"value": 0.9, "unit": "-"}, "check": {"value": 0.9, "unit": "-"}}
+    llm = calc(
+        ("chat_tools", tool("run_python", code="a")),
+        ("chat_tools", tool("run_python", code="u")),
+        ("chat_json", {"answer_md": "ok"}),
+    )
+    q = "(a) Find X and (b) find the volume"
+    steps = run(solve(deps(llm), {"result": GOOD_PARTS}, {"result": other}, question=q))
+    assert [c[1] for c in llm.calls[1:3]] == ["solver", "cross_check"]
+    assert steps[-1]["confidence"] == "low"  # Ultra disagreed: never high
+
+
+def test_wp2_no_time_for_the_cross_check_is_medium_not_low() -> None:
+    clock = Clock()
+    llm = calc(
+        ("chat_tools", tool("run_python", code="a")),
+        ("chat_json", {"answer_md": "ok"}),
+    )
+    d = deps(llm, clock=clock)
+    sid, _ = run(loop.start("(a) Find X (b) Find Y", d, user_id=USER))
+    clock.now = loop.BUDGET_S - 30.0  # 30 s left, below the 40 s an Ultra re-solve needs
+    final = run(loop.on_result(sid, USER, ResultBody(result=GOOD_PARTS), d))
+    assert final["confidence"] == "medium"
+    assert [c[0] for c in llm.calls] == ["chat_json", "chat_tools", "chat_json"]
+
+
+def test_wp2_impossible_value_is_repaired_never_high() -> None:
+    bad = {**GOOD, "values": {"X": {"value": 1.2, "unit": "-"}}}
+    llm = calc(
+        ("chat_tools", tool("run_python", code="a")),
+        ("chat_tools", tool("run_python", code="b")),
+    )
+    steps = run(solve(deps(llm), {"result": bad}))
+    assert steps[1]["type"] == "run_python"
+    assert "between 0 and 1" in llm.calls[2][2][-1]["content"]
+
+
+def test_wp2_template_answer_skips_the_cross_check() -> None:
+    llm = calc(
+        ("chat_json", pick(Q=(0.02, "m^3/s"), L=(50.0, "m"))),
+        ("chat_json", {"answer_md": "dP = 0.5"}),
+    )
+    d = deps(llm, templates=PIPE)
+    sid, _ = run(loop.start("(a) Find dP and (b) the Re", d, user_id=USER))
+    out = {"ok": True, "template": "pipe", "outputs": {"dP": {"value": 0.5, "unit": "-"}}}
+    final = run(loop.on_result(sid, USER, ResultBody(result=out), d))
+    assert final["type"] == "final" and final["confidence"] == "high"
+    assert "cross_check" not in [c[1] for c in llm.calls]
+
+
+Q2 = "(a) Find X and (b) the heat loss per metre"
+
+
+def test_wp8_missing_part_is_repaired_once() -> None:
+    llm = calc(
+        ("chat_tools", tool("run_python", code="a")),
+        ("chat_tools", tool("run_python", code="b")),
+        ("chat_tools", tool("run_python", code="u")),
+        ("chat_json", {"answer_md": "ok"}),
+    )
+    steps = run(solve(deps(llm), {"result": GOOD}, {"result": GOOD_PARTS}, {"result": GOOD_PARTS}, question=Q2))
+    assert "asks for 2 quantities; your result has 0" in llm.calls[2][2][-1]["content"]
+    assert steps[-1]["type"] == "final" and "missing_parts" not in steps[-1].get("flags", [])
+
+
+def test_wp8_second_miss_is_medium_with_no_second_repair() -> None:
+    llm = calc(
+        ("chat_tools", tool("run_python", code="a")),
+        ("chat_tools", tool("run_python", code="b")),
+        ("chat_tools", tool("run_python", code="u")),  # the independent re-check still runs
+        ("chat_json", {"answer_md": "ok"}),
+    )
+    steps = run(solve(deps(llm), {"result": GOOD}, {"result": GOOD}, {"result": GOOD}, question=Q2))
+    assert steps[-1]["confidence"] == "medium"
+    # router, first run, the one repair, the re-check, the write-up
+    assert [c[1] for c in llm.calls] == ["router", "solver", "solver", "cross_check", "solver"]
 
 
 def test_at_most_six_tool_steps() -> None:
@@ -569,9 +669,13 @@ def test_prompt_injection_is_refused_with_no_llm_call(q: str) -> None:
     ],
 )
 def test_real_questions_still_reach_the_router(q: str) -> None:
-    llm = FakeLLM(("chat_json", {"study": False, "live": False, "kind": "calc"}))
+    # the router refuses; an engineering-signal question is then answered as a concept
+    llm = FakeLLM(
+        ("chat_json", {"study": False, "live": False, "kind": "concept"}),
+        ("chat", res("ok")),
+    )
     run(solve(deps(llm, tools=Notes()), question=q))
-    assert len(llm.calls) == 1 and llm.calls[0][1] == "router"
+    assert llm.calls[0][1] == "router"
 
 
 @pytest.mark.parametrize(
@@ -628,9 +732,13 @@ def test_live_fact_questions_are_refused_with_no_llm_call(q: str) -> None:
     ],
 )
 def test_live_lookalikes_still_reach_the_router(q: str) -> None:
-    llm = FakeLLM(("chat_json", {"study": False, "live": False, "kind": "calc"}))
+    # the router refuses; an engineering-signal question is then answered as a concept
+    llm = FakeLLM(
+        ("chat_json", {"study": False, "live": False, "kind": "concept"}),
+        ("chat", res("ok")),
+    )
     run(solve(deps(llm, tools=Notes()), question=q))
-    assert len(llm.calls) == 1 and llm.calls[0][1] == "router"
+    assert llm.calls[0][1] == "router"
 
 
 @pytest.mark.parametrize(
@@ -651,9 +759,13 @@ def test_live_lookalikes_still_reach_the_router(q: str) -> None:
     ],
 )
 def test_engineering_code_requests_reach_the_router(q: str) -> None:
-    llm = FakeLLM(("chat_json", {"study": False, "live": False, "kind": "calc"}))
+    # the router refuses; an engineering-signal question is then answered as a concept
+    llm = FakeLLM(
+        ("chat_json", {"study": False, "live": False, "kind": "concept"}),
+        ("chat", res("ok")),
+    )
     run(solve(deps(llm, tools=Notes()), question=q))
-    assert len(llm.calls) == 1 and llm.calls[0][1] == "router"
+    assert llm.calls[0][1] == "router"
 
 
 def test_energy_sign_trip_is_low_with_warning_and_twin_stays_high() -> None:
@@ -664,12 +776,9 @@ def test_energy_sign_trip_is_low_with_warning_and_twin_stays_high() -> None:
             "answer": {"value": 0.28, "unit": "-"},
             "check": {"value": 0.28, "unit": "-", "method": "numeric"},
             "values": {"exit_temperature": {"value": t_exit, "unit": "K"}},
+            "parts": ["answer", "exit_temperature"],
         }
-        llm = calc(
-            ("chat_tools", tool("run_python", code="r")),
-            ("chat_json", {"answer_md": "Done"}),
-        )
-        return run(solve(deps(llm), {"result": r}, question=REAL_Q))[1]  # type: ignore[no-any-return]
+        return explained(r, "Done", REAL_Q)
 
     bad = go(291.7)
     assert bad["confidence"] == "low"
@@ -683,11 +792,12 @@ def test_energy_sign_trip_is_low_with_warning_and_twin_stays_high() -> None:
 
 
 def explained(result: dict[str, Any], answer_md: str, question: str = "Find X") -> dict[str, Any]:
-    llm = calc(
-        ("chat_tools", tool("run_python", code="r")),
-        ("chat_json", {"answer_md": answer_md}),
-    )
-    return run(solve(deps(llm), {"result": result}, question=question))[1]  # type: ignore[no-any-return]
+    # a multi-part question gets the independent re-check first (FX2): it returns the same result
+    rechecked = loop._MULTI_PART.search(question) is not None
+    runs = [("chat_tools", tool("run_python", code="r"))] * (2 if rechecked else 1)
+    llm = calc(*runs, ("chat_json", {"answer_md": answer_md}))
+    bodies = [{"result": result}] * len(runs)
+    return run(solve(deps(llm), *bodies, question=question))[-1]  # type: ignore[no-any-return]
 
 
 def test_assumed_line_is_added_when_missing() -> None:
@@ -718,10 +828,53 @@ def test_assumed_line_comes_before_the_energy_warning() -> None:
         "answer": {"value": 0.28, "unit": "-"},
         "check": {"value": 0.28, "unit": "-", "method": "numeric"},
         "values": {"exit_temperature": {"value": 291.7, "unit": "K"}},
+        "parts": ["answer", "exit_temperature"],
         "assumptions": ["steady state"],
     }
     md = explained(r, "Done", REAL_Q)["answer_md"]
     assert md.index("**Assumed:**") < md.index("**Warning:**")
+
+
+def test_wp2_failed_voluntary_cross_check_keeps_the_solver_answer_at_medium() -> None:
+    broken = {**GOOD, "answer": {"value": 0.9, "unit": "-"}, "check": {"value": 0.1, "unit": "-"}}
+    llm = calc(
+        ("chat_tools", tool("run_python", code="a")),
+        ("chat_tools", tool("run_python", code="u")),
+        ("chat_json", {"answer_md": "X = 0.6667"}),
+    )
+    q = "(a) Find X and (b) find the volume"
+    steps = run(solve(deps(llm), {"result": GOOD_PARTS}, {"result": broken}, question=q))
+    final = steps[-1]
+    assert final["type"] == "final" and final["confidence"] == "medium"
+    assert final["numbers"]  # the verified solver answer is still shown, unconfirmed
+
+
+def test_router_refusal_of_engineering_question_is_overridden() -> None:
+    q = ("Estimate the diffusivity of dilute acetic acid in water at 25 C using the "
+         "Wilke-Chang correlation. Report in m^2/s.")
+    llm = FakeLLM(
+        ("chat_json", {"study": False, "live": True, "kind": "concept"}),
+        ("chat", res("Wilke-Chang relates ...")),
+    )
+    final = run(solve(deps(llm, tools=Notes()), question=q))[0]
+    assert final["answer_md"] != loop.OFF_TOPIC_REPLY
+
+
+def test_live_engineering_news_is_still_refused() -> None:
+    q = "What is the latest news about the reactor accident today?"
+    llm = FakeLLM(("chat_json", {"study": True, "live": True, "kind": "calc"}))
+    final = run(solve(deps(llm, tools=Notes()), question=q))[0]
+    assert final["answer_md"] == loop.OFF_TOPIC_REPLY
+
+
+def test_derivation_goes_to_concept_even_if_router_says_calc() -> None:
+    q = "Derive the Rachford-Rice equation for an isothermal flash from the component balances."
+    llm = FakeLLM(
+        ("chat_json", {"study": True, "live": False, "kind": "calc"}),
+        ("chat", res("Start from F zi = V yi + L xi ...")),
+    )
+    final = run(solve(deps(llm, tools=Notes()), question=q))[0]
+    assert (final["confidence"], final["numbers"]) == ("medium", {})
 
 
 def test_strip_sizing_hides_defaulted_mccabe_sizing() -> None:

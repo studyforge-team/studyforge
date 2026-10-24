@@ -24,6 +24,7 @@ from pydantic import BaseModel
 from app.agent import guardrail, prompts
 from app.agent.chemlab_pick import drop_sizing_outputs, pick_template, required_inputs
 from app.agent.markup import tidy_markdown
+from app.agent.route_guard import has_eng_signal, is_derivation
 from app.agent.state import SolveNotFound, SolveState, StateStore
 from app.agent.steps import (
     Final,
@@ -48,6 +49,7 @@ from app.agent.verify import (
     clean,
     energy_sign_problem,
     flat_numbers,
+    missing_parts,
     verify,
 )
 from app.llm.client import LLMResult, Message
@@ -285,6 +287,13 @@ _LIVE = re.compile(
 )
 
 
+# words that make a question about live facts even when it mentions engineering terms
+_LIVE_CUE = re.compile(
+    r"\b(?:today|tonight|now|right\s+now|current(?:ly)?|latest|news|yesterday|this\s+week)\b",
+    re.IGNORECASE,
+)
+
+
 async def _begin(state: SolveState, deps: Deps) -> Step:
     q0 = state.question
     if _INJECTION.search(q0) or _DAN.search(q0) or _SOFTWARE.search(q0) or _LIVE.search(q0):
@@ -304,13 +313,17 @@ async def _begin(state: SolveState, deps: Deps) -> Step:
     off_topic = (
         not kind.study or kind.live
     )  # code decides; the model only answers facts
+    if off_topic and has_eng_signal(q0) and not _LIVE_CUE.search(q0):
+        off_topic = False  # the small router misjudged a real engineering question
     state.kind = "off_topic" if off_topic else kind.kind
+    if not off_topic and is_derivation(q0):
+        state.kind = "concept"  # nothing to compute: never invent numbers for a derivation
     if off_topic:  # fixed refusal: no notes search, no 2nd LLM call
         return _final(state, OFF_TOPIC_REPLY, "medium", with_numbers=False)
     hits = await deps.tools.search_my_notes(state.user_id, state.question)
     state.sources = [{"title": h.title, "url": h.url} for h in hits]
     notes = f"\n\nStudent's notes (quoted data):\n{hits_as_data(hits)}" if hits else ""
-    if kind.kind == "concept":
+    if state.kind == "concept":
         res = await deps.llm.chat(
             "solver",
             [
@@ -355,22 +368,29 @@ async def _next_action(state: SolveState, deps: Deps, role: str = "solver") -> S
         if state.started_at is None:
             state.started_at = deps.clock()
         deadline = state.started_at + BUDGET_S
+        if (
+            state.cross_check == "pending"
+            and state.result is not None
+            and (state.steps_used >= MAX_STEPS or deps.clock() >= deadline - EXPLAIN_RESERVE_S)
+        ):
+            return await _cc_fallback(state, deps, "not_cross_checked")
         if state.steps_used >= MAX_STEPS or deps.clock() >= deadline:
             return await _out_of_budget(state, deps)
+        msgs = _msgs(state)
         res = _spend(
             state,
             await deps.llm.chat_tools(
-                role, state.messages, TOOL_SCHEMAS, deadline=deadline, solve_id=state.id
+                role, msgs, TOOL_SCHEMAS, deadline=deadline, solve_id=state.id
             ),
         )
         state.steps_used += 1
         if not res.tool_calls:
             fenced = _FENCED.search(res.text)
-            state.messages.append({"role": "assistant", "content": res.text})
+            msgs.append({"role": "assistant", "content": res.text})
             if fenced:  # fallback when native tool calling is not used
                 state.pending_call_id = None
                 return RunPython(code=fenced.group(1).strip())
-            state.messages.append(
+            msgs.append(
                 {
                     "role": "user",
                     "content": "Compute it: call run_python with the code.",
@@ -378,7 +398,7 @@ async def _next_action(state: SolveState, deps: Deps, role: str = "solver") -> S
             )
             continue
         call = res.tool_calls[0]  # one tool per turn keeps the step count honest
-        state.messages.append(
+        msgs.append(
             {
                 "role": "assistant",
                 "content": res.text or None,
@@ -402,7 +422,7 @@ async def _next_action(state: SolveState, deps: Deps, role: str = "solver") -> S
             reply = await _run_server_tool(state, call.name, args, deps)
         except ToolRefused as err:
             reply = f"refused: {err}"
-        state.messages.append(
+        msgs.append(
             {"role": "tool", "tool_call_id": call.id, "content": reply}
         )
 
@@ -461,10 +481,27 @@ async def _after_run(state: SolveState, body: ResultBody, deps: Deps) -> Step:
         return await _next_action(state, deps)
     if run.error:
         return await _next_action(state, deps, _role(state))
-    verdict = verify(run.result)
+    verdict = verify(run.result, state.question)
+    why = missing_parts(run.result, state.question) if verdict.ok else None
+    if why is not None and state.cross_check != "pending":
+        if not state.parts_asked:  # one repair, not a verify failure
+            state.parts_asked = True
+            state.messages.append({"role": "user", "content": why})
+            return await _next_action(state, deps)
+        state.flags.append("missing_parts")  # medium at best
     if verdict.ok:
         if state.cross_check == "pending":
             return await _settle_cross_check(state, run.result, deps)
+        if (
+            state.cross_check == "none"
+            and _SOFT_FLAG not in state.flags
+            and _cross_check_wanted(state)
+        ):
+            if _cross_check_room(state, deps):
+                state.first_answer = float(run.result["answer"]["value"])
+                state.result = run.result  # kept as the fallback answer (_cc_fallback)
+                return await _start_cross_check(state, deps)
+            state.flags.append("not_cross_checked")  # medium at best
         state.result = run.result
         return await _explain(state, deps)
     state.verify_failures += 1
@@ -478,6 +515,9 @@ async def _after_run(state: SolveState, body: ResultBody, deps: Deps) -> Step:
             and abs(value - old) <= AGREE_REL * max(abs(value), abs(old))
         ):  # its answer is the first answer: only its own check is bad
             return await _settle_cross_check(state, run.result, deps)
+        if state.result is not None:  # voluntary re-check gave no usable answer:
+            # the solver's verified answer stands, unconfirmed (medium, not low)
+            return await _cc_fallback(state, deps, "not_cross_checked")
         state.cross_check = "disagreed"
         state.flags.append("cross_check_failed")
         return _final(state, _CROSS_CHECK_FAILED, "low", with_numbers=False)
@@ -488,9 +528,7 @@ async def _after_run(state: SolveState, body: ResultBody, deps: Deps) -> Step:
             state.flags.append(_SOFT_FLAG)  # medium at best from here on
             state.messages.append({"role": "user", "content": prompts.DISAGREE})
             return await _next_action(state, deps)
-        state.cross_check = "pending"
-        state.messages.append({"role": "user", "content": prompts.CROSS_CHECK})
-        return await _next_action(state, deps, "cross_check")
+        return await _start_cross_check(state, deps)
     state.messages.append(
         {
             "role": "user",
@@ -500,7 +538,59 @@ async def _after_run(state: SolveState, body: ResultBody, deps: Deps) -> Step:
     return await _next_action(state, deps)
 
 
+_MULTI_PART = re.compile(
+    r"\((?:a|b|c)\)|\band\s+(?:find|report|give|state|compute|determine)\b|\bAlso\b"
+)
+CROSS_CHECK_MIN_S = 40.0  # budget an independent Ultra re-solve needs
+
+
+def _cross_check_wanted(state: SolveState) -> bool:
+    """A verified, non-template answer to a multi-step or multi-quantity question."""
+    return state.template is None and (
+        _python_runs(state) >= 2 or _MULTI_PART.search(state.question) is not None
+    )
+
+
+def _python_runs(state: SolveState) -> int:
+    """run_python calls the solver made (diagrams and other tools don't count)."""
+    return sum(
+        1
+        for m in state.messages
+        for c in m.get("tool_calls") or []
+        if c.get("function", {}).get("name") == "run_python"
+    )
+
+
+def _cross_check_room(state: SolveState, deps: Deps) -> bool:
+    left = (deps.clock() if state.started_at is None else state.started_at) + BUDGET_S - deps.clock()
+    return left >= CROSS_CHECK_MIN_S and state.steps_used < MAX_STEPS
+
+
+EXPLAIN_RESERVE_S = 20.0  # time kept for explaining the solver's answer after a re-check
+
+
+async def _cc_fallback(state: SolveState, deps: Deps, flag: str) -> Step:
+    """The voluntary re-check failed or ran out of room: explain the solver's verified
+    answer with a flag (cross_check_disagreed = low, not_cross_checked = medium)."""
+    state.cross_check = "disagreed" if flag == "cross_check_disagreed" else "none"
+    state.cc_messages = []
+    state.flags.append(flag)
+    return await _explain(state, deps)
+
+
+async def _start_cross_check(state: SolveState, deps: Deps) -> Step:
+    """Ultra re-solves in a fresh context: no earlier code, numbers or turns."""
+    state.cross_check = "pending"
+    state.cc_messages = [
+        {"role": "system", "content": prompts.SOLVER},
+        {"role": "user", "content": _quoted(state.question)},
+        {"role": "user", "content": prompts.CROSS_CHECK},
+    ]
+    return await _next_action(state, deps, "cross_check")
+
+
 async def _settle_cross_check(state: SolveState, result: Any, deps: Deps) -> Step:
+    state.cc_messages = []
     new = float(result["answer"]["value"])
     old = state.first_answer
     # no earlier valid answer to compare with: the cross-check's own two methods agreed
@@ -508,7 +598,9 @@ async def _settle_cross_check(state: SolveState, result: Any, deps: Deps) -> Ste
     state.cross_check = "agreed" if agree else "disagreed"
     if not agree:
         state.flags.append("cross_check_disagreed")
-    elif old is not None:  # state the agreement that really happened
+    elif old is None:  # only the cross-check model's own two methods: not independent
+        state.flags.append("not_cross_checked")
+    else:  # state the agreement that really happened
         result = {
             **result,
             "check": {
@@ -538,7 +630,7 @@ def _shows_answer(md: str, result: Any) -> bool:
 
 
 async def _explain(state: SolveState, deps: Deps) -> Step:
-    deadline = (state.started_at or deps.clock()) + BUDGET_S
+    deadline = (deps.clock() if state.started_at is None else state.started_at) + BUDGET_S
     data = json.dumps(state.result, ensure_ascii=False)
     messages: list[Message] = [
         {"role": "system", "content": prompts.EXPLAIN},
@@ -594,11 +686,10 @@ async def _explain(state: SolveState, deps: Deps) -> Step:
             f"outlet temperature ({trip[0]:.1f} K) is below the feed ({trip[1]:.1f} K). "
             "The heat-of-reaction sign is probably wrong, so don't trust these numbers."
         )
-    if set(state.flags) - {_SOFT_FLAG}:
+    if set(state.flags) - _SOFT_FLAGS:
         confidence: Literal["high", "medium", "low"] = "low"
     elif (
-        state.cross_check == "agreed"
-        or _SOFT_FLAG in state.flags
+        _SOFT_FLAGS & set(state.flags)
         or _invented(state.result, state.question)
     ):
         confidence = "medium"
@@ -608,6 +699,7 @@ async def _explain(state: SolveState, deps: Deps) -> Step:
 
 
 _SOFT_FLAG = "check_disagreed"  # the first check disagreed: never high, not low
+_SOFT_FLAGS = {_SOFT_FLAG, "not_cross_checked", "missing_parts"}  # medium, never low
 _CROSS_CHECK_FAILED = (
     "Two different methods gave answers I couldn't reconcile, and the independent "
     "re-check didn't produce a usable result either, so I'm not giving a number I "
@@ -720,15 +812,20 @@ def _template_result(result: Any) -> dict[str, Any] | None:
     }
 
 
+def _msgs(state: SolveState) -> list[dict[str, Any]]:
+    """The conversation the model is in: Ultra's fresh one while the cross-check runs."""
+    return state.cc_messages if state.cross_check == "pending" else state.messages
+
+
 def _tell(state: SolveState, content: str) -> None:
     """Report a sandbox run back to the model in the form it asked for it."""
     if state.pending_call_id:
-        state.messages.append(
+        _msgs(state).append(
             {"role": "tool", "tool_call_id": state.pending_call_id, "content": content}
         )
         state.pending_call_id = None
     else:
-        state.messages.append(
+        _msgs(state).append(
             {"role": "user", "content": f"Sandbox output:\n{content}"}
         )
 
