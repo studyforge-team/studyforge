@@ -6,6 +6,8 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from pydantic import BaseModel
+
 from app.agent.quiz import Quiz, quiz_json_schema
 from app.agent.quiz_gen import (
     KINDS_RULES,
@@ -18,7 +20,6 @@ from app.agent.quiz_gen import (
     generate_quiz,
 )
 from app.llm.errors import JSONRepairFailed
-from pydantic import BaseModel
 
 FIXTURE = Path(__file__).parents[3] / "app" / "agent" / "fixtures" / "quiz_mock.json"
 
