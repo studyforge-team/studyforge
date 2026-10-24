@@ -21,7 +21,7 @@ class SolveState(BaseModel):
     status: Literal["awaiting_confirm", "awaiting_result", "done"] = "awaiting_result"
     kind: Literal["calc", "concept", "off_topic"] | None = None
     messages: list[dict[str, Any]] = Field(default_factory=list)
-    steps_used: int = 0  # counted tool steps (max 4)
+    steps_used: int = 0  # counted tool steps (max MAX_STEPS)
     started_at: float | None = None  # server clock at the first next_action
     pending_call_id: str | None = None  # native tool-call id of the open run_python
     template: str | None = None  # ChemLab template whose run is pending
@@ -35,6 +35,8 @@ class SolveState(BaseModel):
     sources: list[dict[str, Any]] = Field(default_factory=list)
     flags: list[str] = Field(default_factory=list)
     cost_usd: float = 0.0
+    # per model call: role, reasoning length, finish reason (FX1: is the model really thinking?)
+    llm_meta: list[dict[str, Any]] = Field(default_factory=list)
 
 
 def norm(question: str) -> str:

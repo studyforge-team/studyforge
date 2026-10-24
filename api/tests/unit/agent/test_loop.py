@@ -240,22 +240,22 @@ def test_cross_check_that_disagrees_is_flagged_low() -> None:
     assert steps[-1]["confidence"] == "low"
 
 
-def test_at_most_four_tool_steps() -> None:
-    llm = calc(*[("chat_tools", tool("run_python", code="x")) for _ in range(4)])
-    errors = [{"error": "boom"}] * 4
+def test_at_most_six_tool_steps() -> None:
+    llm = calc(*[("chat_tools", tool("run_python", code="x")) for _ in range(6)])
+    errors = [{"error": "boom"}] * 6
     steps = run(solve(deps(llm), *errors))
-    assert len(llm.calls) == 5  # classify + 4 tool steps, no fifth model call
+    assert len(llm.calls) == 7  # classify + 6 tool steps, no seventh model call
     assert steps[-1]["type"] == "final"
     assert steps[-1]["confidence"] == "low"
     assert steps[-1]["numbers"] == {}
 
 
-def test_ninety_second_budget() -> None:
+def test_time_budget() -> None:
     clock = Clock()
     llm = calc(("chat_tools", tool("run_python", code="x")))
     d = deps(llm, clock=clock)
     sid, _ = run(loop.start("q", d, user_id=USER))
-    clock.now = 91.0
+    clock.now = loop.BUDGET_S + 1.0
     final = run(loop.on_result(sid, USER, ResultBody(error="slow"), d))
     assert final["confidence"] == "low"
     assert len(llm.calls) == 2

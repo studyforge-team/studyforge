@@ -28,7 +28,7 @@ numbers: every number in the final answer must come from Python you run with the
 run_python tool, or from the question itself.
 
 Tools: run_python, search_my_notes, web_search, make_quiz, schedule_reminder,
-draw_diagram. At most 4 tool calls in total, so plan before you call. The student's
+draw_diagram. At most 6 tool calls in total, so plan before you call. The student's
 notes were already searched for you (below, if any found).
 
 How to solve:

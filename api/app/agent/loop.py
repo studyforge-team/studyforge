@@ -53,8 +53,8 @@ from app.agent.verify import (
 from app.llm.client import LLMResult, Message
 from app.llm.errors import BudgetExceeded, LLMError
 
-MAX_STEPS = 4
-BUDGET_S = 90.0
+MAX_STEPS = 6
+BUDGET_S = 170.0
 MAX_VERIFY_FAILURES = 2
 MODEL_STDOUT_CHARS = 2000  # what the model sees of stdout
 _FENCED = re.compile(r"```(?:python|py)\s*\n(.*?)```", re.DOTALL)
@@ -249,6 +249,9 @@ async def _issue(state: SolveState, step: Step, deps: Deps) -> dict[str, Any]:
 
 def _spend(state: SolveState, res: LLMResult) -> LLMResult:
     state.cost_usd += res.cost_usd
+    state.llm_meta.append(
+        {"role": res.role, "reasoning_chars": len(res.reasoning or ""), "finish": res.finish_reason}
+    )
     return res
 
 
@@ -617,7 +620,8 @@ async def _out_of_budget(state: SolveState, deps: Deps) -> Step:
     state.flags.append("limit_reached")
     text = (
         "I couldn't finish a verified answer within the limits for one solve "
-        "(4 tool steps, 90 seconds), so I'm not giving a number I can't stand behind. "
+        f"({MAX_STEPS} tool steps, {int(BUDGET_S)} seconds), so I'm not giving a number "
+        "I can't stand behind. "
         "Try rephrasing the question, or split it into smaller parts."
     )
     return _final(state, text, "low", with_numbers=False)
