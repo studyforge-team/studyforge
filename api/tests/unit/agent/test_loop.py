@@ -188,7 +188,7 @@ def test_sandbox_error_goes_back_to_the_model() -> None:
     assert steps[1]["code"] == "result = {}"
     told = llm.calls[2][2][-1]
     assert told["role"] == "tool" and "ZeroDivisionError" in told["content"]
-    assert steps[2]["confidence"] == "high"
+    assert steps[2]["type"] == "run_python"  # two steps: the Ultra cross-check starts
 
 
 def test_shape_failure_is_explained_to_the_model() -> None:
@@ -200,7 +200,7 @@ def test_shape_failure_is_explained_to_the_model() -> None:
     )
     steps = run(solve(deps(llm), {"result": bad}, {"result": GOOD}))
     assert "failed its check" in llm.calls[2][2][-1]["content"]
-    assert steps[2]["confidence"] == "high"
+    assert steps[2]["type"] == "run_python"  # two steps: the Ultra cross-check starts
 
 
 def disagreeing(answer: float = 0.6667) -> dict[str, Any]:
@@ -238,6 +238,76 @@ def test_cross_check_that_disagrees_is_flagged_low() -> None:
     bodies = [{"result": disagreeing()}, {"result": disagreeing()}, {"result": other}]
     steps = run(solve(deps(llm), *bodies))
     assert steps[-1]["confidence"] == "low"
+
+
+# --- WP2: "high" is earned by an independent cross-check ---------------------------
+
+
+def test_wp2_cross_check_agrees_is_high_with_no_solver_turns_in_its_context() -> None:
+    llm = calc(
+        ("chat_tools", tool("run_python", code="a")),
+        ("chat_tools", tool("run_python", code="b")),
+        ("chat_tools", tool("run_python", code="u")),
+        ("chat_json", {"answer_md": "X = 0.6667"}),
+    )
+    steps = run(solve(deps(llm), {"result": GOOD}, {"result": GOOD}, {"result": GOOD}))
+    assert steps[-1]["confidence"] == "high"
+    role, sent = llm.calls[3][1], llm.calls[3][2]
+    assert role == "cross_check"
+    assert [m["role"] for m in sent] == ["system", "user", "user"]
+    assert "0.6667" not in str(sent) and "result = {}" not in str(sent)
+    assert "Find X" in str(sent)
+
+
+def test_wp2_multi_part_question_cross_checks_after_one_step() -> None:
+    other = {**GOOD, "answer": {"value": 0.9, "unit": "-"}, "check": {"value": 0.9, "unit": "-"}}
+    llm = calc(
+        ("chat_tools", tool("run_python", code="a")),
+        ("chat_tools", tool("run_python", code="u")),
+        ("chat_json", {"answer_md": "ok"}),
+    )
+    q = "(a) Find X and (b) find the volume"
+    steps = run(solve(deps(llm), {"result": GOOD}, {"result": other}, question=q))
+    assert [c[1] for c in llm.calls[1:3]] == ["solver", "cross_check"]
+    assert steps[-1]["confidence"] == "low"  # Ultra disagreed: never high
+
+
+def test_wp2_no_time_for_the_cross_check_is_medium_not_low() -> None:
+    clock = Clock()
+    llm = calc(
+        ("chat_tools", tool("run_python", code="a")),
+        ("chat_json", {"answer_md": "ok"}),
+    )
+    d = deps(llm, clock=clock)
+    sid, _ = run(loop.start("(a) Find X (b) Find Y", d, user_id=USER))
+    clock.now = loop.BUDGET_S - 30.0  # 30 s left, below the 40 s an Ultra re-solve needs
+    final = run(loop.on_result(sid, USER, ResultBody(result=GOOD), d))
+    assert final["confidence"] == "medium"
+    assert [c[1] for c in llm.calls] == ["chat_json", "chat_tools", "chat_json"]
+
+
+def test_wp2_impossible_value_is_repaired_never_high() -> None:
+    bad = {**GOOD, "values": {"X": {"value": 1.2, "unit": "-"}}}
+    llm = calc(
+        ("chat_tools", tool("run_python", code="a")),
+        ("chat_tools", tool("run_python", code="b")),
+    )
+    steps = run(solve(deps(llm), {"result": bad}))
+    assert steps[1]["type"] == "run_python"
+    assert "between 0 and 1" in llm.calls[2][2][-1]["content"]
+
+
+def test_wp2_template_answer_skips_the_cross_check() -> None:
+    llm = calc(
+        ("chat_json", pick(Q=(0.02, "m^3/s"), L=(50.0, "m"))),
+        ("chat_json", {"answer_md": "dP = 0.5"}),
+    )
+    d = deps(llm, templates=PIPE)
+    sid, _ = run(loop.start("(a) Find dP and (b) the Re", d, user_id=USER))
+    out = {"ok": True, "template": "pipe", "outputs": {"dP": {"value": 0.5, "unit": "-"}}}
+    final = run(loop.on_result(sid, USER, ResultBody(result=out), d))
+    assert final["type"] == "final" and final["confidence"] == "high"
+    assert "cross_check" not in [c[1] for c in llm.calls]
 
 
 def test_at_most_four_tool_steps() -> None:
@@ -722,3 +792,17 @@ def test_assumed_line_comes_before_the_energy_warning() -> None:
     }
     md = explained(r, "Done", REAL_Q)["answer_md"]
     assert md.index("**Assumed:**") < md.index("**Warning:**")
+
+
+def test_wp2_failed_voluntary_cross_check_keeps_the_solver_answer_at_low() -> None:
+    broken = {**GOOD, "answer": {"value": 0.9, "unit": "-"}, "check": {"value": 0.1, "unit": "-"}}
+    llm = calc(
+        ("chat_tools", tool("run_python", code="a")),
+        ("chat_tools", tool("run_python", code="u")),
+        ("chat_json", {"answer_md": "X = 0.6667"}),
+    )
+    q = "(a) Find X and (b) find the volume"
+    steps = run(solve(deps(llm), {"result": GOOD}, {"result": broken}, question=q))
+    final = steps[-1]
+    assert final["type"] == "final" and final["confidence"] == "low"
+    assert final["numbers"]  # the verified solver answer is still shown, flagged
