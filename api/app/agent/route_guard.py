@@ -3,8 +3,8 @@
 import re
 
 _DERIVE_VERB = re.compile(
-    r"\b(derive|derivation|prove|show\s+that|obtain\s+an?\s+(?:expression|equation|relation)"
-    r"|sketch|draw)\b",
+    # "draw"/"sketch" stay on the calc route: only it has the draw_diagram tool
+    r"\b(derive|derivation|prove|show\s+that|obtain\s+an?\s+(?:expression|equation|relation))\b",
     re.IGNORECASE,
 )
 # digits that are not data: ordinals (2nd law), 1D/2-D, and digits glued to letters
@@ -16,7 +16,7 @@ _NUMBER = re.compile(r"(?<![\w.])[-+]?\d+(?:[.,]\d+)?(?:[eE][-+]?\d+)?(?![\w])")
 
 
 def is_derivation(question: str) -> bool:
-    """True for derive/prove/show-that/sketch questions that give nothing to compute."""
+    """True for derive/prove/show-that questions that give nothing to compute."""
     if not _DERIVE_VERB.search(question):
         return False
     return not _NUMBER.search(_NOT_A_VALUE.sub(" ", question))

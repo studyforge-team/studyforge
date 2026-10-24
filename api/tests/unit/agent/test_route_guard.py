@@ -22,7 +22,6 @@ DERIVATIONS = [
         "Derive the solution for unsteady diffusion into a semi-infinite medium with "
         "constant surface concentration, using a similarity (Boltzmann) variable."
     ),
-    "Draw the shell balance element for heat conduction in a fin.",
     "Derive Fick's 2nd law for C_A0 and x1 in a 1D slab.",
 ]
 
@@ -41,6 +40,9 @@ def test_derivations_detected(q: str) -> None:
         ),
         "Show that the pressure drop is 50 kPa at 20 C.",
         "Why does a fin lose heat?",
+        # drawing needs the draw_diagram tool, which only the calc route has
+        "Draw the shell balance element for heat conduction in a fin.",
+        "Sketch the process flow diagram of an ammonia synthesis loop.",
     ],
 )
 def test_not_derivations(q: str) -> None:

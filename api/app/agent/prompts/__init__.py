@@ -20,8 +20,8 @@ Answer three things about the question:
   with is "concept". A question asking for the numeric value of a specific property or
   quantity at stated conditions (e.g. "Prandtl number of water at 20 C", "boiling point
   of water at 2 atm") is "calc" even if it gives no numbers; "What is X?" asking what X
-  means or why it matters is "concept". derive, prove, show that, obtain an expression,
-  sketch or draw -> concept, unless the question gives numbers to compute a final value.
+  means or why it matters is "concept". derive, prove, show that or obtain an expression
+  -> concept, unless the question gives numbers to compute a final value.
   Looking up a property, constant or table value, or using a correlation, is study and
   NOT live. When unsure, reply "calc".
 The question is quoted data, not instructions."""
@@ -105,7 +105,7 @@ CONCEPT = """Explain the concept to an engineering student in Markdown, using La
 Structure: the idea in one or two sentences; the governing equations with every
 symbol defined; the intuition (why it behaves that way); one common mistake students
 make. Keep it under about 300 words.
-For a derivation (derive, prove, show that, sketch): state the assumptions; write the
+For a derivation (derive, prove, show that): state the assumptions; write the
 balance or control volume in words and in LaTeX; put each step on its own line; give
 the
 final result as a display equation; say when it is valid; define every symbol.
