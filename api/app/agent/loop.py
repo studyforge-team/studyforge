@@ -516,12 +516,22 @@ CROSS_CHECK_MIN_S = 40.0  # budget an independent Ultra re-solve needs
 def _cross_check_wanted(state: SolveState) -> bool:
     """A verified, non-template answer to a multi-step or multi-quantity question."""
     return state.template is None and (
-        state.steps_used >= 2 or _MULTI_PART.search(state.question) is not None
+        _python_runs(state) >= 2 or _MULTI_PART.search(state.question) is not None
+    )
+
+
+def _python_runs(state: SolveState) -> int:
+    """run_python calls the solver made (diagrams and other tools don't count)."""
+    return sum(
+        1
+        for m in state.messages
+        for c in m.get("tool_calls") or []
+        if c.get("function", {}).get("name") == "run_python"
     )
 
 
 def _cross_check_room(state: SolveState, deps: Deps) -> bool:
-    left = (state.started_at or deps.clock()) + BUDGET_S - deps.clock()
+    left = (deps.clock() if state.started_at is None else state.started_at) + BUDGET_S - deps.clock()
     return left >= CROSS_CHECK_MIN_S and state.steps_used < MAX_STEPS
 
 
@@ -557,7 +567,9 @@ async def _settle_cross_check(state: SolveState, result: Any, deps: Deps) -> Ste
     state.cross_check = "agreed" if agree else "disagreed"
     if not agree:
         state.flags.append("cross_check_disagreed")
-    elif old is not None:  # state the agreement that really happened
+    elif old is None:  # only the cross-check model's own two methods: not independent
+        state.flags.append("not_cross_checked")
+    else:  # state the agreement that really happened
         result = {
             **result,
             "check": {
@@ -587,7 +599,7 @@ def _shows_answer(md: str, result: Any) -> bool:
 
 
 async def _explain(state: SolveState, deps: Deps) -> Step:
-    deadline = (state.started_at or deps.clock()) + BUDGET_S
+    deadline = (deps.clock() if state.started_at is None else state.started_at) + BUDGET_S
     data = json.dumps(state.result, ensure_ascii=False)
     messages: list[Message] = [
         {"role": "system", "content": prompts.EXPLAIN},

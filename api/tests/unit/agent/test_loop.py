@@ -182,7 +182,7 @@ def test_sandbox_error_goes_back_to_the_model() -> None:
     llm = calc(
         ("chat_tools", tool("run_python", code="1/0")),
         ("chat_tools", tool("run_python", code="result = {}")),
-        ("chat_json", {"answer_md": "ok"}),
+        ("chat_tools", tool("run_python", code="u")),
     )
     steps = run(solve(deps(llm), {"error": "ZeroDivisionError"}, {"result": GOOD}))
     assert steps[1]["code"] == "result = {}"
@@ -196,7 +196,7 @@ def test_shape_failure_is_explained_to_the_model() -> None:
     llm = calc(
         ("chat_tools", tool("run_python", code="a")),
         ("chat_tools", tool("run_python", code="b")),
-        ("chat_json", {"answer_md": "ok"}),
+        ("chat_tools", tool("run_python", code="u")),
     )
     steps = run(solve(deps(llm), {"result": bad}, {"result": GOOD}))
     assert "failed its check" in llm.calls[2][2][-1]["content"]
@@ -250,7 +250,8 @@ def test_wp2_cross_check_agrees_is_high_with_no_solver_turns_in_its_context() ->
         ("chat_tools", tool("run_python", code="u")),
         ("chat_json", {"answer_md": "X = 0.6667"}),
     )
-    steps = run(solve(deps(llm), {"result": GOOD}, {"result": GOOD}, {"result": GOOD}))
+    bad = {"answer": {"value": "0.67", "unit": "-"}, "check": GOOD["check"]}
+    steps = run(solve(deps(llm), {"result": bad}, {"result": GOOD}, {"result": GOOD}))
     assert steps[-1]["confidence"] == "high"
     role, sent = llm.calls[3][1], llm.calls[3][2]
     assert role == "cross_check"
@@ -283,7 +284,7 @@ def test_wp2_no_time_for_the_cross_check_is_medium_not_low() -> None:
     clock.now = loop.BUDGET_S - 30.0  # 30 s left, below the 40 s an Ultra re-solve needs
     final = run(loop.on_result(sid, USER, ResultBody(result=GOOD), d))
     assert final["confidence"] == "medium"
-    assert [c[1] for c in llm.calls] == ["chat_json", "chat_tools", "chat_json"]
+    assert [c[0] for c in llm.calls] == ["chat_json", "chat_tools", "chat_json"]
 
 
 def test_wp2_impossible_value_is_repaired_never_high() -> None:
@@ -735,11 +736,7 @@ def test_energy_sign_trip_is_low_with_warning_and_twin_stays_high() -> None:
             "check": {"value": 0.28, "unit": "-", "method": "numeric"},
             "values": {"exit_temperature": {"value": t_exit, "unit": "K"}},
         }
-        llm = calc(
-            ("chat_tools", tool("run_python", code="r")),
-            ("chat_json", {"answer_md": "Done"}),
-        )
-        return run(solve(deps(llm), {"result": r}, question=REAL_Q))[1]  # type: ignore[no-any-return]
+        return explained(r, "Done", REAL_Q)
 
     bad = go(291.7)
     assert bad["confidence"] == "low"
@@ -753,11 +750,12 @@ def test_energy_sign_trip_is_low_with_warning_and_twin_stays_high() -> None:
 
 
 def explained(result: dict[str, Any], answer_md: str, question: str = "Find X") -> dict[str, Any]:
-    llm = calc(
-        ("chat_tools", tool("run_python", code="r")),
-        ("chat_json", {"answer_md": answer_md}),
-    )
-    return run(solve(deps(llm), {"result": result}, question=question))[1]  # type: ignore[no-any-return]
+    # a multi-part question gets the independent re-check first (FX2): it returns the same result
+    rechecked = loop._MULTI_PART.search(question) is not None
+    runs = [("chat_tools", tool("run_python", code="r"))] * (2 if rechecked else 1)
+    llm = calc(*runs, ("chat_json", {"answer_md": answer_md}))
+    bodies = [{"result": result}] * len(runs)
+    return run(solve(deps(llm), *bodies, question=question))[-1]  # type: ignore[no-any-return]
 
 
 def test_assumed_line_is_added_when_missing() -> None:
