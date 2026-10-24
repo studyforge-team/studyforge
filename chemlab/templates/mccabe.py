@@ -50,7 +50,7 @@ MAX_POINTS = 200
 N_EQ = 101
 
 SPEC: dict[str, InputSpec] = {
-    "F": spec("kmol/h", 100.0, 1e-6, 1e9, "feed flow"),
+    "F": spec("kmol/h", 100.0, 1e-6, 1e9, "feed flow", sizing=True),
     "zF": spec("-", 0.5, 1e-6, 1 - 1e-6, "feed light-key mole fraction"),
     "xD": spec("-", 0.95, 1e-6, 1 - 1e-6, "distillate light-key mole fraction"),
     "xB": spec("-", 0.05, 1e-6, 1 - 1e-6, "bottoms light-key mole fraction"),
@@ -58,11 +58,11 @@ SPEC: dict[str, InputSpec] = {
     "alpha": spec("-", 2.5, 1.0, 100.0, "relative volatility (must be > 1)"),
     "R": spec("-", 0.0, 0.0, 1e6, "reflux ratio L/D (0 = not given, use R_factor)"),
     "R_factor": spec("-", 1.3, 1.0001, 1e4, "R / Rmin, used when R = 0"),
-    "Eo": spec("-", 0.7, 0.05, 1.0, "overall tray efficiency"),
-    "P": spec("Pa", 101325.0, 1e3, 1e8, "column top pressure"),
-    "T_top": spec("K", 353.0, 100.0, 1000.0, "top vapour temperature"),
-    "MW_top": spec("kg/kmol", 78.11, 1.0, 1000.0, "top vapour molar mass"),
-    "rho_L": spec("kg/m^3", 800.0, 100.0, 5000.0, "liquid density"),
+    "Eo": spec("-", 0.7, 0.05, 1.0, "overall tray efficiency", sizing=True),
+    "P": spec("Pa", 101325.0, 1e3, 1e8, "column top pressure", sizing=True),
+    "T_top": spec("K", 353.0, 100.0, 1000.0, "top vapour temperature", sizing=True),
+    "MW_top": spec("kg/kmol", 78.11, 1.0, 1000.0, "top vapour molar mass", sizing=True),
+    "rho_L": spec("kg/m^3", 800.0, 100.0, 5000.0, "liquid density", sizing=True),
 }
 
 
@@ -186,7 +186,9 @@ def _run(inputs: dict[str, Any], want_series: bool) -> dict[str, Any]:
         return finish(out)
     n_frac = (n - 1) + (x_prev - p["xB"]) / (x_prev - x)
     theo = n - 1
-    feed = min(feed, theo)  # feed on the reboiler stage is reported on the last column stage
+    feed = min(
+        feed, theo
+    )  # feed on the reboiler stage is reported on the last column stage
     real = math.ceil(theo / p["Eo"])
     D = F * (p["zF"] - p["xB"]) / (p["xD"] - p["xB"])
     V = (R + 1.0) * D

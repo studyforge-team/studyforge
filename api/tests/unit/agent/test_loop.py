@@ -762,3 +762,12 @@ def test_derivation_goes_to_concept_even_if_router_says_calc() -> None:
     )
     final = run(solve(deps(llm, tools=Notes()), question=q))[0]
     assert (final["confidence"], final["numbers"]) == ("medium", {})
+
+
+def test_strip_sizing_hides_defaulted_mccabe_sizing() -> None:
+    res = {"outputs": {"N_theoretical": 13, "feed_stage": 6, "diameter_m": 1.0}, "geometry": {"height_m": 9}}
+    loop._strip_sizing("mccabe", res, "How many theoretical stages at 1.5 Rmin?")
+    assert "diameter_m" not in res["outputs"] and "geometry" not in res
+    asked = {"outputs": {"N_theoretical": 13, "diameter_m": 1.0}, "geometry": {"height_m": 9}}
+    loop._strip_sizing("mccabe", asked, "Find the stages and the column diameter.")
+    assert "diameter_m" in asked["outputs"] and "geometry" in asked
