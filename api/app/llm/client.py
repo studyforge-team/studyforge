@@ -196,6 +196,7 @@ class LLMClient:
         params.update(extra)
         think = spec.reasoning if reasoning is None else reasoning
         cost, attempts, last = 0.0, 0, ""
+        cut_off = False  # a "length" reply is retried once with a bigger max_tokens
         chain = self.registry.chain(role)
         for model in chain:
             for retry in range(MAX_RETRIES + 1):
@@ -235,16 +236,27 @@ class LLMClient:
                 pt, ct = (
                     (usage.prompt_tokens, usage.completion_tokens) if usage else (0, 0)
                 )
-                row_cost = await self._log(role, model, solve_id, start, None, pt, ct)
-                cost += row_cost or 0.0
                 if not resp.choices:
+                    row_cost = await self._log(role, model, solve_id, start, None, pt, ct)
+                    cost += row_cost or 0.0
                     raise ModelUnavailable(f"role '{role}': reply had no choices")
                 msg = resp.choices[0].message
                 extra_fields = msg.model_extra or {}
+                thoughts = extra_fields.get("reasoning_content") or extra_fields.get(
+                    "reasoning"
+                )
+                finish = resp.choices[0].finish_reason
+                row_cost = await self._log(role, model, solve_id, start, None, pt, ct)
+                cost += row_cost or 0.0
+                if finish == "length":
+                    if cut_off:
+                        raise ModelUnavailable(f"role '{role}': reply cut off")
+                    cut_off = True
+                    params["max_tokens"] = (params.get("max_tokens") or 16000) * 2
+                    continue
                 return LLMResult(
                     text=strip_reasoning(msg.content),
-                    reasoning=extra_fields.get("reasoning_content")
-                    or extra_fields.get("reasoning"),
+                    reasoning=thoughts,
                     tool_calls=[
                         ToolCall(c.id, c.function.name, c.function.arguments)
                         for c in msg.tool_calls or []
@@ -256,7 +268,7 @@ class LLMClient:
                     role=role,
                     cost_usd=cost,
                     attempts=attempts,
-                    finish_reason=resp.choices[0].finish_reason,
+                    finish_reason=finish,
                 )
         raise ModelUnavailable(f"role '{role}': every model failed (last: {last})")
 

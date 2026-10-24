@@ -34,19 +34,23 @@ roles:
     models: [nano, super]
     timeout_s: 5
     reasoning: false
+    max_tokens: 256
   solver:
     models: [super]  # no fallback model: failure raises ModelUnavailable
     timeout_s: 60
     reasoning: true
     temperature: 1.0
     top_p: 0.95
+    max_tokens: 16000
   cross_check:
     models: [ultra, super]
     timeout_s: 60
     reasoning: true
     temperature: 1.0
     top_p: 0.95
+    max_tokens: 16000
   vision:
     models: [vision]
     timeout_s: 45
     reasoning: false
+    max_tokens: 4000
