@@ -11,13 +11,15 @@ const auth = async (): Promise<Record<string, string>> => {
   return t ? { Authorization: `Bearer ${t}` } : {}
 }
 
+const SOLVE_MS = 180_000 // solve calls run up to 6 steps server-side; every other route keeps the 90 s default
+
 // ponytail: no retry — retrying POST /solve could create duplicate solves
-async function post<T>(path: string, body: unknown | FormData, onSlow?: () => void): Promise<T> {
+async function post<T>(path: string, body: unknown | FormData, onSlow?: () => void, timeoutMs = 90_000): Promise<T> {
   const t = setTimeout(() => onSlow?.(), 3000) // Render free tier sleeps
   try {
     const r = await fetch(`${BASE}/api/v1${path}`, {
       method: 'POST',
-      signal: AbortSignal.timeout(90_000), // model timeout; friendly() words it
+      signal: AbortSignal.timeout(timeoutMs), // model timeout; friendly() words it
       // FormData: the browser sets the multipart Content-Type (with boundary) itself
       ...(body instanceof FormData ? { body, headers: await auth() } : { headers: { 'Content-Type': 'application/json', ...(await auth()) }, body: JSON.stringify(body) }),
     })
@@ -30,7 +32,7 @@ async function post<T>(path: string, body: unknown | FormData, onSlow?: () => vo
 
 // confirmed: true = the student approved this text on the confirm screen (server then skips need_confirm)
 export const startSolve = (question: string, onSlow?: () => void, uploadId?: string, confirmed?: boolean): Promise<SolveStart> =>
-  BASE ? post('/solve', { question, ...(uploadId && { upload_id: uploadId }), ...(confirmed && { confirmed: true }) }, onSlow) : mock.startSolve(question)
+  BASE ? post('/solve', { question, ...(uploadId && { upload_id: uploadId }), ...(confirmed && { confirmed: true }) }, onSlow, SOLVE_MS) : mock.startSolve(question)
 
 export function uploadFile(file: File, kind: UploadKind, onSlow?: () => void): Promise<{ upload_id: string }> {
   const form = new FormData()
@@ -43,7 +45,7 @@ export const readUpload = (id: string, onSlow?: () => void): Promise<UploadRead>
   BASE ? post(`/uploads/${id}/read`, {}, onSlow) : mock.readUpload()
 
 export const postResult = async (id: string, body: ResultBody, onSlow?: () => void): Promise<Step> =>
-  BASE ? (await post<{ step: Step }>(`/solve/${id}/result`, body, onSlow)).step : mock.postResult(id, body)
+  BASE ? (await post<{ step: Step }>(`/solve/${id}/result`, body, onSlow, SOLVE_MS)).step : mock.postResult(id, body)
 
 export async function getDashboard(): Promise<Dashboard> {
   if (!BASE) return mock.getDashboard()

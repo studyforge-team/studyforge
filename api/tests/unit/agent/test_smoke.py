@@ -220,7 +220,7 @@ def abstaining_script() -> list[tuple[str, Any]]:
     # the model never produces code: the loop runs out of steps and abstains
     return [("chat_json", {"study": True, "live": False, "kind": "calc"})] + [
         ("chat_tools", res("no code"))
-    ] * 4
+    ] * loop.MAX_STEPS
 
 
 def test_run_suite_totals_and_markdown() -> None:
@@ -244,7 +244,7 @@ def test_run_suite_totals_and_markdown() -> None:
     assert report.abstained == 1
     assert report.wrong_numbers == 1
     assert report.errors == 0
-    assert report.total_cost == pytest.approx(0.03 + 0.03 + 0.05)
+    assert report.total_cost == pytest.approx(0.03 + 0.03 + 0.01 * (1 + loop.MAX_STEPS))
     assert report.median_seconds > 0
     assert report.passed(0.3) and not report.passed(0.4)
     assert report.passed(0.3, max_median_s=1e6)
