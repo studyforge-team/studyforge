@@ -340,22 +340,22 @@ def test_wp8_second_miss_is_medium_with_no_second_repair() -> None:
     assert [c[1] for c in llm.calls] == ["router", "solver", "solver", "cross_check", "solver"]
 
 
-def test_at_most_four_tool_steps() -> None:
-    llm = calc(*[("chat_tools", tool("run_python", code="x")) for _ in range(4)])
-    errors = [{"error": "boom"}] * 4
+def test_at_most_six_tool_steps() -> None:
+    llm = calc(*[("chat_tools", tool("run_python", code="x")) for _ in range(6)])
+    errors = [{"error": "boom"}] * 6
     steps = run(solve(deps(llm), *errors))
-    assert len(llm.calls) == 5  # classify + 4 tool steps, no fifth model call
+    assert len(llm.calls) == 7  # classify + 6 tool steps, no seventh model call
     assert steps[-1]["type"] == "final"
     assert steps[-1]["confidence"] == "low"
     assert steps[-1]["numbers"] == {}
 
 
-def test_ninety_second_budget() -> None:
+def test_time_budget() -> None:
     clock = Clock()
     llm = calc(("chat_tools", tool("run_python", code="x")))
     d = deps(llm, clock=clock)
     sid, _ = run(loop.start("q", d, user_id=USER))
-    clock.now = 91.0
+    clock.now = loop.BUDGET_S + 1.0
     final = run(loop.on_result(sid, USER, ResultBody(error="slow"), d))
     assert final["confidence"] == "low"
     assert len(llm.calls) == 2
@@ -669,9 +669,13 @@ def test_prompt_injection_is_refused_with_no_llm_call(q: str) -> None:
     ],
 )
 def test_real_questions_still_reach_the_router(q: str) -> None:
-    llm = FakeLLM(("chat_json", {"study": False, "live": False, "kind": "calc"}))
+    # the router refuses; an engineering-signal question is then answered as a concept
+    llm = FakeLLM(
+        ("chat_json", {"study": False, "live": False, "kind": "concept"}),
+        ("chat", res("ok")),
+    )
     run(solve(deps(llm, tools=Notes()), question=q))
-    assert len(llm.calls) == 1 and llm.calls[0][1] == "router"
+    assert llm.calls[0][1] == "router"
 
 
 @pytest.mark.parametrize(
@@ -728,9 +732,13 @@ def test_live_fact_questions_are_refused_with_no_llm_call(q: str) -> None:
     ],
 )
 def test_live_lookalikes_still_reach_the_router(q: str) -> None:
-    llm = FakeLLM(("chat_json", {"study": False, "live": False, "kind": "calc"}))
+    # the router refuses; an engineering-signal question is then answered as a concept
+    llm = FakeLLM(
+        ("chat_json", {"study": False, "live": False, "kind": "concept"}),
+        ("chat", res("ok")),
+    )
     run(solve(deps(llm, tools=Notes()), question=q))
-    assert len(llm.calls) == 1 and llm.calls[0][1] == "router"
+    assert llm.calls[0][1] == "router"
 
 
 @pytest.mark.parametrize(
@@ -751,9 +759,13 @@ def test_live_lookalikes_still_reach_the_router(q: str) -> None:
     ],
 )
 def test_engineering_code_requests_reach_the_router(q: str) -> None:
-    llm = FakeLLM(("chat_json", {"study": False, "live": False, "kind": "calc"}))
+    # the router refuses; an engineering-signal question is then answered as a concept
+    llm = FakeLLM(
+        ("chat_json", {"study": False, "live": False, "kind": "concept"}),
+        ("chat", res("ok")),
+    )
     run(solve(deps(llm, tools=Notes()), question=q))
-    assert len(llm.calls) == 1 and llm.calls[0][1] == "router"
+    assert llm.calls[0][1] == "router"
 
 
 def test_energy_sign_trip_is_low_with_warning_and_twin_stays_high() -> None:
@@ -823,7 +835,7 @@ def test_assumed_line_comes_before_the_energy_warning() -> None:
     assert md.index("**Assumed:**") < md.index("**Warning:**")
 
 
-def test_wp2_failed_voluntary_cross_check_keeps_the_solver_answer_at_low() -> None:
+def test_wp2_failed_voluntary_cross_check_keeps_the_solver_answer_at_medium() -> None:
     broken = {**GOOD, "answer": {"value": 0.9, "unit": "-"}, "check": {"value": 0.1, "unit": "-"}}
     llm = calc(
         ("chat_tools", tool("run_python", code="a")),
@@ -833,5 +845,42 @@ def test_wp2_failed_voluntary_cross_check_keeps_the_solver_answer_at_low() -> No
     q = "(a) Find X and (b) find the volume"
     steps = run(solve(deps(llm), {"result": GOOD_PARTS}, {"result": broken}, question=q))
     final = steps[-1]
-    assert final["type"] == "final" and final["confidence"] == "low"
-    assert final["numbers"]  # the verified solver answer is still shown, flagged
+    assert final["type"] == "final" and final["confidence"] == "medium"
+    assert final["numbers"]  # the verified solver answer is still shown, unconfirmed
+
+
+def test_router_refusal_of_engineering_question_is_overridden() -> None:
+    q = ("Estimate the diffusivity of dilute acetic acid in water at 25 C using the "
+         "Wilke-Chang correlation. Report in m^2/s.")
+    llm = FakeLLM(
+        ("chat_json", {"study": False, "live": True, "kind": "concept"}),
+        ("chat", res("Wilke-Chang relates ...")),
+    )
+    final = run(solve(deps(llm, tools=Notes()), question=q))[0]
+    assert final["answer_md"] != loop.OFF_TOPIC_REPLY
+
+
+def test_live_engineering_news_is_still_refused() -> None:
+    q = "What is the latest news about the reactor accident today?"
+    llm = FakeLLM(("chat_json", {"study": True, "live": True, "kind": "calc"}))
+    final = run(solve(deps(llm, tools=Notes()), question=q))[0]
+    assert final["answer_md"] == loop.OFF_TOPIC_REPLY
+
+
+def test_derivation_goes_to_concept_even_if_router_says_calc() -> None:
+    q = "Derive the Rachford-Rice equation for an isothermal flash from the component balances."
+    llm = FakeLLM(
+        ("chat_json", {"study": True, "live": False, "kind": "calc"}),
+        ("chat", res("Start from F zi = V yi + L xi ...")),
+    )
+    final = run(solve(deps(llm, tools=Notes()), question=q))[0]
+    assert (final["confidence"], final["numbers"]) == ("medium", {})
+
+
+def test_strip_sizing_hides_defaulted_mccabe_sizing() -> None:
+    res = {"outputs": {"N_theoretical": 13, "feed_stage": 6, "diameter_m": 1.0}, "geometry": {"height_m": 9}}
+    loop._strip_sizing("mccabe", res, "How many theoretical stages at 1.5 Rmin?")
+    assert "diameter_m" not in res["outputs"] and "geometry" not in res
+    asked = {"outputs": {"N_theoretical": 13, "diameter_m": 1.0}, "geometry": {"height_m": 9}}
+    loop._strip_sizing("mccabe", asked, "Find the stages and the column diameter.")
+    assert "diameter_m" in asked["outputs"] and "geometry" in asked

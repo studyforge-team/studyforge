@@ -138,6 +138,7 @@ export default function Solve() {
             onDismiss={() => { setFile(undefined); setRead(undefined) }}
           />
         )}
+        {busy && <p aria-live="polite" className="mt-2 text-sm text-muted-foreground">Working… step {Math.min(6, Math.max(1, rows.length))} of 6</p>}
         {slow && <p className="mt-2 text-sm text-muted-foreground">Waking up the server…</p>}
       </div>
       {error && <p role="alert" className="mt-3 text-sm font-medium text-destructive">{error}</p>}

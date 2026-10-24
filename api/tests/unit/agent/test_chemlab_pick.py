@@ -353,3 +353,32 @@ def test_prompt_lists_templates_null_rule_and_quotes_question() -> None:
     assert "null" in system["content"]
     assert json.dumps(question) in user["content"]
     assert question not in system["content"]
+
+
+MCC_SPEC: dict[str, dict[str, Any]] = {
+    "alpha": {"unit": "-"},
+    "xD": {"unit": "-"},
+    "F": {"unit": "kmol/h", "sizing": True},
+    "Eo": {"unit": "-", "sizing": True},
+}
+
+
+def test_required_inputs_skips_sizing_unless_asked() -> None:
+    from app.agent.chemlab_pick import required_inputs
+
+    assert required_inputs("mccabe", MCC_SPEC, "How many stages?") == {"alpha", "xD"}
+    asked = required_inputs("mccabe", MCC_SPEC, "Find the column Diameter")
+    assert asked == set(MCC_SPEC)
+    assert required_inputs("cstr", MCC_SPEC, "diameter") is None
+
+
+def test_drop_sizing_outputs() -> None:
+    from app.agent.chemlab_pick import drop_sizing_outputs
+
+    vals = {"N_theoretical": 13, "feed_stage": 6, "Rmin": 1.2, "R": 1.8, "D": 50,
+            "B": 50, "V": 1, "V_bar": 1, "rho_V": 1, "u_max": 1, "diameter_m": 1,
+            "real_trays": 18, "height_m": 1, "n_trays": 18, "feed_tray": 9}  # fmt: skip
+    kept = drop_sizing_outputs("mccabe", vals, "How many stages?")
+    assert set(kept) == {"N_theoretical", "feed_stage", "Rmin", "R"}
+    assert drop_sizing_outputs("mccabe", vals, "actual trays needed") == vals
+    assert drop_sizing_outputs("cstr", vals, "q") == vals

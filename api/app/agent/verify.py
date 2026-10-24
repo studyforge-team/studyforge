@@ -92,6 +92,7 @@ _FRACTION = re.compile(
     r"conversion|efficien|fraction|mole_frac|yield|selectivity|(?:^|_)(?:eta|x|y)(?:_|\d|$)"
 )
 _PERCENT = re.compile(r"percent|pct")
+_FACTOR = re.compile(r"factor|_per_")  # "conversion_factor" = 1000 is not a fraction
 _STAGES = re.compile(r"stage|tray|n_min")
 _FEED_STAGE = re.compile(r"feed_?(?:stage|tray)")
 _STAGE_COUNT = re.compile(
@@ -99,6 +100,7 @@ _STAGE_COUNT = re.compile(
 )
 _DELTA = re.compile(r"gauge|delta|drop|(?:^|_)d[tp](?:_|$)|rise|diff|change")
 _FLOW = re.compile(r"flow|volume")
+_SIGNED = re.compile(r"heat|work|energy|duty|power|enthalp")  # sign = direction
 _DELTA_Q = re.compile(
     r"(?i)\b(?:change|rise|drop|differen|increase|decrease|loss|gauge|Δ|delta)"
 )
@@ -111,18 +113,18 @@ def _sanity_one(name: str, value: float, unit: str, delta_ok: bool) -> str | Non
     if _PERCENT.search(key):
         if not 0 <= value <= 100:
             return f"{name} = {value:g} is outside 0-100 %"
-    elif unit == "-" and _FRACTION.search(key):
+    elif unit == "-" and _FRACTION.search(key) and not _FACTOR.search(key):
         if not 0 <= value <= 1:
             return f"{name} = {value:g} is a fraction and must be between 0 and 1"
     elif (
         (unit == "-" or u in ("stage", "stages", "tray", "trays"))
         and _STAGES.search(key)
-        and (not 1 <= value <= 150 or ("n_min" not in key and value != round(value)))
+        and not 1 <= value <= 150  # Gilliland/Kremser give fractional stages
     ):
         return f"{name} = {value:g} must be a whole number of stages from 1 to 150"
     if not delta_ok and ((u == "k" and value <= 0) or (u in _PRESSURE and value <= 0)):
         return f"{name} = {value:g} {unit} must be above zero"
-    if _FLOW.search(key) and not _DELTA.search(key) and value < 0:
+    if _FLOW.search(key) and not _DELTA.search(key) and not _SIGNED.search(key) and value < 0:
         return f"{name} = {value:g} is a flow or volume and cannot be negative"
     return None
 
