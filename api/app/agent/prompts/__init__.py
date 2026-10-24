@@ -62,6 +62,8 @@ How to solve:
    }
    - "answer" and "check" use the same unit, the unit the question asks for.
      Dimensionless quantities use unit "-".
+   - "parts" lists the value names, one per quantity the question asks for, in the
+     question's order; each is a key of "values" or "answer".
    - Put every number the explanation will show into "values", in the unit it will
      be shown in, including any unit-conversion factor you will show (e.g.
      "kPa_per_MPa": {"value": 1000.0, "unit": "-"}).

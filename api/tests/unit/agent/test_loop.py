@@ -21,6 +21,7 @@ GOOD = {
     "check": {"value": 0.66671, "unit": "-", "method": "numeric"},
     "values": {"k": {"value": 0.25, "unit": "1/min"}},
 }
+GOOD_PARTS = {**GOOD, "parts": ["answer", "k"]}  # lists both asked quantities
 PNG = base64.b64encode(b"\x89PNG\r\n\x1a\n" + b"0" * 100).decode()
 
 
@@ -261,14 +262,14 @@ def test_wp2_cross_check_agrees_is_high_with_no_solver_turns_in_its_context() ->
 
 
 def test_wp2_multi_part_question_cross_checks_after_one_step() -> None:
-    other = {**GOOD, "answer": {"value": 0.9, "unit": "-"}, "check": {"value": 0.9, "unit": "-"}}
+    other = {**GOOD_PARTS, "answer": {"value": 0.9, "unit": "-"}, "check": {"value": 0.9, "unit": "-"}}
     llm = calc(
         ("chat_tools", tool("run_python", code="a")),
         ("chat_tools", tool("run_python", code="u")),
         ("chat_json", {"answer_md": "ok"}),
     )
     q = "(a) Find X and (b) find the volume"
-    steps = run(solve(deps(llm), {"result": GOOD}, {"result": other}, question=q))
+    steps = run(solve(deps(llm), {"result": GOOD_PARTS}, {"result": other}, question=q))
     assert [c[1] for c in llm.calls[1:3]] == ["solver", "cross_check"]
     assert steps[-1]["confidence"] == "low"  # Ultra disagreed: never high
 
@@ -282,7 +283,7 @@ def test_wp2_no_time_for_the_cross_check_is_medium_not_low() -> None:
     d = deps(llm, clock=clock)
     sid, _ = run(loop.start("(a) Find X (b) Find Y", d, user_id=USER))
     clock.now = loop.BUDGET_S - 30.0  # 30 s left, below the 40 s an Ultra re-solve needs
-    final = run(loop.on_result(sid, USER, ResultBody(result=GOOD), d))
+    final = run(loop.on_result(sid, USER, ResultBody(result=GOOD_PARTS), d))
     assert final["confidence"] == "medium"
     assert [c[0] for c in llm.calls] == ["chat_json", "chat_tools", "chat_json"]
 
@@ -309,6 +310,32 @@ def test_wp2_template_answer_skips_the_cross_check() -> None:
     final = run(loop.on_result(sid, USER, ResultBody(result=out), d))
     assert final["type"] == "final" and final["confidence"] == "high"
     assert "cross_check" not in [c[1] for c in llm.calls]
+
+
+Q2 = "(a) Find X and (b) the heat loss per metre"
+
+
+def test_wp8_missing_part_is_repaired_once() -> None:
+    llm = calc(
+        ("chat_tools", tool("run_python", code="a")),
+        ("chat_tools", tool("run_python", code="b")),
+        ("chat_tools", tool("run_python", code="u")),
+        ("chat_json", {"answer_md": "ok"}),
+    )
+    steps = run(solve(deps(llm), {"result": GOOD}, {"result": GOOD_PARTS}, {"result": GOOD_PARTS}, question=Q2))
+    assert "asks for 2 quantities; your result has 0" in llm.calls[2][2][-1]["content"]
+    assert steps[-1]["type"] == "final" and "missing_parts" not in steps[-1].get("flags", [])
+
+
+def test_wp8_second_miss_is_medium_with_no_second_repair() -> None:
+    llm = calc(
+        ("chat_tools", tool("run_python", code="a")),
+        ("chat_tools", tool("run_python", code="b")),
+        ("chat_json", {"answer_md": "ok"}),
+    )
+    steps = run(solve(deps(llm), {"result": GOOD}, {"result": GOOD}, question=Q2))
+    assert steps[-1]["confidence"] == "medium"
+    assert [c[1] for c in llm.calls].count("solver") == 2  # one extra step only
 
 
 def test_at_most_four_tool_steps() -> None:
@@ -800,7 +827,7 @@ def test_wp2_failed_voluntary_cross_check_keeps_the_solver_answer_at_low() -> No
         ("chat_json", {"answer_md": "X = 0.6667"}),
     )
     q = "(a) Find X and (b) find the volume"
-    steps = run(solve(deps(llm), {"result": GOOD}, {"result": broken}, question=q))
+    steps = run(solve(deps(llm), {"result": GOOD_PARTS}, {"result": broken}, question=q))
     final = steps[-1]
     assert final["type"] == "final" and final["confidence"] == "low"
     assert final["numbers"]  # the verified solver answer is still shown, flagged

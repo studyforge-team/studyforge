@@ -28,6 +28,7 @@ class SolveState(BaseModel):
     last_step: dict[str, Any] | None = None  # wire form of the last issued step
     result: Any = None  # last result that passed verify
     verify_failures: int = 0
+    parts_asked: bool = False  # the one repair for missing parts was used
     cross_check: Literal["none", "pending", "agreed", "disagreed"] = "none"
     cc_messages: list[dict[str, Any]] = Field(default_factory=list)  # fresh cross-check context
     first_answer: float | None = None  # answer before the cross-check

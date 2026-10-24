@@ -1,6 +1,6 @@
 from typing import Any
 
-from app.agent.verify import sanity, verify
+from app.agent.verify import asked_parts, missing_parts, sanity, verify
 
 
 def result(**values: tuple[float, str]) -> dict[str, Any]:
@@ -50,3 +50,22 @@ def test_non_finite_fails_and_a_change_question_may_be_negative() -> None:
     }
     assert sanity(neg) is not None
     assert sanity(neg, "Find the temperature change") is None
+
+
+def test_asked_parts_counts_markers_clauses_and_also() -> None:
+    assert asked_parts("(a) find h and (b) heat loss per metre") == 2
+    assert asked_parts("Compute NPSHa and state whether cavitation is expected") == 2
+    assert asked_parts("Find the pump head for 0.02 m3/s") == 1
+    assert asked_parts("Find X. Also give Y.") == 2
+    assert asked_parts("Answer only part (b): what is Re?") == 1
+
+
+def test_missing_parts_needs_listed_known_names() -> None:
+    q = "(a) find h and (b) heat loss per metre"
+    assert missing_parts(result(q=(1.0, "W/m")), "Find h") is None
+    assert missing_parts(result(q=(1.0, "W/m")), q) is not None
+    one = {**result(q=(1.0, "W/m")), "parts": ["answer"]}
+    assert "result has 1" in (missing_parts(one, q) or "")
+    ghost = {**one, "parts": ["answer", "nope"]}
+    assert missing_parts(ghost, q) is not None
+    assert missing_parts({**one, "parts": ["answer", "q"]}, q) is None
