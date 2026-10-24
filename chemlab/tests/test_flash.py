@@ -256,3 +256,12 @@ def test_tiny_root_converges() -> None:
     assert r["ok"]
     ys = [v["value"] for k, v in r["outputs"].items() if k[0] == "y"]
     assert not ys or math.fsum(ys) == pytest.approx(1, abs=1e-9)
+
+
+def test_default_run_has_no_warnings() -> None:
+    assert run()["warnings"] == []
+
+
+def test_txy_still_warns_when_a_major_compound_leaves_its_range() -> None:
+    r = run({"P": 3e5})  # benzene-toluene at 3 bar boils well above both ranges
+    assert any("benzene: T-x-y outside its Antoine range" in w for w in r["warnings"])

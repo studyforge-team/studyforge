@@ -8,8 +8,10 @@ Numerical answer keys are NOT run here: the server never executes model-written 
 quiz and drops items that fail ``check_key``. Nothing in this module evaluates ``key_code``.
 """
 
+import hashlib
 import json
 import logging
+import random
 import re
 import uuid
 from collections.abc import Awaitable, Callable, Sequence
@@ -171,6 +173,23 @@ def _tidy(
     return kept[:n]
 
 
+def _shuffled(item: QuizItem) -> QuizItem:
+    """Permute an mcq's options (seeded by its stem, so stable); keep the key and notes attached."""
+    if item.type != "mcq":
+        return item
+    order = list(range(4))
+    seed = int.from_bytes(hashlib.sha256(_normalise(item.stem).encode()).digest()[:8], "big")
+    random.Random(seed).shuffle(order)  # order[new] = old
+    new = {old: i for i, old in enumerate(order)}
+    return item.model_copy(
+        update={
+            "options": [item.options[o] for o in order],
+            "correct_index": new[item.correct_index],
+            "misconceptions": {new[k]: v for k, v in item.misconceptions.items()},
+        }
+    )
+
+
 def _quoted(notes: Sequence[str]) -> list[str]:
     return [note[:MAX_NOTE_CHARS] for note in list(notes)[:MAX_NOTES]]
 
@@ -294,7 +313,7 @@ async def generate_quiz(
         ]
     if len(items) < need:
         raise QuizGenerationFailed(f"only {len(items)} usable questions on {topic!r}")
-    return Quiz(title=title or topic, items=items)
+    return Quiz(title=title or topic, items=[_shuffled(i) for i in items])
 
 
 class QuizService:

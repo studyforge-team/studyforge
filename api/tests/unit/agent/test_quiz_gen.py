@@ -17,6 +17,7 @@ from app.agent.quiz_gen import (
     QuizService,
     _calc_key,
     _Loose,
+    _shuffled,
     generate_quiz,
 )
 from app.llm.errors import JSONRepairFailed
@@ -228,7 +229,8 @@ def test_fixture_survives_except_subjective() -> None:
     quiz = run(generate_quiz(FakeLLM(data), "t", 10))
     expected = Quiz.model_validate(data)
     assert quiz.title == expected.title
-    assert quiz.items == [i for i in expected.items if i.type != "subjective"]
+    # MCQ options are shuffled (FX10); same items once shuffled the same way
+    assert quiz.items == [_shuffled(i) for i in expected.items if i.type != "subjective"]
     assert len(quiz.items) == len(data["items"]) - 1
 
 
@@ -431,3 +433,24 @@ def test_mcq_rule_points_calculations_to_numerical_items() -> None:
         "Write multiple choice (mcq) items. When a question needs a calculation, "
         "write a numerical item instead (its key is computed and checked)."
     )
+
+
+def test_shuffle_keeps_key_text_and_misconceptions_attached() -> None:
+    quiz = run(generate_quiz(FakeLLM(quiz_of(*(mcq(f"s{i}") for i in range(5)))), "Thermo", 5))
+    for item in quiz.items:
+        assert item.type == "mcq"
+        assert sorted(item.options) == ["a", "b", "c", "d"]
+        assert item.options[item.correct_index] == "a"
+        assert set(item.misconceptions) == {0, 1, 2, 3} - {item.correct_index}
+        for i, text in item.misconceptions.items():
+            assert text == "m" + str("abcd".index(item.options[i]))
+
+
+def test_shuffle_uses_every_position_and_is_stable() -> None:
+    def first(i: int) -> Any:
+        data = quiz_of(mcq(f"stem {i}"), mcq("x"), mcq("y"))
+        return run(generate_quiz(FakeLLM(data), "T", 3)).items[0]
+
+    items = [first(i) for i in range(20)]
+    assert {it.correct_index for it in items} == {0, 1, 2, 3}
+    assert first(0).options == items[0].options  # same stem, same order
