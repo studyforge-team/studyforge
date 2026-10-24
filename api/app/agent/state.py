@@ -37,6 +37,8 @@ class SolveState(BaseModel):
     sources: list[dict[str, Any]] = Field(default_factory=list)
     flags: list[str] = Field(default_factory=list)
     cost_usd: float = 0.0
+    # per model call: role, reasoning length, finish reason (FX1: is the model really thinking?)
+    llm_meta: list[dict[str, Any]] = Field(default_factory=list)
 
 
 def norm(question: str) -> str:

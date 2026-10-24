@@ -34,6 +34,7 @@ TEMPLATE = "flash"
 VERSION = "1.0"
 N_SERIES = 41
 T_MAX = 2000.0  # K, upper bracket for bubble/dew temperature
+TRACE_X = 0.2  # T-x-y: below this liquid fraction a compound is trace, range unchecked
 LOG10_PSAT_FLOOR = -250.0  # lower bracket: every Psat >= 1e-250 Pa
 NUMBERS = ", ".join(f"{i} {r['name']}" for i, r in enumerate(COMPOUNDS, 1))
 N = len(COMPOUNDS)
@@ -198,7 +199,11 @@ def _run(inputs: dict[str, Any], want_series: bool) -> dict[str, Any]:
         ts = out["series"]["T_x"]["y"]
         if len(ts) < N_SERIES:
             warn.append(f"T-x-y: {N_SERIES - len(ts)} of {N_SERIES} points not found")
-        warn.extend(_range_warnings(rs, "T-x-y", ts))
+        # the sweep runs to the other compound's boiling point, where this one is only trace
+        xl = out["series"]["T_x"]["x"]
+        for r, side in zip(rs, (xl, [1 - x for x in xl]), strict=True):
+            kept = [t for t, f in zip(ts, side, strict=True) if f >= TRACE_X]
+            warn.extend(_range_warnings([r], "T-x-y", kept))
     return finish(out)
 
 

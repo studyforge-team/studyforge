@@ -251,6 +251,9 @@ async def _issue(state: SolveState, step: Step, deps: Deps) -> dict[str, Any]:
 
 def _spend(state: SolveState, res: LLMResult) -> LLMResult:
     state.cost_usd += res.cost_usd
+    state.llm_meta.append(
+        {"role": res.role, "reasoning_chars": len(res.reasoning or ""), "finish": res.finish_reason}
+    )
     return res
 
 
