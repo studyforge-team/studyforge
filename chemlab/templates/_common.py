@@ -14,7 +14,7 @@ submitted code, which for CH3 is one line: `from chemlab.cstr import run`).
 """
 
 import math
-from typing import Any, TypedDict
+from typing import Any, NotRequired, TypedDict
 
 
 class InputSpec(TypedDict):
@@ -24,15 +24,21 @@ class InputSpec(TypedDict):
     max: float
     required: bool
     description: str
+    sizing: NotRequired[bool]  # only needed for equipment sizing, not the stage count
 
 
 Values = dict[str, float]
 
 
 def spec(
-    unit: str, default: float, lo: float, hi: float, description: str
+    unit: str,
+    default: float,
+    lo: float,
+    hi: float,
+    description: str,
+    sizing: bool = False,
 ) -> InputSpec:
-    return {
+    out: InputSpec = {
         "unit": unit,
         "default": default,
         "min": lo,
@@ -40,6 +46,9 @@ def spec(
         "required": False,
         "description": description,
     }
+    if sizing:
+        out["sizing"] = True
+    return out
 
 
 def validate(

@@ -22,7 +22,7 @@ from typing import Any, Literal, Protocol
 from pydantic import BaseModel
 
 from app.agent import guardrail, prompts
-from app.agent.chemlab_pick import pick_template
+from app.agent.chemlab_pick import drop_sizing_outputs, pick_template, required_inputs
 from app.agent.markup import tidy_markdown
 from app.agent.state import SolveNotFound, SolveState, StateStore
 from app.agent.steps import (
@@ -335,8 +335,13 @@ async def _begin(state: SolveState, deps: Deps) -> Step:
             solve_id=state.id,
         )
         state.cost_usd += cost
-        if run is not None and _unsupplied(deps.templates[run.template], run.values):
-            run = None  # defaults would be invented inputs: use the normal solver
+        if run is not None:
+            spec = deps.templates[run.template]
+            need = required_inputs(run.template, spec, state.question)
+            if need is not None:  # sizing-only inputs may stay default when sizing isn't asked
+                spec = {k: v for k, v in spec.items() if k in need}
+            if _unsupplied(spec, run.values):
+                run = None  # defaults would be invented inputs: use the normal solver
         if run is not None:
             state.template = run.template
             state.steps_used += 1
@@ -429,6 +434,8 @@ async def _run_server_tool(
 async def _after_run(state: SolveState, body: ResultBody, deps: Deps) -> Step:
     run = clean(body)
     state.figures = (state.figures + run.figures)[:4]
+    if state.template is not None and isinstance(run.result, dict):
+        _strip_sizing(state.template, run.result, state.question)
     report = {
         "stdout": run.stdout[-MODEL_STDOUT_CHARS:],
         "result": run.result,
@@ -675,6 +682,18 @@ def _final(
 
 
 _STEADY_UNITS = {"T": "K", "X": "-", "CA": "mol/m^3", "Da": "-"}
+
+
+def _strip_sizing(template: str, result: dict[str, Any], question: str) -> None:
+    """Sizing outputs computed from defaulted inputs are hidden from the model and the
+    answer (they would be invented numbers) unless the question asks for sizing."""
+    outputs = result.get("outputs")
+    if not isinstance(outputs, dict):
+        return
+    kept = drop_sizing_outputs(template, outputs, question)
+    if kept is not outputs:
+        result["outputs"] = kept
+        result.pop("geometry", None)
 
 
 def _template_result(result: Any) -> dict[str, Any] | None:
