@@ -485,8 +485,9 @@ async def _after_run(state: SolveState, body: ResultBody, deps: Deps) -> Step:
             and abs(value - old) <= AGREE_REL * max(abs(value), abs(old))
         ):  # its answer is the first answer: only its own check is bad
             return await _settle_cross_check(state, run.result, deps)
-        if state.result is not None:  # voluntary re-check of a verified answer
-            return await _cc_fallback(state, deps, "cross_check_disagreed")
+        if state.result is not None:  # voluntary re-check gave no usable answer:
+            # the solver's verified answer stands, unconfirmed (medium, not low)
+            return await _cc_fallback(state, deps, "not_cross_checked")
         state.cross_check = "disagreed"
         state.flags.append("cross_check_failed")
         return _final(state, _CROSS_CHECK_FAILED, "low", with_numbers=False)

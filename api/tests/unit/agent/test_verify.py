@@ -25,8 +25,9 @@ def test_fraction_above_one_fails_and_percent_is_0_to_100() -> None:
     assert sanity(result(conversion_percent=(120.0, "%"))) is not None
 
 
-def test_non_whole_stages_and_feed_beyond_the_column_fail() -> None:
-    assert sanity(result(n_stages=(12.5, "-"))) is not None
+def test_stage_range_and_feed_beyond_the_column_fail() -> None:
+    assert sanity(result(n_stages=(13.4, "-"))) is None  # Gilliland gives fractional stages
+    assert sanity(result(n_stages=(151, "-"))) is not None
     assert sanity(result(N_min=(7.3, "-"))) is None  # Fenske is not whole
     assert sanity(result(n_stages=(10, "-"), feed_stage=(11, "-"))) is not None
     assert sanity(result(n_stages=(10, "-"), feed_stage=(5, "-"))) is None
@@ -50,3 +51,10 @@ def test_non_finite_fails_and_a_change_question_may_be_negative() -> None:
     }
     assert sanity(neg) is not None
     assert sanity(neg, "Find the temperature change") is None
+
+
+def test_signed_energy_flows_and_conversion_factors_pass() -> None:
+    assert sanity(result(heat_flow=(-50.0, "kW"))) is None  # heat removed
+    assert sanity(result(conversion_factor=(1000.0, "-"))) is None
+    assert sanity(result(kPa_per_MPa=(1000.0, "-"))) is None
+    assert sanity(result(conversion=(1.2, "-"))) is not None

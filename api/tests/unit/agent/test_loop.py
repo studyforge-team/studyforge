@@ -792,7 +792,7 @@ def test_assumed_line_comes_before_the_energy_warning() -> None:
     assert md.index("**Assumed:**") < md.index("**Warning:**")
 
 
-def test_wp2_failed_voluntary_cross_check_keeps_the_solver_answer_at_low() -> None:
+def test_wp2_failed_voluntary_cross_check_keeps_the_solver_answer_at_medium() -> None:
     broken = {**GOOD, "answer": {"value": 0.9, "unit": "-"}, "check": {"value": 0.1, "unit": "-"}}
     llm = calc(
         ("chat_tools", tool("run_python", code="a")),
@@ -802,5 +802,5 @@ def test_wp2_failed_voluntary_cross_check_keeps_the_solver_answer_at_low() -> No
     q = "(a) Find X and (b) find the volume"
     steps = run(solve(deps(llm), {"result": GOOD}, {"result": broken}, question=q))
     final = steps[-1]
-    assert final["type"] == "final" and final["confidence"] == "low"
-    assert final["numbers"]  # the verified solver answer is still shown, flagged
+    assert final["type"] == "final" and final["confidence"] == "medium"
+    assert final["numbers"]  # the verified solver answer is still shown, unconfirmed
