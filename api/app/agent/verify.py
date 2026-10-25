@@ -94,6 +94,10 @@ _FRACTION = re.compile(
 _PERCENT = re.compile(r"percent|pct")
 _FACTOR = re.compile(r"factor|_per_")  # "conversion_factor" = 1000 is not a fraction
 _STAGES = re.compile(r"stage|tray|n_min")
+_ASKS_STAGES = re.compile(
+    r"(?i)\b(?:number|no\.) of (?:\w+ ){0,2}(?:stages|trays|plates)\b"
+    r"|\b(?:stages|trays|plates) (?:are )?(?:required|needed)\b"
+)
 _FEED_STAGE = re.compile(r"feed_?(?:stage|tray)")
 _STAGE_COUNT = re.compile(
     r"^(?:n_?)?(?:total_)?(?:stages|trays)$|^n_(?:theoretical|total)"
@@ -136,6 +140,8 @@ def sanity(result: Any, question: str = "") -> str | None:
     named = [("answer", result.get("answer")), ("check", result.get("check"))]
     named += [(str(k), v) for k, v in (result.get("values") or {}).items()]
     delta_q = _DELTA_Q.search(question) is not None
+    # one-quantity question asking for stages: the answer itself is the stage count
+    asks_stages = _ASKS_STAGES.search(question) is not None and asked_parts(question) < 2
     stage_n: float | None = None
     feed: float | None = None
     for name, node in named:
@@ -151,6 +157,8 @@ def sanity(result: Any, question: str = "") -> str | None:
             name, q[0], q[1], delta_q and name in ("answer", "check")
         ):
             return why
+        if asks_stages and name in ("answer", "check") and not 1 <= q[0] <= 150:
+            return f"{name} = {q[0]:g} cannot be a number of stages (must be 1 to 150)"
         key = name.lower()
         if _FEED_STAGE.search(key):
             feed = q[0]
@@ -190,7 +198,8 @@ def missing_parts(result: Any, question: str) -> str | None:
         return None
     return (
         f"The question asks for {asked} quantities; your result has {len(given)}. "
-        "Add each missing one to values and list all in parts."
+        "Keep your method and numbers; add each missing quantity to values and list "
+        "all of them in parts."
     )
 
 

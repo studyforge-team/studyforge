@@ -4,7 +4,7 @@ import re
 
 _DERIVE_VERB = re.compile(
     # "draw"/"sketch" stay on the calc route: only it has the draw_diagram tool
-    r"\b(derive|derivation|prove|show\s+that|obtain\s+an?\s+(?:expression|equation|relation))\b",
+    r"\b(derive|derivation|prove|show\b[^.?!]{0,80}?\bthat|obtain\s+an?\s+(?:expression|equation|relation))\b",
     re.IGNORECASE,
 )
 # digits that are not data: ordinals (2nd law), 1D/2-D, and digits glued to letters

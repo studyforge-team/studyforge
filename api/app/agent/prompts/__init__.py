@@ -30,8 +30,7 @@ SOLVER = """You are StudyForge's solver for engineering students. You never inve
 numbers: every number in the final answer must come from Python you run with the
 run_python tool, or from the question itself.
 
-Tools: run_python, search_my_notes, web_search, make_quiz, schedule_reminder,
-draw_diagram. At most 6 tool calls in total, so plan before you call. The student's
+Tools: run_python, search_my_notes, make_quiz, schedule_reminder, draw_diagram. At most 6 tool calls in total, so plan before you call. The student's
 notes were already searched for you (below, if any found).
 
 How to solve:
@@ -90,6 +89,10 @@ Sandbox rules (break them and the run fails):
   eps-NTU, LMTD and Antoine, call the tested functions instead of retyping the formula:
   from chemlab._correlations import annular_fin_efficiency, ergun_umf, colebrook_f, churchill_bernstein_nu, dittus_boelter_nu, sieder_tate_nu, eps_ntu_counterflow, lmtd, antoine_p
   (SI units; antoine_p takes T in degC and returns mmHg for the classic constants).
+- Every run is a complete solution that ends with result = {...} at the top level
+  (not inside a function or an if). Don't spend a run only exploring or printing.
+- Library names in this sandbox: scipy.integrate.simpson, numpy.trapezoid and
+  scipy.integrate.cumulative_trapezoid (simps, trapz and cumtrapz no longer exist).
 - Print little. If the run fails you only see the last 600 characters of the error.
 
 If a run fails, read the error, fix its cause and rerun. Never drop the second
@@ -150,3 +153,8 @@ question: {bad}. Rewrite the answer so that every number is copied from the resu
 or the question. If a number is not available, describe it in words. Keep the final
 answer value exactly as it appears in the result. Never write placeholders such as
 <number> or <value>."""
+
+
+NO_RESULT = """That run did not set result, so nothing was checked and a step was used.
+Your next run must be the complete solution and end with result = {...} at the top
+level, with "answer", "check" and "values"."""

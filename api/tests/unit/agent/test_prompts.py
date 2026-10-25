@@ -21,8 +21,8 @@ def test_solver_keeps_the_sandbox_rules() -> None:
         "quoted data",
     ):
         assert rule in s, rule
-    for name in TOOL_NAMES:
-        assert name in s
+    for name in TOOL_NAMES:  # every tool the solver is offered (web_search is not wired)
+        assert (name in s) == (name != "web_search"), name
 
 
 def test_explain_only_uses_result_numbers() -> None:

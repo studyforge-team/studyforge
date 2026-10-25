@@ -884,3 +884,16 @@ def test_strip_sizing_hides_defaulted_mccabe_sizing() -> None:
     asked = {"outputs": {"N_theoretical": 13, "diameter_m": 1.0}, "geometry": {"height_m": 9}}
     loop._strip_sizing("mccabe", asked, "Find the stages and the column diameter.")
     assert "diameter_m" in asked["outputs"] and "geometry" in asked
+
+
+def test_run_without_result_gets_told_to_finish_and_web_search_is_not_offered() -> None:
+    llm = calc(
+        ("chat_tools", tool("run_python", code="print(1)")),
+        ("chat_tools", tool("run_python", code="r")),
+        ("chat_tools", tool("run_python", code="u")),  # two runs: the independent re-check
+        ("chat_json", {"answer_md": "X = 0.6667"}),
+    )
+    run(solve(deps(llm), {"error": "code must set result = {...}"}, {"result": GOOD}, {"result": GOOD}))
+    told = llm.calls[2][2][-1]
+    assert told["role"] == "user" and "did not set result" in told["content"]
+    assert all(t["function"]["name"] != "web_search" for t in loop.SOLVER_TOOLS)

@@ -20,6 +20,11 @@ const quiet = { messageCallback: () => {} }
 // numpy scalars/arrays -> plain lists/floats; anything else -> str. allow_nan=False raises on NaN/inf.
 const DUMP = `import json as _j
 _out = _j.dumps(result, default=lambda o: o.tolist() if hasattr(o, "tolist") else str(o), allow_nan=False)`
+const COMPAT = `import numpy as _np, scipy.integrate as _si
+if not hasattr(_np, 'trapz'): _np.trapz = _np.trapezoid
+for _a, _b in (('simps', 'simpson'), ('trapz', 'trapezoid'), ('cumtrapz', 'cumulative_trapezoid')):
+    if not hasattr(_si, _a) and hasattr(_si, _b): setattr(_si, _a, getattr(_si, _b))
+del _a, _b`
 const FIGS = `import io, base64, json
 import matplotlib.pyplot as plt
 figs, notes = [], []
@@ -63,6 +68,8 @@ async function init(packages: string[]) {
   py = await mod.loadPyodide({ indexURL: BASE })
   await py.loadPackage(['numpy', 'scipy', ...packages], quiet)
   await py.runPythonAsync('import numpy, scipy.optimize, scipy.integrate')
+  // old names models still write (removed in NumPy 2 / SciPy 1.14): alias, never override
+  py.runPython(COMPAT)
   const extra = packages.filter((p) => p === 'matplotlib' || p === 'sympy')
   await load(extra)
   const files = Object.entries(CHEMLAB)
@@ -89,7 +96,7 @@ async function run(id: number, code: string, mode: 'solve' | 'chemlab') {
   post({ type: 'started', id })
   try {
     await py.runPythonAsync(code, { globals: ns })
-    if (!ns.has('result')) throw new Error('code must set result = {...}')
+    if (!ns.has('result')) throw new Error('code must set result = {...} at the top level (this run set no result)')
     py.runPython(DUMP, { globals: ns })
     const json = ns.get('_out') as string
     // ponytail: the 16 KB cap counts UTF-16 units of the JSON string, close enough to bytes for numeric results.

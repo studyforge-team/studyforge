@@ -77,3 +77,16 @@ def test_signed_energy_flows_and_conversion_factors_pass() -> None:
     assert sanity(result(conversion_factor=(1000.0, "-"))) is None
     assert sanity(result(kPa_per_MPa=(1000.0, "-"))) is None
     assert sanity(result(conversion=(1.2, "-"))) is not None
+
+
+def test_stage_count_question_rejects_a_fraction_of_a_stage() -> None:
+    from app.agent.verify import sanity
+
+    q = "Use the Kremser equation to find the number of ideal stages required."
+    bad = {"answer": {"value": 0.0173, "unit": "-"}, "check": {"value": 0.0173, "unit": "-"}}
+    good = {"answer": {"value": 8.05, "unit": "-"}, "check": {"value": 8.05, "unit": "-"}}
+    assert sanity(bad, q) is not None and "stages" in sanity(bad, q)  # type: ignore[operator]
+    assert sanity(good, q) is None
+    # a two-part question's main answer may be something else (e.g. a reflux ratio)
+    two = "Find the number of stages and also report the minimum reflux ratio."
+    assert sanity({**bad}, two) is None
