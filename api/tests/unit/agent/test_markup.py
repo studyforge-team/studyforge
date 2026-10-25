@@ -6,6 +6,15 @@ import pytest
 
 from app.agent.markup import _DECIMAL, _DOUBLE, _MATH, _round, tidy_markdown
 
+
+def test_plain_legacy_bold_answer_renders_as_markdown() -> None:
+    assert tidy_markdown(r"**Answer:** {\bf 0.1943 m³}") == "**Answer:** **0.1943 m³**"
+
+
+def test_legacy_bold_inside_math_and_code_is_preserved() -> None:
+    text = r"${\bf V}=0.1943$ and `{\bf example}`"
+    assert tidy_markdown(text) == text
+
 # Real snippets from the live baseline (1019).
 CONCEPT = (
     "raises the coefficient \\(h\\).\n\n**Governing equations**\n\n"
