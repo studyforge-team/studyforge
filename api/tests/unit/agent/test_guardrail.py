@@ -237,3 +237,12 @@ def test_one_difference_of_given_numbers_is_allowed() -> None:
     allowed = allowed_numbers({}, q)
     assert check("dT = 280 K, drho = 1652 kg/m3, 1 - X = 0.15", allowed).ok
     assert not check("dT = 290 K", allowed).ok
+
+
+def test_formula_constants_pass_only_inside_a_formula() -> None:
+    pool = [0.5]
+    assert check("Nu = 0.023 Re^0.8 Pr^0.4", pool).ok
+    assert check(r"v_t = \frac{g d^2 \Delta\rho}{18 \mu}", pool).ok
+    assert check(r"$\frac{1}{\sqrt f} = -2\log(\frac{e/D}{3.7} + \frac{2.51}{Re\sqrt f})$", pool).ok
+    assert not check("The reactor volume is 24 m^3.", pool).ok
+    assert not check("V = 150 L", pool).ok

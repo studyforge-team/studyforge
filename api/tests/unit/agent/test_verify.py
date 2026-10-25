@@ -98,3 +98,9 @@ def test_a_stream_flow_named_by_symbol_cannot_be_negative() -> None:
     r = {"answer": {"value": 135.98, "unit": "kmol/h"}, "check": {"value": 135.98, "unit": "kmol/h"},
          "values": {"L_bar": {"value": -40.0, "unit": "kmol/h"}}}
     assert sanity(r, "Find the stripping-section vapour flow.") is not None
+
+
+def test_reaction_rates_may_be_negative_but_flows_may_not() -> None:
+    assert sanity(result(r_A=(-0.5, "mol/s"))) is None
+    assert sanity(result(rate_A=(-0.5, "mol/s"))) is None
+    assert sanity(result(L=(-2.0, "kmol/h"))) is not None

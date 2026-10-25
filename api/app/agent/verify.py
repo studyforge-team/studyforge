@@ -105,6 +105,8 @@ _STAGE_COUNT = re.compile(
 _DELTA = re.compile(r"gauge|delta|drop|(?:^|_)d[tp](?:_|$)|rise|diff|change")
 _FLOW = re.compile(r"flow|volume")
 _SIGNED = re.compile(r"heat|work|energy|duty|power|enthalp")  # sign = direction
+# reaction / generation / accumulation rates are negative for consumption by convention
+_RATE = re.compile(r"rate|^r_|^r[a-z]?$|gener|consum|accum|net")
 _DELTA_Q = re.compile(
     r"(?i)\b(?:change|rise|drop|differen|increase|decrease|loss|gauge|Δ|delta)"
 )
@@ -132,7 +134,8 @@ def _sanity_one(name: str, value: float, unit: str, delta_ok: bool) -> str | Non
     if not delta_ok and ((u == "k" and value <= 0) or (u in _PRESSURE and value <= 0)):
         return f"{name} = {value:g} {unit} must be above zero"
     flow_unit = u.replace(" ", "") in _FLOW_UNITS  # L, V, L_bar ... named by symbol only
-    if (_FLOW.search(key) or flow_unit) and not _DELTA.search(key) and not _SIGNED.search(key) and value < 0:
+    signed = _DELTA.search(key) or _SIGNED.search(key) or _RATE.search(key)
+    if (_FLOW.search(key) or flow_unit) and not signed and value < 0:
         return f"{name} = {value:g} is a flow or volume and cannot be negative"
     return None
 

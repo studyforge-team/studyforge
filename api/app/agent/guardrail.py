@@ -24,6 +24,21 @@ FORMULA_CONSTANTS: tuple[float, ...] = (
     18.0, 24.0, 3.7, 2.51, 0.023, 0.027, 0.14, 150.0, 1.75, 0.62, 282000.0,
     0.664, 0.332, 1.86, 64.0, 16.0, 0.316, 0.079,
 )  # fmt: skip
+# a formula constant counts only right beside an operator, inside \frac{..}, or before a
+# dimensionless group or property symbol: "V = 24 m^3" stays checked, "0.023 Re^0.8" passes
+_OP_BEFORE = re.compile(r"(?:[*/+^({×·−-]|\\cdot|\\times|\\frac)$")
+_OP_AFTER = re.compile(
+    r"(?:[*/+^)}×·−-]|\\cdot|\\times|\\mathrm\{|\\left|\\mu|\\rho|\\varepsilon"
+    r"|(?:Re|Pr|Nu|Gr|Ra|Sc|Sh|Ar)\b)"
+)
+
+
+def _in_formula(f: "Flagged", md: str) -> bool:
+    before = md[: f.start].rstrip(" \\,")
+    after = md[f.start + len(f.text) :].lstrip(" \\,")
+    return bool(_OP_BEFORE.search(before) or _OP_AFTER.match(after))
+
+
 # exact conversion factors; one counts only when visible on the same line (see _conv_fits)
 CONVERSIONS: tuple[float, ...] = (1000.0, 3600.0, 60.0, 1e5)
 
@@ -270,7 +285,7 @@ def check(
         for f in parse_numbers(answer_md)
         if not (f.value.is_integer() and abs(f.value) <= SMALL_INT_MAX)
         and not (f.value in (100, 1000) and _DIVISOR.search(answer_md, 0, f.start))
-        and f.value not in FORMULA_CONSTANTS  # exactly as printed, never "close to"
+        and not (f.value in FORMULA_CONSTANTS and _in_formula(f, answer_md))  # exact, inside a formula
         and not _fits(f, answer_md, pool, quantities)
     ]
     return GuardrailReport(ok=not bad, unsupported=bad)
