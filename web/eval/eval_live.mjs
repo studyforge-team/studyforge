@@ -4,6 +4,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { limitReached } from './limit.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const arg = (n) => { const i = process.argv.indexOf(n); return i > 0 ? process.argv[i + 1] : undefined }
@@ -15,7 +16,6 @@ const all = JSON.parse(readFileSync(resolve(arg('--questions') || resolve(here, 
 const qs = only ? all.filter((q) => only.includes(q.id)) : all
 if (!qs.length) throw new Error('no questions selected')
 
-const LIMIT = /Today.s AI limit is reached/i
 // ponytail: small regex list; widen if a real refusal wording slips through
 const REFUSAL = [
   /(can|could) only (help|answer|assist|support)/i, /only (able to )?(help|assist)/i,
@@ -126,9 +126,10 @@ for (const q of qs) {
     await page.getByRole('button', { name: 'Solve', exact: true }).click()
   } catch (err) { cur.err = String(err).split('\n')[0] }
   while (!cur.final && !cur.err && Date.now() - t0 < 150_000) {
-    if (LIMIT.test(await page.locator('body').innerText().catch(() => ''))) { aborted = q.id; break }
+    if (limitReached(await page.locator('body').innerText().catch(() => ''))) { aborted = q.id; break }
     await page.waitForTimeout(500)
   }
+  if (limitReached('', cur.final)) aborted = q.id // fast final skips the polling loop
   if (aborted) break
   const f = cur.final
   const seconds = +((Date.now() - t0) / 1000).toFixed(1)
