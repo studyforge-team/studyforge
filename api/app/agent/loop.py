@@ -380,7 +380,7 @@ async def _next_action(state: SolveState, deps: Deps, role: str = "solver") -> S
         res = _spend(
             state,
             await deps.llm.chat_tools(
-                role, msgs, TOOL_SCHEMAS, deadline=deadline, solve_id=state.id
+                role, msgs, SOLVER_TOOLS, deadline=deadline, solve_id=state.id
             ),
         )
         state.steps_used += 1
@@ -480,11 +480,14 @@ async def _after_run(state: SolveState, body: ResultBody, deps: Deps) -> Step:
         )
         return await _next_action(state, deps)
     if run.error:
+        if _NO_RESULT in run.error:  # an exploratory run: don't let it happen again
+            _msgs(state).append({"role": "user", "content": prompts.NO_RESULT})
         return await _next_action(state, deps, _role(state))
     verdict = verify(run.result, state.question)
     why = missing_parts(run.result, state.question) if verdict.ok else None
     if why is not None and state.cross_check != "pending":
-        if not state.parts_asked:  # one repair, not a verify failure
+        # one repair, not a verify failure, and only while a step is left for it
+        if not state.parts_asked and state.steps_used < MAX_STEPS:
             state.parts_asked = True
             state.messages.append({"role": "user", "content": why})
             return await _next_action(state, deps)
@@ -537,6 +540,10 @@ async def _after_run(state: SolveState, body: ResultBody, deps: Deps) -> Step:
     )
     return await _next_action(state, deps)
 
+
+_NO_RESULT = "must set result"  # the sandbox's error when a script never sets result
+# web_search is not wired (no search provider): offering it only wastes a solver step
+SOLVER_TOOLS = [t for t in TOOL_SCHEMAS if t["function"]["name"] != "web_search"]
 
 _MULTI_PART = re.compile(
     r"\((?:a|b|c)\)|\band\s+(?:find|report|give|state|compute|determine)\b|\bAlso\b"

@@ -58,3 +58,12 @@ def test_eng_signal() -> None:
     assert has_eng_signal("Pressure is 200 kPa at 300 K")
     assert not has_eng_signal("Who won the IPL final last night?")
     assert not has_eng_signal("What is the stock price of Reliance now?")
+
+
+def test_show_from_the_laws_that_is_a_derivation() -> None:
+    q = (
+        "Show from the first and second laws that for a steady-flow process exchanging heat "
+        "only with surroundings at T0, the lost work equals T0 times the entropy generation rate."
+    )
+    assert is_derivation(q)
+    assert not is_derivation("Show the flow sheet. Then find the duty for 120 kmol/h of N2 that is heated.")
