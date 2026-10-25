@@ -27,6 +27,9 @@ _TEXT = re.compile(r"(?:\\+ )?\\+(?:text|mathrm)\{([^{}]*)\}")
 
 # stray instruction word the model leaves after the answer: "**4.2 m** (bolded)"
 _STRAY = re.compile(r"[ \t]*\((?:bolded|bold|boxed)\)", re.IGNORECASE)
+# Legacy TeX text styling occasionally appears outside math delimiters.
+# Restrict this to a flat group; math spans and code are handled separately.
+_PLAIN_BOLD = re.compile(r"\{\\bf\s+([^{}\n]+)\}")
 _BR = re.compile(r"<br\s*/?>")
 _SUB = re.compile(r"<sub>(.*?)</sub>")
 _SUP = re.compile(r"<sup>(.*?)</sup>")
@@ -50,6 +53,7 @@ def _round(m: re.Match[str]) -> str:
 def _plain(s: str) -> str:
     s = _BR.sub("\n\n", _SUB.sub(r"_\1", _SUP.sub(r"^\1", s)))
     s = _STRAY.sub("", s)
+    s = _PLAIN_BOLD.sub(lambda m: f"**{m[1].strip()}**", s)
     s = _TEXT.sub(r"\1", _LITERAL_NL.sub("\n", s))
     s = _SECTION_NL.sub("\n\n", s)
     return _DECIMAL.sub(_round, _LATEX.sub(lambda m: _SYMBOLS[m.group(1)], s))
