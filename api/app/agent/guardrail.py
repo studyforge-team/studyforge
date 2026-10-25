@@ -17,6 +17,13 @@ CONSTANTS: tuple[float, ...] = (
     96485.33212, 5.670374419e-8, 299792458, 6.62607015e-34, 273.15,
     101325, 1.01325, 0.08206, math.pi,
 )  # fmt: skip
+# coefficients printed inside standard correlations (Stokes, Colebrook, Dittus-Boelter,
+# Sieder-Tate, Ergun, Churchill-Bernstein, flat plate, laminar friction): part of the
+# formula the explanation shows, not results of it
+FORMULA_CONSTANTS: tuple[float, ...] = (
+    18.0, 24.0, 3.7, 2.51, 0.023, 0.027, 0.14, 150.0, 1.75, 0.62, 282000.0,
+    0.664, 0.332, 1.86, 64.0, 16.0, 0.316, 0.079,
+)  # fmt: skip
 # exact conversion factors; one counts only when visible on the same line (see _conv_fits)
 CONVERSIONS: tuple[float, ...] = (1000.0, 3600.0, 60.0, 1e5)
 
@@ -110,8 +117,12 @@ def _scalars(node: object) -> list[float]:
 
 
 def allowed_numbers(result: object, question: str) -> list[float]:
-    """Numbers an answer may cite: sandbox scalars plus numbers in the question."""
-    return _scalars(result) + [f.value for f in parse_numbers(question)]
+    """Numbers an answer may cite: sandbox scalars, numbers in the question, and one
+    subtraction of two given numbers (a temperature or density difference, 1 - X)."""
+    given = [f.value for f in parse_numbers(question)][:40]
+    diffs = [abs(a - b) for i, a in enumerate(given) for b in given[i + 1 :] if a != b]
+    diffs += [1 - x for x in given if 0 < x < 1]
+    return _scalars(result) + given + diffs
 
 
 def _close(a: float, b: float) -> bool:
@@ -259,6 +270,7 @@ def check(
         for f in parse_numbers(answer_md)
         if not (f.value.is_integer() and abs(f.value) <= SMALL_INT_MAX)
         and not (f.value in (100, 1000) and _DIVISOR.search(answer_md, 0, f.start))
+        and f.value not in FORMULA_CONSTANTS  # exactly as printed, never "close to"
         and not _fits(f, answer_md, pool, quantities)
     ]
     return GuardrailReport(ok=not bad, unsupported=bad)

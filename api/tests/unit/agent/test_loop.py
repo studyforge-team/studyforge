@@ -897,3 +897,20 @@ def test_run_without_result_gets_told_to_finish_and_web_search_is_not_offered() 
     told = llm.calls[2][2][-1]
     assert told["role"] == "user" and "did not set result" in told["content"]
     assert all(t["function"]["name"] != "web_search" for t in loop.SOLVER_TOOLS)
+
+
+def test_empty_concept_reply_is_asked_again_without_thinking() -> None:
+    llm = FakeLLM(
+        ("chat_json", {"study": True, "live": False, "kind": "concept"}),
+        ("chat", res("")),
+        ("chat", res("Lost work is T0 times the entropy generation.")),
+    )
+    final = run(solve(deps(llm), question="Explain lost work"))[0]
+    assert final["answer_md"].startswith("Lost work") and final["confidence"] == "medium"
+
+
+def test_a_part_missing_from_the_write_up_is_appended() -> None:
+    r = {**GOOD, "values": {"k": {"value": 0.25, "unit": "1/min"}, "V": {"value": 12.5, "unit": "L"}},
+         "parts": ["answer", "V"]}
+    md = explained(r, "X = 0.6667")["answer_md"]
+    assert "**Also:** V = 12.5 L" in md

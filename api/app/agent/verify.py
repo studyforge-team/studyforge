@@ -109,6 +109,9 @@ _DELTA_Q = re.compile(
     r"(?i)\b(?:change|rise|drop|differen|increase|decrease|loss|gauge|Δ|delta)"
 )
 _PRESSURE = {"pa", "kpa", "bar", "atm"}
+_FLOW_UNITS = {
+    f"{a}/{t}" for a in ("mol", "kmol", "kg", "g", "m^3", "m3", "l") for t in ("s", "min", "h", "hr")
+}
 
 
 def _sanity_one(name: str, value: float, unit: str, delta_ok: bool) -> str | None:
@@ -128,7 +131,8 @@ def _sanity_one(name: str, value: float, unit: str, delta_ok: bool) -> str | Non
         return f"{name} = {value:g} must be a whole number of stages from 1 to 150"
     if not delta_ok and ((u == "k" and value <= 0) or (u in _PRESSURE and value <= 0)):
         return f"{name} = {value:g} {unit} must be above zero"
-    if _FLOW.search(key) and not _DELTA.search(key) and not _SIGNED.search(key) and value < 0:
+    flow_unit = u.replace(" ", "") in _FLOW_UNITS  # L, V, L_bar ... named by symbol only
+    if (_FLOW.search(key) or flow_unit) and not _DELTA.search(key) and not _SIGNED.search(key) and value < 0:
         return f"{name} = {value:g} is a flow or volume and cannot be negative"
     return None
 
