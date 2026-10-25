@@ -58,7 +58,8 @@ export function VoiceInput({ disabled, onTranscript, onActiveChange }: {
       const recognition = new Constructor()
       recognitionRef.current = recognition
       recognition.lang = document.documentElement.lang || navigator.language || 'en-IN'
-      recognition.continuous = true
+      // Android Chrome repeats final results in continuous mode (doubled words): one phrase per tap there
+      recognition.continuous = !/Android/i.test(navigator.userAgent)
       recognition.interimResults = true
       recognition.onstart = () => setPhase('listening')
       recognition.onresult = ({ results }) => {

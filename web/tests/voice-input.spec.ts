@@ -71,3 +71,19 @@ test('unsupported browsers retain typing with an explanation', async ({ page }) 
   await expect(page.getByText('Voice input is not supported in this browser. You can still type your question.')).toBeVisible()
   await expect(page.getByLabel('Your question', { exact: true })).toBeEditable()
 })
+
+test.describe('Android phone', () => {
+  test.use({ userAgent: 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0 Mobile Safari/537.36' })
+  test('uses one phrase per tap (continuous mode repeats words on Android)', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 })
+    await page.goto('/#solve')
+    await page.getByRole('button', { name: 'Start voice input' }).click()
+    expect(await page.evaluate(() => (window as unknown as { testRecognition: { continuous: boolean } }).testRecognition.continuous)).toBe(false)
+  })
+})
+
+test('laptop browsers keep continuous dictation', async ({ page }) => {
+  await page.goto('/#solve')
+  await page.getByRole('button', { name: 'Start voice input' }).click()
+  expect(await page.evaluate(() => (window as unknown as { testRecognition: { continuous: boolean } }).testRecognition.continuous)).toBe(true)
+})
