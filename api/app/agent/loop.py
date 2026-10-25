@@ -49,6 +49,7 @@ from app.agent.verify import (
     clean,
     energy_sign_problem,
     flat_numbers,
+    missing_parts,
     verify,
 )
 from app.llm.client import LLMResult, Message
@@ -481,6 +482,13 @@ async def _after_run(state: SolveState, body: ResultBody, deps: Deps) -> Step:
     if run.error:
         return await _next_action(state, deps, _role(state))
     verdict = verify(run.result, state.question)
+    why = missing_parts(run.result, state.question) if verdict.ok else None
+    if why is not None and state.cross_check != "pending":
+        if not state.parts_asked:  # one repair, not a verify failure
+            state.parts_asked = True
+            state.messages.append({"role": "user", "content": why})
+            return await _next_action(state, deps)
+        state.flags.append("missing_parts")  # medium at best
     if verdict.ok:
         if state.cross_check == "pending":
             return await _settle_cross_check(state, run.result, deps)

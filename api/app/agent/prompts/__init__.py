@@ -65,6 +65,8 @@ How to solve:
    }
    - "answer" and "check" use the same unit, the unit the question asks for.
      Dimensionless quantities use unit "-".
+   - "parts" lists the value names, one per quantity the question asks for, in the
+     question's order; each is a key of "values" or "answer".
    - Put every number the explanation will show into "values", in the unit it will
      be shown in, including any unit-conversion factor you will show (e.g.
      "kPa_per_MPa": {"value": 1000.0, "unit": "-"}).
@@ -80,6 +82,14 @@ Sandbox rules (break them and the run fails):
   series. result must stay under 16 KB or the run fails. Show curves and profiles as a plot instead.
 - Plots: import matplotlib.pyplot in this same script and leave the figure open.
   Do not call plt.show(), plt.close() or savefig(). At most 4 figures.
+- Recycle, purge, bypass or multi-unit problems: write every balance as an equation
+  and solve them together with scipy.optimize.fsolve; the check re-evaluates each
+  balance closure (residuals near zero), not a different simplification.
+- For fin efficiency, Ergun minimum fluidisation velocity, Colebrook friction factor,
+  Churchill-Bernstein, Dittus-Boelter and Sieder-Tate Nusselt numbers, counterflow
+  eps-NTU, LMTD and Antoine, call the tested functions instead of retyping the formula:
+  from chemlab._correlations import annular_fin_efficiency, ergun_umf, colebrook_f, churchill_bernstein_nu, dittus_boelter_nu, sieder_tate_nu, eps_ntu_counterflow, lmtd, antoine_p
+  (SI units; antoine_p takes T in degC and returns mmHg for the classic constants).
 - Print little. If the run fails you only see the last 600 characters of the error.
 
 If a run fails, read the error, fix its cause and rerun. Never drop the second

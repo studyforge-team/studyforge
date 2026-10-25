@@ -163,6 +163,37 @@ def sanity(result: Any, question: str = "") -> str | None:
     return None
 
 
+_MARKS = re.compile(r"\(([a-d])\)")
+_CLAUSE = re.compile(
+    r"(?i)\band\s+(?:find|report|give|state|compute|determine|say|also)\b"
+)
+_ALSO = re.compile(r"(?:^|[.!?]\s+)Also\b")
+
+
+def asked_parts(question: str) -> int:
+    """How many quantities the question asks for (at least 1)."""
+    if marks := {m.lower() for m in _MARKS.findall(question)}:
+        return len(marks)
+    return 1 + len(_CLAUSE.findall(question)) + (_ALSO.search(question) is not None)
+
+
+def missing_parts(result: Any, question: str) -> str | None:
+    """A repair message when result["parts"] lists fewer quantities than asked."""
+    asked = asked_parts(question)
+    if asked < 2 or not isinstance(result, dict):
+        return None
+    raw = result.get("parts")
+    values = result.get("values")
+    known = set(values) if isinstance(values, dict) else set()
+    given = [p for p in raw if p == "answer" or p in known] if isinstance(raw, list) else []
+    if isinstance(raw, list) and len(given) >= asked and len(given) == len(raw):
+        return None
+    return (
+        f"The question asks for {asked} quantities; your result has {len(given)}. "
+        "Add each missing one to values and list all in parts."
+    )
+
+
 def verify(result: Any, question: str = "") -> Verdict:
     """Canonical result: {"answer": {value, unit}, "check": {value, unit, method},
     "values": {name: {value, unit}}}. Both methods must agree and be physically possible."""
