@@ -17,6 +17,8 @@ CONSTANTS: tuple[float, ...] = (
     96485.33212, 5.670374419e-8, 299792458, 6.62607015e-34, 273.15,
     101325, 1.01325, 0.08206, math.pi,
 )  # fmt: skip
+# exact conversion factors; one counts only when visible on the same line (see _conv_fits)
+CONVERSIONS: tuple[float, ...] = (1000.0, 3600.0, 60.0, 1e5)
 
 
 @dataclass(frozen=True)
@@ -174,6 +176,51 @@ def _prefix_slip(
     )
 
 
+_W = r"(?<![A-Za-zμµ]){}(?![A-Za-zμµ])"
+_M3 = r"(?<![A-Za-z])m\s*(?:\^\s*\{?3\}?|³)"
+# a unit pair written on one line makes its factor visible
+_UNIT_PAIRS: tuple[tuple[re.Pattern[str], re.Pattern[str], float], ...] = tuple(
+    (re.compile(a), re.compile(b), k)
+    for a, b, k in (
+        (_W.format("L"), _M3, 1000.0),
+        (_W.format("g"), _W.format("kg"), 1000.0),
+        (_W.format("h"), _W.format("s"), 3600.0),
+        (_W.format("min"), _W.format("s"), 60.0),
+        (_W.format("bar"), _W.format("Pa"), 1e5),
+    )
+)
+_SCI_PART = re.compile(rf"({_NUM})\s*(?:×|\\times|\\cdot)\s*10")
+_OPERATOR = re.compile(r"(?:×|\\times|\\cdot|\*|/)\s*$")
+_OPERATOR_AFTER = re.compile(r"\s*(?:×|\\times|\\cdot|\*|/)")
+
+
+def _conv_fits(f: Flagged, answer_md: str, pool: Sequence[float]) -> bool:
+    """f = a x k or a / k (pool number a, factor k) with k visible on f's line."""
+    ls = answer_md.rfind("\n", 0, f.start) + 1
+    le = answer_md.find("\n", f.start)
+    line = answer_md[ls : le if le >= 0 else len(answer_md)]
+    off = f.start - ls
+    ks = {n.value for n in parse_numbers(line) if n.start != off}
+    ks = {k for k in CONVERSIONS if any(_close(k, v) for v in ks)}
+    pairs = {k for a, b, k in _UNIT_PAIRS if a.search(line) and b.search(line)}
+    ks |= pairs
+    end = off + len(f.text)
+    if any(_close(f.value, k) for k in pairs):
+        return True  # "1000 L/m^3": the factor named by the units
+    sci = _SCI_PART.match(f.text)  # "50 x 10^5 Pa": mantissa from the pool, bar -> Pa factor
+    if sci:
+        man = float(sci[1].replace(",", ""))
+        pa = re.compile(r"\s*(?:\\[,; ]\s*)?(?:\\(?:text|mathrm)\{\s*)?Pa\b").match(line, end)
+        return any(_close(man, a) for a in pool) and (
+            1e5 in pairs or (pa is not None and _close(f.value / man, 1e5))
+        )
+    if (_OPERATOR.search(line, 0, off) or _OPERATOR_AFTER.match(line, end)) and any(
+        _close(f.value, k) for k in CONVERSIONS
+    ):
+        return True  # a bare factor used as a multiplier / divisor
+    return any(_close(f.value, a * k) or _close(f.value, a / k) for a in pool for k in ks)
+
+
 def _fits(
     f: Flagged, answer_md: str, pool: Sequence[float], quantities: Sequence[tuple[float, str]]
 ) -> bool:
@@ -184,6 +231,8 @@ def _fits(
     if _TEN.fullmatch(f.text) and abs(round(math.log10(f.value))) <= 12:
         return True  # bare power of ten: a conversion factor, not a result
     if _AFTER_PCT.match(answer_md, end) and any(_close(f.value / 100, a) for a in pool):
+        return True
+    if _conv_fits(f, answer_md, pool):
         return True
     m = _AFTER_UNIT.match(answer_md, end)
     uw = parse_unit(m[1] + m[2]) if m else None

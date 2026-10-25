@@ -161,19 +161,20 @@ def test_solve_one_counts_runs_after_an_error() -> None:
         ("chat_json", {"study": True, "live": False, "kind": "calc"}),
         ("chat_tools", run_py("bad")),
         ("chat_tools", run_py("good")),
+        ("chat_tools", run_py("good")),  # two runs: the independent re-check (FX2)
         ("chat_json", {"answer_md": "ok"}),
     )
     runner = FakeRunner(
         {"bad": ResultBody(error="NameError: x"), "good": answer_body(10.0, "min")}
     )
     out = asyncio.run(solve_one(problem("a", 10.0, "min"), deps_for(llm), runner))
-    assert out.runs == 2
+    assert out.runs == 3
     assert out.error is None
     assert out.final is not None and out.final["confidence"] == "high"
     assert out.confidence == "high"
-    assert out.cost_usd == pytest.approx(0.04)  # router + 2 solver + explain
+    assert out.cost_usd == pytest.approx(0.05)  # router + 2 solver + re-check + explain
     assert out.seconds > 0
-    assert [c[0] for c in runner.calls] == ["bad", "good"]
+    assert [c[0] for c in runner.calls] == ["bad", "good", "good"]
     assert runner.calls[0][1] == 10
 
 
@@ -220,7 +221,7 @@ def abstaining_script() -> list[tuple[str, Any]]:
     # the model never produces code: the loop runs out of steps and abstains
     return [("chat_json", {"study": True, "live": False, "kind": "calc"})] + [
         ("chat_tools", res("no code"))
-    ] * 4
+    ] * loop.MAX_STEPS
 
 
 def test_run_suite_totals_and_markdown() -> None:
@@ -244,7 +245,7 @@ def test_run_suite_totals_and_markdown() -> None:
     assert report.abstained == 1
     assert report.wrong_numbers == 1
     assert report.errors == 0
-    assert report.total_cost == pytest.approx(0.03 + 0.03 + 0.05)
+    assert report.total_cost == pytest.approx(0.03 + 0.03 + 0.01 * (1 + loop.MAX_STEPS))
     assert report.median_seconds > 0
     assert report.passed(0.3) and not report.passed(0.4)
     assert report.passed(0.3, max_median_s=1e6)

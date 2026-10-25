@@ -168,3 +168,9 @@ def test_long_decimals_rounded(src: str, want: str) -> None:
 )
 def test_short_decimals_and_code_untouched(s: str) -> None:
     assert tidy_markdown(s) == s
+
+
+@pytest.mark.parametrize("word", ["bolded", "bold", "boxed", "Bolded", "BOXED"])
+def test_stray_instruction_word_removed(word: str) -> None:
+    out = tidy_markdown(f"**Answer:** **4.2 m** ({word})\n\n**Check:** ok `({word})`")
+    assert out == f"**Answer:** **4.2 m**\n\n**Check:** ok `({word})`"  # code untouched
