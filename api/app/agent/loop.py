@@ -333,6 +333,20 @@ async def _begin(state: SolveState, deps: Deps) -> Step:
             solve_id=state.id,
         )
         _spend(state, res)
+        if not res.text.strip():  # the whole reply went into the thinking channel: ask once more
+            res = await deps.llm.chat(
+                "solver",
+                [
+                    {"role": "system", "content": prompts.CONCEPT + notes},
+                    {"role": "user", "content": q},
+                ],
+                solve_id=state.id,
+                reasoning=False,
+            )
+            _spend(state, res)
+        if not res.text.strip():
+            state.flags.append("empty_reply")
+            return _final(state, EMPTY_REPLY, "low", with_numbers=False)
         return _final(state, res.text, "medium")
     state.messages = [
         {"role": "system", "content": prompts.SOLVER + notes},
@@ -541,6 +555,26 @@ async def _after_run(state: SolveState, body: ResultBody, deps: Deps) -> Step:
     return await _next_action(state, deps)
 
 
+EMPTY_REPLY = "I couldn't write this explanation just now. Please ask again in a moment."
+
+
+def _unshown_parts(result: dict[str, Any], answer_md: str) -> list[str]:
+    """'name = value unit' for each listed part whose value the write-up never shows."""
+    parts, values = result.get("parts"), result.get("values")
+    if not isinstance(parts, list) or not isinstance(values, dict):
+        return []
+    shown = [f.value for f in guardrail.parse_numbers(answer_md)]
+    out = []
+    for name in parts:
+        node = values.get(name) if isinstance(name, str) else None
+        v = node.get("value") if isinstance(node, dict) else None
+        if not isinstance(node, dict) or not isinstance(v, int | float) or isinstance(v, bool):
+            continue
+        if not any(guardrail._close(float(v), s) for s in shown):
+            out.append(f"{name} = {float(v):.4g} {node.get('unit', '')}".rstrip())
+    return out
+
+
 _NO_RESULT = "must set result"  # the sandbox's error when a script never sets result
 # web_search is not wired (no search provider): offering it only wastes a solver step
 SOLVER_TOOLS = [t for t in TOOL_SCHEMAS if t["function"]["name"] != "web_search"]
@@ -684,6 +718,8 @@ async def _explain(state: SolveState, deps: Deps) -> Step:
             and not re.search(r"(?i)\bassum(?:ed|ptions?)\s*\**\s*:", answer)
         ):
             answer += "\n\n**Assumed:** " + "; ".join(given)
+    if isinstance(state.result, dict) and (shown := _unshown_parts(state.result, answer)):
+        answer += "\n\n**Also:** " + "; ".join(shown)  # every asked part stays visible
     if isinstance(state.result, dict) and (
         trip := energy_sign_problem(flat_numbers(state.result), state.question)
     ):  # after the guardrail, so the warning's own numbers are not checked

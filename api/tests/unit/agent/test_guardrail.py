@@ -222,3 +222,27 @@ def test_divisor_100_and_1000_not_flagged() -> None:
     assert flagged("ln(1 - 90/100) and (200 / 1000) / 1.2", {"X": 90.0}, "200 1.2") == []
     assert flagged("so 100 is the answer", {"X": 5.0}) == ["100"]
     assert flagged("X is 5/37", {"X": 5.0}) == ["37"]
+
+
+def test_correlation_constants_pass_only_exactly() -> None:
+    assert flagged("Colebrook: 1/sqrt(f) = -2 log(e/(3.7 D) + 2.51/(Re sqrt(f)))") == []
+    assert flagged("Stokes: u = g d^2 (rho_p - rho) / (18 mu)") == []
+    assert flagged("u = 2.52") == ["2.52"]  # near a constant is not the constant
+
+
+def test_one_difference_of_given_numbers_is_allowed() -> None:
+    from app.agent.guardrail import allowed_numbers, check
+
+    q = "A sphere at 300 C is cooled in air at 20 C. Particle 2650 kg/m3 in water 998 kg/m3; X = 0.85."
+    allowed = allowed_numbers({}, q)
+    assert check("dT = 280 K, drho = 1652 kg/m3, 1 - X = 0.15", allowed).ok
+    assert not check("dT = 290 K", allowed).ok
+
+
+def test_formula_constants_pass_only_inside_a_formula() -> None:
+    pool = [0.5]
+    assert check("Nu = 0.023 Re^0.8 Pr^0.4", pool).ok
+    assert check(r"v_t = \frac{g d^2 \Delta\rho}{18 \mu}", pool).ok
+    assert check(r"$\frac{1}{\sqrt f} = -2\log(\frac{e/D}{3.7} + \frac{2.51}{Re\sqrt f})$", pool).ok
+    assert not check("The reactor volume is 24 m^3.", pool).ok
+    assert not check("V = 150 L", pool).ok
