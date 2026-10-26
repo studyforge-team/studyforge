@@ -4,6 +4,7 @@ Not a template (no SPEC/run; the leading underscore keeps it out of discovery).
 In the sandbox: `from chemlab._correlations import annular_fin_efficiency, ...`
 """
 
+import functools
 import math
 from itertools import pairwise
 
@@ -532,3 +533,23 @@ def dew_p(y: list[float], psat_values: list[float], gammas=None) -> Props:
         if done:
             break
     return Props(("P", "x"), {"P": p_tot, "x": x})
+
+
+def _scalar_args(fn):
+    """fsolve and friends pass one-element arrays into the model's own functions, which then call
+    these tools: take such an argument as the number it holds (math.exp(array) would fail)."""
+
+    def one(a):
+        return a.reshape(()).item() if getattr(a, "ndim", 0) and getattr(a, "size", 0) == 1 else a
+
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        return fn(*map(one, args), **{k: one(v) for k, v in kwargs.items()})
+
+    return wrapper
+
+
+for _name, _fn in list(globals().items()):
+    if not _name.startswith("_") and callable(_fn) and not isinstance(_fn, type) and getattr(_fn, "__module__", None) == __name__:
+        globals()[_name] = _scalar_args(_fn)
+del _name, _fn

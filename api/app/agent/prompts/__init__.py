@@ -214,7 +214,9 @@ _CARDS: tuple[tuple[str, str], ...] = (
     ((r"residual|departure|lee[/ -]?kesler|generali[sz]ed correlation|pitzer|virial|compressibility"
       r"|supercritical|real[- ]gas|fugacity|\bH\^?R\b|\bS\^?R\b|enthalpy and entropy|equation of state"
       r"|peng|redlich|soave|van der waals"),
-     ("Real-gas properties (Smith-Van Ness ch. 3 and 6), from chemlab._correlations: "
+     ("Real-gas properties (Smith-Van Ness ch. 3 and 6), from chemlab._correlations (tested "
+      "against the published tables: use their numbers, don't re-derive them by hand; check with a "
+      "different method such as another correlation or an equation of state instead): "
       "lee_kesler(Tr, Pr, omega) and pitzer_virial(Tr, Pr, omega) return Z, HR_RTc (H^R/(R Tc)), "
       "SR_R (S^R/R), lnphi; ig_cp_integrals(T0, T, A, B, C, D) returns dH_R and dS_R for "
       "Cp/R = A + B T + C T^2 + D T^-2. Use Lee-Kesler when the question names it or at high "

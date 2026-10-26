@@ -337,3 +337,14 @@ def test_bubble_dew_pressure() -> None:
     dg = dew_p(bg.y, ps, gm)
     assert dg.P == pytest.approx(bg.P, rel=1e-8)
     assert dg.x == pytest.approx([0.3, 0.7], abs=1e-6)
+
+
+def test_tools_take_the_one_element_arrays_fsolve_passes() -> None:
+    import numpy as np
+    from scipy.optimize import fsolve
+
+    # throttling-style use: solve for T where a tool is called inside the residual
+    t = fsolve(lambda T: lee_kesler(T / 300.0, 0.5, 0.1)["Z"] - 0.95, 400.0)[0]  # T is an array here
+    assert lee_kesler(t / 300.0, 0.5, 0.1)["Z"] == pytest.approx(0.95, abs=1e-6)
+    assert colebrook_f(np.array([1e5]), 1e-4) == colebrook_f(1e5, 1e-4)
+    assert lee_kesler.__doc__ and "Lee-Kesler" in lee_kesler.__doc__
