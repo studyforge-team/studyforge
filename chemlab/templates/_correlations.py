@@ -116,3 +116,31 @@ def antoine_p(T: float, A: float, B: float, C: float) -> float:
     units (kPa, K, ln) must be used in those units. Returns P in the constants' units.
     """
     return float(10.0 ** (A - B / (C + T)))
+
+
+def fuller_diffusivity(
+    T: float, P: float, MA: float, MB: float, vA: float, vB: float
+) -> float:
+    """Binary gas diffusivity [m2/s], Fuller-Schettler-Giddings (Poling 5th ed. Eq. 11-4.4).
+
+    T [K], P [Pa], MA, MB molar masses [g/mol], vA, vB summed diffusion volumes [cm3/mol]
+    (Poling Table 11-1; chemlab._compounds FULLER_*). D [cm2/s] = 0.00143 T^1.75 /
+    (P[bar] M_AB^0.5 (vA^(1/3) + vB^(1/3))^2) with M_AB = 2/(1/MA + 1/MB).
+    """
+    m_ab = 2.0 / (1.0 / MA + 1.0 / MB)
+    d_cm2 = 0.00143 * T**1.75 / ((P / 1e5) * math.sqrt(m_ab) * (vA ** (1 / 3) + vB ** (1 / 3)) ** 2)
+    return float(d_cm2 * 1e-4)
+
+
+def wilke_chang_diffusivity(
+    T: float, mu_B: float, MB: float, VA: float, phi: float = 2.6
+) -> float:
+    """Dilute solute A in liquid B, diffusivity [m2/s], Wilke-Chang (Poling Eq. 11-9.1).
+
+    T [K], mu_B solvent viscosity [Pa s], MB solvent molar mass [g/mol], VA solute molar
+    volume at its normal boiling point [cm3/mol], phi association factor (water 2.6,
+    methanol 1.9, ethanol 1.5, unassociated 1.0). D [cm2/s] = 7.4e-8 (phi MB)^0.5 T /
+    (mu_B[cP] VA^0.6).
+    """
+    d_cm2 = 7.4e-8 * math.sqrt(phi * MB) * T / (mu_B * 1e3 * VA**0.6)
+    return float(d_cm2 * 1e-4)

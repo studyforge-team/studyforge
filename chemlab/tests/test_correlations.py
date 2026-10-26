@@ -11,8 +11,10 @@ from chemlab._correlations import (
     dittus_boelter_nu,
     eps_ntu_counterflow,
     ergun_umf,
+    fuller_diffusivity,
     lmtd,
     sieder_tate_nu,
+    wilke_chang_diffusivity,
 )
 
 
@@ -54,3 +56,15 @@ def test_lmtd_and_antoine() -> None:
     assert lmtd(30, 30) == 30
     # water, A=8.07131 B=1730.63 C=233.426 (mmHg, degC): ~760 mmHg at 100 degC
     assert antoine_p(100, 8.07131, 1730.63, 233.426) == pytest.approx(760, rel=0.005)
+
+
+def test_fuller_co2_n2() -> None:
+    # Poling form; the older atm form (1e-3 T^1.75 sqrt(1/MA+1/MB)/...) gives 0.1643 cm2/s
+    d = fuller_diffusivity(300.0, 101325.0, 44.01, 28.01, 26.9, 18.5)
+    assert d == pytest.approx(0.1643e-4, rel=0.005)
+
+
+def test_wilke_chang_acetic_acid_in_water() -> None:
+    # Vb(acetic acid) 64.1 cm3/mol, water 0.89 mPa s at 25 C: ~1.4e-9 m2/s (exp. 1.29e-9)
+    d = wilke_chang_diffusivity(298.15, 0.89e-3, 18.015, 64.1)
+    assert d == pytest.approx(1.398e-9, rel=0.005)

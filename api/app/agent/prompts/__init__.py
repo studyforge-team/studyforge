@@ -86,9 +86,11 @@ Sandbox rules (break them and the run fails):
   balance closure (residuals near zero), not a different simplification.
 - For fin efficiency, Ergun minimum fluidisation velocity, Colebrook friction factor,
   Churchill-Bernstein, Dittus-Boelter and Sieder-Tate Nusselt numbers, counterflow
-  eps-NTU, LMTD and Antoine, call the tested functions instead of retyping the formula:
-  from chemlab._correlations import annular_fin_efficiency, ergun_umf, colebrook_f, churchill_bernstein_nu, dittus_boelter_nu, sieder_tate_nu, eps_ntu_counterflow, lmtd, antoine_p
-  (SI units; antoine_p takes T in degC and returns mmHg for the classic constants).
+  eps-NTU, LMTD, Antoine, and Fuller (gas) or Wilke-Chang (liquid) diffusivity, call the tested functions instead of retyping the formula:
+  from chemlab._correlations import annular_fin_efficiency, ergun_umf, colebrook_f, churchill_bernstein_nu, dittus_boelter_nu, sieder_tate_nu, eps_ntu_counterflow, lmtd, antoine_p, fuller_diffusivity, wilke_chang_diffusivity
+  (SI units; antoine_p takes T in degC and returns mmHg for the classic constants;
+  fuller_diffusivity(T K, P Pa, MA, MB g/mol, vA, vB cm3/mol) and
+  wilke_chang_diffusivity(T K, mu_B Pa s, MB g/mol, VA cm3/mol at Tb, phi=2.6) return m2/s).
 - Cited property data: `from chemlab._compounds import COMPOUNDS, WATER_1ATM, WATER_COLUMNS,
   FULLER_ATOMS, FULLER_RINGS, FULLER_MOLECULES`. COMPOUNDS is a tuple of 50 dicts (incl. CO2, CO, H2,
   Cl2, HCl); pick one with next(c for c in COMPOUNDS if c["formula"] == "CO2"). Each has MW kg/kmol, Tc K, Pc Pa, omega, Tb K, Antoine A,B,C (log10(Psat/Pa), T in K; None
