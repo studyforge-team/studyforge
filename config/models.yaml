@@ -37,7 +37,7 @@ roles:
     reasoning: false
     max_tokens: 256
   solver:
-    models: [super]  # no fallback model: failure raises ModelUnavailable
+    models: [ultra, super]  # ACC2: Ultra (550B) solves, Super is the fallback; held-out 46/48 vs 44/48
     timeout_s: 90
     reasoning: true
     temperature: 1.0

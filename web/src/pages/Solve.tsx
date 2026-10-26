@@ -8,6 +8,7 @@ import { VoiceInput } from '@/components/VoiceInput'
 import { Button } from '@/components/ui/button'
 import { friendly, PlainError } from '@/lib/errors'
 import { labLink } from '@/lib/labLink'
+import { splitQuestions } from '@/lib/splitQuestions'
 import { run, warm } from '@/sandbox/client'
 
 // Keeps react-markdown and KaTeX out of the main chunk; download starts when Solve is pressed.
@@ -16,7 +17,7 @@ const AnswerCard = lazy(loadCard)
 
 type Row = { code: string; stdout: string; status: 'running' | 'ok' | 'fail'; ms?: number; timeout?: boolean }
 const demo = !import.meta.env.VITE_API_URL // same switch as api/client.ts
-const MAX_STEPS = 8
+const MAX_STEPS = 14 // server allows 10 counted steps (api loop.MAX_STEPS) plus uncounted ones
 const disclose = 'inline-flex min-h-11 items-center rounded-lg px-3 text-sm text-muted-foreground hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground'
 const pre = 'mt-1 overflow-x-auto rounded-lg border bg-muted p-3 font-mono text-xs leading-relaxed'
 
@@ -56,6 +57,9 @@ export default function Solve() {
   const [file, setFile] = useState<{ name: string; id: string }>()
   const [upStatus, setUpStatus] = useState('') // 'Uploading …' / 'Reading…' while non-empty
   const [read, setRead] = useState<UploadRead>()
+  // a whole tutorial sheet is solved one question at a time; finished ones stack above
+  const [done, setDone] = useState<{ label: string; end?: Step; ran: boolean; error?: string }[]>([])
+  const [label, setLabel] = useState('')
 
   useEffect(() => { void warm() }, []) // boot the sandbox while the student types
 
@@ -78,26 +82,44 @@ export default function Solve() {
     }
   }
 
+  async function solveOne(text: string, confirmed: boolean): Promise<{ step: Step; ran: boolean }> {
+    const onSlow = () => setSlow(true)
+    const first = await startSolve(text, onSlow, file?.id, confirmed)
+    let step = first.step
+    let ran = true
+    for (let n = 0; step.type === 'run_python'; n++) {
+      if (n >= MAX_STEPS) throw new PlainError('Too many steps, stopping.')
+      const { code } = step
+      setRows((r) => [...r, { code, stdout: '', status: 'running' }])
+      const res = await run(code, { mode: 'solve' })
+      const body = res.ok
+        ? { stdout: res.stdout, result: res.result, figures: res.figures, error: null, ms: res.ms }
+        : { stdout: '', result: null, figures: [], error: res.error, ms: 0 }
+      ran &&= res.ok
+      patch(n, { status: res.ok ? 'ok' : 'fail', ms: body.ms, stdout: body.stdout, timeout: !res.ok && res.error === 'timeout' })
+      step = await postResult(first.solve_id, body, onSlow)
+    }
+    return { step, ran }
+  }
+
   async function submit(text = question, confirmed = false) {
     if (busy || voiceActive || !text.trim()) return
-    setBusy(true); setRows([]); setEnd(undefined); setError(''); setSlow(false)
+    setBusy(true); setRows([]); setEnd(undefined); setError(''); setSlow(false); setDone([]); setLabel('')
     void loadCard() // fire and forget: fetch the answer-card chunk while Python runs
-    const onSlow = () => setSlow(true)
+    const parts = splitQuestions(text)
     try {
-      const first = await startSolve(text, onSlow, file?.id, confirmed)
-      let step = first.step
-      for (let n = 0; step.type === 'run_python'; n++) {
-        if (n >= MAX_STEPS) throw new PlainError('Too many steps, stopping.')
-        const { code } = step
-        setRows((r) => [...r, { code, stdout: '', status: 'running' }])
-        const res = await run(code, { mode: 'solve' })
-        const body = res.ok
-          ? { stdout: res.stdout, result: res.result, figures: res.figures, error: null, ms: res.ms }
-          : { stdout: '', result: null, figures: [], error: res.error, ms: 0 }
-        patch(n, { status: res.ok ? 'ok' : 'fail', ms: body.ms, stdout: body.stdout, timeout: !res.ok && res.error === 'timeout' })
-        step = await postResult(first.solve_id, body, onSlow)
+      for (const [i, p] of parts.entries()) {
+        setLabel(p.label); setRows([]); setSlow(false)
+        const last = i === parts.length - 1
+        try {
+          const { step, ran } = await solveOne(p.text, confirmed || parts.length > 1)
+          if (last) setEnd(step)
+          else setDone((d) => [...d, { label: p.label, end: step, ran }])
+        } catch (e) {
+          if (last) throw e
+          setDone((d) => [...d, { label: p.label, ran: false, error: friendly(e) }]) // the next question still runs
+        }
       }
-      setEnd(step)
     } catch (e) {
       setError(friendly(e))
     } finally {
@@ -142,10 +164,22 @@ export default function Solve() {
             onDismiss={() => { setFile(undefined); setRead(undefined) }}
           />
         )}
-        {busy && <p aria-live="polite" className="mt-2 text-sm text-muted-foreground">Working… step {Math.min(6, Math.max(1, rows.length))} of 6</p>}
+        {busy && <p aria-live="polite" className="mt-2 text-sm text-muted-foreground">Working{label && ` on ${label}`}… step {Math.max(1, rows.length)}</p>}
         {slow && <p className="mt-2 text-sm text-muted-foreground">Waking up the server…</p>}
       </div>
       {error && <p role="alert" className="mt-3 text-sm font-medium text-destructive">{error}</p>}
+      {done.map((d) => (
+        <section key={d.label} className="mt-6">
+          <h2 className="text-lg font-semibold">{d.label}</h2>
+          {d.error ? <p role="alert" className="mt-2 text-sm font-medium text-destructive">{d.error}</p>
+            : d.end?.type === 'final' && (
+              <Suspense fallback={<p className="mt-2 text-sm text-muted-foreground">Loading answer…</p>}>
+                <AnswerCard a={d.end} ran={d.ran} />
+              </Suspense>
+            )}
+        </section>
+      ))}
+      {label && <h2 className="mt-6 text-lg font-semibold">{label}</h2>}
       <div aria-live="polite" className="mt-4 print:hidden">
         {rows.length > 0 && (
           <ol className="relative space-y-3 rounded-lg border bg-card p-4 before:absolute before:bottom-8 before:left-[27px] before:top-8 before:w-px before:bg-border">

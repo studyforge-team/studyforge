@@ -8,7 +8,9 @@ from app.llm.registry import Registry, load_registry
 
 def test_repo_config_has_confirmed_ids_and_prices() -> None:
     reg = load_registry()  # repo-root config/models.yaml, filled by G10 (19 Oct)
-    assert [m.id for m in reg.chain("solver")] == ["nvidia/nemotron-3-super-120b-a12b"]
+    assert [m.id for m in reg.chain("solver")] == [  # ACC2: Ultra solves, Super is the fallback
+        "nvidia/Nemotron-3-Ultra-550b-a55b", "nvidia/nemotron-3-super-120b-a12b",
+    ]
     assert [m.name for m in reg.chain("router")] == ["nano", "super"]
     assert [m.name for m in reg.chain("cross_check")] == ["ultra", "super"]
     assert [m.name for m in reg.chain("vision")] == ["vision"]

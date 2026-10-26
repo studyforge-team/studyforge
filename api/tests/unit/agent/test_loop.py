@@ -345,11 +345,12 @@ def test_wp8_second_miss_is_medium_with_no_second_repair() -> None:
     assert [c[1] for c in llm.calls] == ["router", "solver", "solver", "cross_check", "solver"]
 
 
-def test_at_most_six_tool_steps() -> None:
-    llm = calc(*[("chat_tools", tool("run_python", code="x")) for _ in range(6)])
-    errors = [{"error": "boom"}] * 6
+def test_at_most_max_steps_tool_steps() -> None:
+    n = loop.MAX_STEPS
+    llm = calc(*[("chat_tools", tool("run_python", code="x")) for _ in range(n)])
+    errors = [{"error": "boom"}] * n
     steps = run(solve(deps(llm), *errors))
-    assert len(llm.calls) == 7  # classify + 6 tool steps, no seventh model call
+    assert len(llm.calls) == n + 1  # classify + n tool steps, no further model call
     assert steps[-1]["type"] == "final"
     assert steps[-1]["confidence"] == "low"
     assert steps[-1]["numbers"] == {}

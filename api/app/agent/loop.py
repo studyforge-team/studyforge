@@ -55,8 +55,8 @@ from app.agent.verify import (
 from app.llm.client import LLMResult, Message
 from app.llm.errors import BudgetExceeded, LLMError
 
-MAX_STEPS = 6
-BUDGET_S = 170.0
+MAX_STEPS = 10  # ACC2: solver, independent re-solve and tie-break share these
+BUDGET_S = 300.0  # correct beats fast (heavy tutorial problems ran out at 170 s)
 MAX_VERIFY_FAILURES = 2
 MODEL_STDOUT_CHARS = 2000  # what the model sees of stdout
 _FENCED = re.compile(r"```(?:python|py)\s*\n(.*?)```", re.DOTALL)
