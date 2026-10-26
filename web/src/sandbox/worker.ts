@@ -29,7 +29,8 @@ import builtins as _bi
 class _FloatMeta(type):
     def __instancecheck__(cls, o): return isinstance(o, _bi.float)
     def __subclasscheck__(cls, c): return issubclass(c, _bi.float)
-class _compat_float(metaclass=_FloatMeta):
+class _compat_float(_bi.float, metaclass=_FloatMeta):
+    dtype = _np.dtype('float64')  # np.zeros(n, dtype=float) must stay float64, not object
     # NumPy 2 refuses float(np.array([x])); models write float(fsolve(...)) all the time
     def __new__(cls, x=0.0):
         if getattr(x, 'ndim', 0) and getattr(x, 'size', 0) == 1: x = x.reshape(()).item()

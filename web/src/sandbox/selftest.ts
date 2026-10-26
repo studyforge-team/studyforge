@@ -78,6 +78,9 @@ result = {"ca": np.float64(ca), "arr": np.arange(3)}`)
   const tools = r.ok ? (r.result as { Z: number; psat_bar: number; T: number }) : undefined
   add('chemlab tools: Lee-Kesler, PR Psat, bubble T', !!tools && Math.abs(tools.Z - 0.865) < 0.003 && Math.abs(tools.psat_bar - 9.99) < 0.1 && tools.T > 80 && tools.T < 100, r.ok ? JSON.stringify(r.result) : err(r))
 
+  r = await run('import numpy as np\na = np.zeros(2, dtype=float)\nx = np.linalg.solve(np.eye(2, dtype=float), np.ones(2))\nresult = {"dtype": str(a.dtype), "x": x.tolist()}')
+  add('dtype=float stays float64', r.ok && (r.result as { dtype: string }).dtype === 'float64', r.ok ? JSON.stringify(r.result) : err(r))
+
   r = await run('from scipy.optimize import fsolve\nv = float(fsolve(lambda x: x**2 - 4, 1.0))\nresult = {"v": v, "isfloat": isinstance(v, float)}')
   add('float() of a one-element array', r.ok && Math.abs((r.result as { v: number }).v - 2) < 1e-9 && (r.result as { isfloat: boolean }).isfloat, r.ok ? JSON.stringify(r.result) : err(r))
 
