@@ -232,7 +232,28 @@ def _lk_fluid(Tr: float, Pr: float, k: dict, phase: str) -> dict:
     return {"Z": z, "HR": hr, "SR": sr, "lnphi": lnphi}
 
 
-def lee_kesler(Tr: float, Pr: float, omega: float, phase: str = "vapour") -> dict:
+class Props(dict):
+    """A result dict that also reads as r.Z and unpacks to its main values in order, so
+    r["Z"], r.Z and `Z, HR_RTc, SR_R, lnphi = lee_kesler(...)` all work (models write all three)."""
+
+    def __init__(self, main: tuple[str, ...], values: dict) -> None:
+        super().__init__(values)
+        self._main = main
+
+    def __iter__(self):  # type: ignore[override]
+        return iter([self[k] for k in self._main])
+
+    def __getattr__(self, k: str) -> float:
+        try:
+            return self[k]
+        except KeyError:
+            raise AttributeError(k) from None
+
+
+_MAIN = ("Z", "HR_RTc", "SR_R", "lnphi")
+
+
+def lee_kesler(Tr: float, Pr: float, omega: float, phase: str = "vapour") -> Props:
     """Lee-Kesler (AIChE J. 21, 1975, 510) residual properties; SVNA ch. 3 and 6, Tables E.1-E.12.
 
     Tr, Pr reduced T and P [-], omega acentric factor. phase "vapour" takes the largest volume
@@ -243,15 +264,15 @@ def lee_kesler(Tr: float, Pr: float, omega: float, phase: str = "vapour") -> dic
     s = _lk_fluid(Tr, Pr, _LK[0], phase)
     r = _lk_fluid(Tr, Pr, _LK[1], phase)
     p = {n: (r[n] - s[n]) / _LK_OMEGA_R for n in s}
-    return {
+    return Props(_MAIN, {
         "Z": s["Z"] + omega * p["Z"], "Z0": s["Z"], "Z1": p["Z"],
         "HR_RTc": s["HR"] + omega * p["HR"], "HR0_RTc": s["HR"], "HR1_RTc": p["HR"],
         "SR_R": s["SR"] + omega * p["SR"], "SR0_R": s["SR"], "SR1_R": p["SR"],
         "lnphi": s["lnphi"] + omega * p["lnphi"],
-    }
+    })
 
 
-def pitzer_virial(Tr: float, Pr: float, omega: float) -> dict:
+def pitzer_virial(Tr: float, Pr: float, omega: float) -> Props:
     """Pitzer second-virial correlation, valid at low Pr (SVNA eqs 3.57-3.66, 6.89-6.90).
 
     Z = 1 + (B0 + omega B1) Pr/Tr with B0 = 0.083 - 0.422/Tr^1.6, B1 = 0.139 - 0.172/Tr^4.2.
@@ -260,19 +281,19 @@ def pitzer_virial(Tr: float, Pr: float, omega: float) -> dict:
     b0, b1 = 0.083 - 0.422 / Tr**1.6, 0.139 - 0.172 / Tr**4.2
     db0, db1 = 0.6752 / Tr**2.6, 0.7224 / Tr**5.2  # exact dB/dTr (SVNA rounds to 0.675, 0.722)
     bhat = b0 + omega * b1
-    return {
+    return Props(_MAIN, {
         "Z": 1 + bhat * Pr / Tr,
         "HR_RTc": Pr * (bhat - Tr * (db0 + omega * db1)),
         "SR_R": -Pr * (db0 + omega * db1),
         "lnphi": bhat * Pr / Tr,
-    }
+    })
 
 
-def ig_cp_integrals(T0: float, T: float, A: float, B: float, C: float = 0.0, D: float = 0.0) -> dict:
+def ig_cp_integrals(T0: float, T: float, A: float, B: float, C: float = 0.0, D: float = 0.0) -> Props:
     """Ideal-gas sensible heat from T0 to T [K] for Cp/R = A + B T + C T^2 + D T^-2 (SVNA ICPH/ICPS).
 
     Returns dH_R = integral Cp/R dT [K] and dS_R = integral (Cp/R)/T dT [-].
     """
     dh = A * (T - T0) + B / 2 * (T**2 - T0**2) + C / 3 * (T**3 - T0**3) + D * (1 / T0 - 1 / T)
     ds = A * math.log(T / T0) + B * (T - T0) + C / 2 * (T**2 - T0**2) + D / 2 * (1 / T0**2 - 1 / T**2)
-    return {"dH_R": dh, "dS_R": ds}
+    return Props(("dH_R", "dS_R"), {"dH_R": dh, "dS_R": ds})

@@ -161,3 +161,17 @@ def test_ig_cp_integrals_vs_quad() -> None:
     r = ig_cp_integrals(298.15, 650.0, A, B, C, D)
     assert r["dH_R"] == pytest.approx(quad(cp, 298.15, 650.0)[0], rel=1e-9)
     assert r["dS_R"] == pytest.approx(quad(lambda t: cp(t) / t, 298.15, 650.0)[0], rel=1e-9)
+
+
+def test_results_read_every_way_a_model_writes_them() -> None:
+    import json
+
+    r = lee_kesler(1.2, 0.66, 0.2)
+    z, hr, sr, lnphi = r
+    assert (z, hr, sr, lnphi) == (r["Z"], r.HR_RTc, r["SR_R"], r.lnphi)
+    assert r["Z0"] == r.Z0
+    assert json.loads(json.dumps(r))["Z"] == r["Z"]  # still a plain dict inside result
+    dh, ds = ig_cp_integrals(300.0, 400.0, 3.5, 0.0)
+    assert dh == pytest.approx(350.0)
+    assert ds == pytest.approx(3.5 * math.log(4 / 3))
+    assert pitzer_virial(1.5, 0.05, 0.2).Z == pitzer_virial(1.5, 0.05, 0.2)["Z"]

@@ -246,3 +246,15 @@ def test_formula_constants_pass_only_inside_a_formula() -> None:
     assert check(r"$\frac{1}{\sqrt f} = -2\log(\frac{e/D}{3.7} + \frac{2.51}{Re\sqrt f})$", pool).ok
     assert not check("The reactor volume is 24 m^3.", pool).ok
     assert not check("V = 150 L", pool).ok
+
+
+def test_every_number_of_a_data_table_in_the_question_counts_as_given() -> None:
+    table = "\n".join(f"{p:.2f} " + " ".join(f"0.{9000 + p * 37:.0f}" for _ in range(5)) for p in range(1, 15))
+    q = "Use the Z table below.\n" + table + "\nThe last entry is 0.71727 at 15.41 bar."
+    allowed = allowed_numbers({}, q)
+    assert 0.71727 in allowed and 15.41 in allowed  # beyond the first 40 numbers
+
+
+def test_latex_thin_space_thousands_is_one_number() -> None:
+    assert [f.value for f in parse_numbers(r"H = 18\,115.0 J and 1\,000\,000 then 7")] == [18115.0, 1000000.0, 7.0]
+    assert [f.value for f in parse_numbers(r"0.5\,3 and 12\,34")] == [0.5, 3.0, 12.0, 34.0]

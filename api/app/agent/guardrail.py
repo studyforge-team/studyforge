@@ -103,10 +103,15 @@ def _exp(s: str) -> str:
     return re.sub(r"[\s{}^]", "", s).translate(_FROM_SUP).replace("−", "-")
 
 
+_THIN_THOUSANDS = re.compile(r"(?<![0-9.])[0-9]{1,3}(?:\\,[0-9]{3})+(?![0-9])")  # LaTeX 18\,115.0
+
+
 def parse_numbers(text: str) -> list[Flagged]:
     """Numbers written in ``text`` (code and identifiers excluded), in order."""
     text = _INLINE.sub(_blank, _FENCE.sub(_blank, text))
     text = _GLUED.sub(_blank, text)
+    # 1\,000\,000 -> "  1,000,000": same length, so later positions stay valid
+    text = _THIN_THOUSANDS.sub(lambda m: m.group().replace("\\", "").rjust(len(m.group())), text)
     out: list[Flagged] = []
     for m in _TOKEN.finditer(text):
         if m["sci"]:
@@ -134,8 +139,9 @@ def _scalars(node: object) -> list[float]:
 def allowed_numbers(result: object, question: str) -> list[float]:
     """Numbers an answer may cite: sandbox scalars, numbers in the question, and one
     subtraction of two given numbers (a temperature or density difference, 1 - X)."""
-    given = [f.value for f in parse_numbers(question)][:40]
-    diffs = [abs(a - b) for i, a in enumerate(given) for b in given[i + 1 :] if a != b]
+    given = [f.value for f in parse_numbers(question)]  # all of them: a data table has hundreds
+    first = given[:40]  # pairwise differences stay O(40^2)
+    diffs = [abs(a - b) for i, a in enumerate(first) for b in first[i + 1 :] if a != b]
     diffs += [1 - x for x in given if 0 < x < 1]
     return _scalars(result) + given + diffs
 
