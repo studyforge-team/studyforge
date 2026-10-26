@@ -73,3 +73,11 @@ def test_method_cards_follow_the_topic_not_the_question() -> None:
     assert "chemlab.mccabe" in (method_cards("How many theoretical plates are needed?") or "")
     assert "rachford_rice" in (method_cards("An isothermal flash drum receives ...") or "")
     assert method_cards("Find the Reynolds number in a 50 mm pipe") is None
+
+
+def test_z_table_card_extrapolates_the_integrands_to_zero_pressure() -> None:
+    # (dZ/dT)/P and (Z-1)/P tend to finite limits at P = 0; setting them to 0 cost ~7 %
+    # of H^R on a Z-table question, and solver and re-solve agreed on it (wrong at high)
+    card = prompts.method_cards("residual enthalpy from a table of compressibility factors") or ""
+    assert "do NOT vanish at P = 0" in card and "never set them to 0" in card
+    assert "dZ/dT = 0 there" not in card

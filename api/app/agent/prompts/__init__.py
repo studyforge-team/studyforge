@@ -227,8 +227,10 @@ _CARDS: tuple[tuple[str, str], ...] = (
       "the question, else chemlab._compounds (Poling cp: Cp/R = a0 + a1 T + ... + a4 T^4; "
       "integrate it with scipy). From a table of Z(T, P): H^R/RT = -T * integral of (dZ/dT)_P dP/P "
       "and S^R/R = -T * integral of (dZ/dT)_P dP/P - integral of (Z - 1) dP/P from P = 0 "
-      "(Z = 1, dZ/dT = 0 there), with dZ/dT from the neighbouring temperature columns "
-      "(np.gradient) and scipy.integrate.trapezoid. Cubic equations of state: cubic_eos(T, P, Tc, Pc, "
+      "(Z = 1 there), with dZ/dT from the neighbouring temperature columns (np.gradient). The "
+      "integrands (dZ/dT)_P/P and (Z - 1)/P do NOT vanish at P = 0 (both tend to finite limits): "
+      "extrapolate each to P = 0 with np.polyfit (degree 2) on the three lowest-pressure points, "
+      "never set them to 0, then integrate with the rule the question names (else trapezoid). Cubic equations of state: cubic_eos(T, P, Tc, Pc, "
       "omega, eos='vdW'|'RK'|'SRK'|'PR') returns Z_vap, Z_liq, lnphi_vap, lnphi_liq, V_vap, V_liq "
       "(P, Pc in Pa, V in m3/mol); cubic_psat(T, Tc, Pc, omega, eos) returns Psat (Pa), Z_vap, "
       "Z_liq from equal fugacities (unpack all three, or take r.Psat). Give every asked property, with units.")),
