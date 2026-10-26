@@ -38,6 +38,8 @@ async def _exercise(llm: FakeLLM, made: dict[str, Any]) -> None:
         assert r.status_code == 200 and step["type"] == "run_python"
         assert (await c.get(f"/api/v1/solve/{sid}")).json() == {"step": step}
         body = {"stdout": "", "result": GOOD, "figures": [], "error": None, "ms": 1}
+        again = (await c.post(f"/api/v1/solve/{sid}/result", json=body)).json()["step"]
+        assert again["type"] == "run_python"  # ACC1: every answer gets the independent re-solve
         final = (await c.post(f"/api/v1/solve/{sid}/result", json=body)).json()["step"]
         assert final["type"] == "final"
         who["u"] = "B"
@@ -69,6 +71,7 @@ def test_solve_mounted(monkeypatch: pytest.MonkeyPatch) -> None:
     made: dict[str, Any] = {}
     llm = calc(
         ("chat_tools", tool("run_python", code="result = {}")),
+        ("chat_tools", tool("run_python", code="result = {}")),  # ACC1: independent re-solve
         ("chat_json", {"answer_md": "X = 0.6667"}),
     )
 
