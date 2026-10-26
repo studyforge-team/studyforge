@@ -6,6 +6,8 @@ captured from open matplotlib figures, only the last 600 characters of an error.
 tests/unit/agent/test_prompts.py pins the rules that must not be lost in a rewrite.
 """
 
+import re
+
 CLASSIFY = """You route a question sent to a study app for engineering students.
 Answer three things about the question:
 - study: true if it is about engineering, science or maths that a student could study
@@ -86,9 +88,30 @@ Sandbox rules (break them and the run fails):
   balance closure (residuals near zero), not a different simplification.
 - For fin efficiency, Ergun minimum fluidisation velocity, Colebrook friction factor,
   Churchill-Bernstein, Dittus-Boelter and Sieder-Tate Nusselt numbers, counterflow
-  eps-NTU, LMTD and Antoine, call the tested functions instead of retyping the formula:
-  from chemlab._correlations import annular_fin_efficiency, ergun_umf, colebrook_f, churchill_bernstein_nu, dittus_boelter_nu, sieder_tate_nu, eps_ntu_counterflow, lmtd, antoine_p
-  (SI units; antoine_p takes T in degC and returns mmHg for the classic constants).
+  eps-NTU, LMTD, Antoine, Fuller (gas) or Wilke-Chang (liquid) diffusivity, Rayleigh batch
+  distillation residue, Rachford-Rice flash and Kremser absorber stages, call the tested functions instead of retyping the formula:
+  from chemlab._correlations import annular_fin_efficiency, ergun_umf, colebrook_f, churchill_bernstein_nu, dittus_boelter_nu, sieder_tate_nu, eps_ntu_counterflow, lmtd, antoine_p, fuller_diffusivity, wilke_chang_diffusivity, rayleigh_residue, rachford_rice, kremser_stages
+  (SI units; antoine_p takes T in degC and returns mmHg for the classic constants;
+  fuller_diffusivity(T K, P Pa, MA, MB g/mol, vA, vB cm3/mol) and
+  wilke_chang_diffusivity(T K, mu_B Pa s, MB g/mol, VA cm3/mol at Tb, phi=2.6) return m2/s).
+  rayleigh_residue(F, xF, xW, alpha) returns W; rachford_rice(z list, K list) returns V/F;
+  kremser_stages(y_in, y_out, x_in, m, A) returns N.
+- Binary distillation with constant relative volatility (McCabe-Thiele stage stepping, Rmin,
+  feed stage): call the tested module instead of writing your own stepping loop:
+  from chemlab.mccabe import run as mccabe
+  out = mccabe({"zF": 0.5, "xD": 0.95, "xB": 0.05, "q": 1.0, "alpha": 2.5, "R": 2.0}, series=False)["outputs"]
+  (R = 0 means R = R_factor*Rmin.) out[name]["value"] for N_theoretical (whole stages, partial
+  reboiler counted as the last stage), N_fractional, theoretical_trays (= N - 1), feed_stage,
+  Rmin, D, B (F defaults to 100 kmol/h). Check out is not empty: bad inputs give ok False.
+- Cited property data: `from chemlab._compounds import COMPOUNDS, WATER_1ATM, WATER_COLUMNS,
+  FULLER_ATOMS, FULLER_RINGS, FULLER_MOLECULES`. COMPOUNDS is a tuple of 50 dicts (incl. CO2, CO, H2,
+  Cl2, HCl); pick one by name, e.g. next(c for c in COMPOUNDS if c["name"] == "carbon dioxide")
+  (lowercase IUPAC-style names: "hydrogen chloride", "n-hexane"; formulas are in Hill order). Each has MW kg/kmol, Tc K, Pc Pa, omega, Tb K, Antoine A,B,C (log10(Psat/Pa), T in K; None
+  where no data, as can be Tb) and "cp" = [a0..a4] with ideal-gas
+  Cp = 8.314462618*(a0+a1*T+...+a4*T**4) J/mol/K (T in K). WATER_1ATM rows follow WATER_COLUMNS
+  (T_C, rho kg/m3, cp J/kg/K, mu Pa s, k W/m/K, Pr); interpolate linearly. FULLER_* are diffusion
+  volumes in cm3/mol. When the question says to look up or use standard data, use these; a number
+  given in the question always wins over the table. Check the units, and name the source in assumptions.
 - Every run is a complete solution that ends with result = {...} at the top level
   (not inside a function or an if). Don't spend a run only exploring or printing.
 - Library names in this sandbox: scipy.integrate.simpson, numpy.trapezoid and
@@ -158,3 +181,41 @@ answer value exactly as it appears in the result. Never write placeholders such 
 NO_RESULT = """That run did not set result, so nothing was checked and a step was used.
 Your next run must be the complete solution and end with result = {...} at the top
 level, with "answer", "check" and "values"."""
+
+
+# ACC1: tested tools by topic. The sandbox rules list every tool, but the model mostly
+# rewrote formulas from memory (Rayleigh, McCabe-Thiele stepping) and got them wrong; a
+# short card next to the question, picked by topic words, is what it actually reads.
+_CARDS: tuple[tuple[str, str], ...] = (
+    (r"rayleigh|batch distill|differential distill|simple distill",
+     ("Batch (Rayleigh) distillation, constant alpha: W = rayleigh_residue(F, xF, xW, alpha) from "
+     "chemlab._correlations. If W is given and xW is asked, solve rayleigh_residue(F, xF, x, alpha) "
+     "- W = 0 with brentq on (1e-9, xF - 1e-12). Distillate D = F - W, average y_D = (F xF - W xW)/D.")),
+    ((r"mccabe|step(?:ping)? off|stepping|equilibrium stages|theoretical (?:stages|plates|trays)"
+      r"|number of (?:stages|plates|trays)|minimum reflux|feed stage|feed plate"),
+     ("Binary column with constant alpha: use the tested module, never your own stepping loop: "
+     "from chemlab.mccabe import run as mccabe; o = mccabe({\"zF\": .., \"xD\": .., \"xB\": .., "
+     "\"q\": .., \"alpha\": .., \"R\": ..}, series=False)[\"outputs\"]. q: saturated liquid 1, "
+     "saturated vapour 0, f mol% liquid f/100. N_theoretical counts whole stages including the "
+     "partial reboiler; N_fractional = (N - 1) + (x_prev - xB)/(x_prev - x_last), also including "
+     "it; stages inside the column = N - 1. Also feed_stage, Rmin, D, B. Read the question for "
+     "whether the reboiler counts and whether to round, and report that number.")),
+    (r"\bflash\b|rachford|k[- ]values?\b",
+     ("Flash with K-values: V/F = rachford_rice(z, K) from chemlab._correlations, then "
+     "x_i = z_i/(1 + V (K_i - 1)), y_i = K_i x_i.")),
+    (r"kremser|absorber|absorption factor|stripping factor",
+     ("Dilute counter-current absorber: N = kremser_stages(y_in, y_out, x_in, m, A) from "
+     "chemlab._correlations, A = L/(m V).")),
+    (r"fuller|wilke|diffusivit",
+     ("Diffusivity: fuller_diffusivity (gas) or wilke_chang_diffusivity (dilute liquid) from "
+     "chemlab._correlations, both in m2/s; Fuller volumes are in chemlab._compounds FULLER_*.")),
+    (r"look up|standard (?:data|value|table)|from tables|steam table|property data",
+     ("Look-ups: use chemlab._compounds (COMPOUNDS by name, WATER_1ATM, FULLER_*) before "
+     "recalling a value; numbers given in the question win.")),
+)
+
+
+def method_cards(question: str) -> str | None:
+    """The tool cards whose topic words appear in the question, or None."""
+    hits = [card for pat, card in _CARDS if re.search(pat, question, re.IGNORECASE)]
+    return ("Tested tools for this question:\n- " + "\n- ".join(hits)) if hits else None

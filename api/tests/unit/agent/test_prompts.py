@@ -64,3 +64,12 @@ def test_concept_has_derivation_structure() -> None:
     k = prompts.CONCEPT
     assert "final result as a display equation" in k and "Never invent numbers" in k
     assert "define every symbol" in k
+
+
+def test_method_cards_follow_the_topic_not_the_question() -> None:
+    from app.agent.prompts import method_cards
+
+    assert "rayleigh_residue" in (method_cards("Simple batch distillation of 100 mol ...") or "")
+    assert "chemlab.mccabe" in (method_cards("How many theoretical plates are needed?") or "")
+    assert "rachford_rice" in (method_cards("An isothermal flash drum receives ...") or "")
+    assert method_cards("Find the Reynolds number in a 50 mm pipe") is None

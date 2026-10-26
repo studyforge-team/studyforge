@@ -116,3 +116,71 @@ def antoine_p(T: float, A: float, B: float, C: float) -> float:
     units (kPa, K, ln) must be used in those units. Returns P in the constants' units.
     """
     return float(10.0 ** (A - B / (C + T)))
+
+
+def fuller_diffusivity(
+    T: float, P: float, MA: float, MB: float, vA: float, vB: float
+) -> float:
+    """Binary gas diffusivity [m2/s], Fuller-Schettler-Giddings (Poling 5th ed. Eq. 11-4.4).
+
+    T [K], P [Pa], MA, MB molar masses [g/mol], vA, vB summed diffusion volumes [cm3/mol]
+    (Poling Table 11-1; chemlab._compounds FULLER_*). D [cm2/s] = 0.00143 T^1.75 /
+    (P[bar] M_AB^0.5 (vA^(1/3) + vB^(1/3))^2) with M_AB = 2/(1/MA + 1/MB).
+    """
+    m_ab = 2.0 / (1.0 / MA + 1.0 / MB)
+    d_cm2 = 0.00143 * T**1.75 / ((P / 1e5) * math.sqrt(m_ab) * (vA ** (1 / 3) + vB ** (1 / 3)) ** 2)
+    return float(d_cm2 * 1e-4)
+
+
+def wilke_chang_diffusivity(
+    T: float, mu_B: float, MB: float, VA: float, phi: float = 2.6
+) -> float:
+    """Dilute solute A in liquid B, diffusivity [m2/s], Wilke-Chang (Poling Eq. 11-9.1).
+
+    T [K], mu_B solvent viscosity [Pa s], MB solvent molar mass [g/mol], VA solute molar
+    volume at its normal boiling point [cm3/mol], phi association factor (water 2.6,
+    methanol 1.9, ethanol 1.5, unassociated 1.0). D [cm2/s] = 7.4e-8 (phi MB)^0.5 T /
+    (mu_B[cP] VA^0.6).
+    """
+    d_cm2 = 7.4e-8 * math.sqrt(phi * MB) * T / (mu_B * 1e3 * VA**0.6)
+    return float(d_cm2 * 1e-4)
+
+
+def rayleigh_residue(F: float, xF: float, xW: float, alpha: float) -> float:
+    """Residue W [same unit as F] after simple batch (Rayleigh) distillation, constant alpha.
+
+    xF, xW light-key mole fractions in the charge and the final residue (xW < xF).
+    ln(W/F) = [ln(xW/xF) + alpha ln((1-xF)/(1-xW))] / (alpha - 1)  (McCabe-Smith Eq. 21.x).
+    The distillate is D = F - W with average composition (F xF - W xW)/D.
+    """
+    ln_wf = (math.log(xW / xF) + alpha * math.log((1 - xF) / (1 - xW))) / (alpha - 1)
+    return float(F * math.exp(ln_wf))
+
+
+def rachford_rice(z: list[float], K: list[float]) -> float:
+    """Vapour fraction V/F [-] of an isothermal flash from feed z and K-values (Rachford-Rice).
+
+    sum z_i (K_i - 1)/(1 + V (K_i - 1)) = 0 solved on (0, 1); returns 0.0 (all liquid) or
+    1.0 (all vapour) outside the two-phase region. Then x_i = z_i/(1 + V (K_i - 1)), y_i = K_i x_i.
+    """
+    from scipy.optimize import brentq
+
+    def g(v: float) -> float:
+        return sum(zi * (k - 1) / (1 + v * (k - 1)) for zi, k in zip(z, K, strict=True))
+
+    if g(0.0) <= 0:
+        return 0.0
+    if g(1.0) >= 0:
+        return 1.0
+    return float(brentq(g, 0.0, 1.0, xtol=1e-14))
+
+
+def kremser_stages(y_in: float, y_out: float, x_in: float, m: float, A: float) -> float:
+    """Theoretical stages [-] of a dilute counter-current absorber, Kremser equation.
+
+    y_in, y_out gas mole fractions in and out, x_in entering liquid, m equilibrium slope
+    (y* = m x), A = L/(m V) absorption factor (A != 1). N = ln[((y_in - m x_in)/(y_out -
+    m x_in))(1 - 1/A) + 1/A] / ln A.
+    """
+    r = (y_in - m * x_in) / (y_out - m * x_in)
+    return float(math.log(r * (1 - 1 / A) + 1 / A) / math.log(A))

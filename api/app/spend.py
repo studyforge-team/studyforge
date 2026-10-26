@@ -5,6 +5,7 @@ SPEND_CAP_USD is the in-app total cap. When a cap is hit, BudgetExceeded stops t
 the loop serves a cached answer (see loop._capped).
 """
 
+import ipaddress
 import os
 from contextvars import ContextVar
 from dataclasses import dataclass
@@ -25,13 +26,22 @@ class Who:
 who: ContextVar[Who] = ContextVar("who", default=Who())  # noqa: B039 (frozen)
 
 
+def _internal(ip: str) -> bool:
+    try:
+        return not ipaddress.ip_address(ip).is_global
+    except ValueError:
+        return False
+
+
 def client_ip(xff: str | None, peer: str | None) -> str | None:
-    """Rightmost X-Forwarded-For entry: the one Render's proxy appended. Left entries are
-    client-supplied and spoofable, so they are never trusted."""
-    for part in reversed((xff or "").split(",")):
-        if part.strip():
-            return part.strip()
-    return peer
+    """Rightmost public X-Forwarded-For entry: the one Render's edge appended. Render's own
+    internal hops (10.x) sit right of it; with only those, every student shared one daily
+    IP cap (ACC1). Left entries are client-supplied and spoofable, so they are never trusted."""
+    parts = [p.strip() for p in (xff or "").split(",") if p.strip()]
+    for part in reversed(parts):
+        if not _internal(part):
+            return part
+    return parts[-1] if parts else peer
 
 
 def _cap(name: str) -> float | None:

@@ -28,7 +28,7 @@ import numpy as np
 from scipy.optimize import brentq
 
 from ._common import InputSpec, _err, envelope, failed, finish, series, spec, validate
-from ._compounds import COMPOUNDS
+from ._compounds import COMPOUNDS as _ALL
 
 TEMPLATE = "flash"
 VERSION = "1.0"
@@ -36,6 +36,7 @@ N_SERIES = 41
 T_MAX = 2000.0  # K, upper bracket for bubble/dew temperature
 TRACE_X = 0.2  # T-x-y: below this liquid fraction a compound is trace, range unchecked
 LOG10_PSAT_FLOOR = -250.0  # lower bracket: every Psat >= 1e-250 Pa
+COMPOUNDS = _ALL[:40]  # the Antoine compounds; later rows are gases for lookup only
 NUMBERS = ", ".join(f"{i} {r['name']}" for i, r in enumerate(COMPOUNDS, 1))
 N = len(COMPOUNDS)
 

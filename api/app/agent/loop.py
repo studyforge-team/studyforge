@@ -155,6 +155,9 @@ class Deps:
     # ChemLab SPECs as data ({template: SPEC}); None turns template picking off
     templates: Mapping[str, Mapping[str, Mapping[str, Any]]] | None = None
     regenerate_on_flag: bool = True  # cut-line step 1 sets False: flag only
+    # ACC1: every answer gets the independent re-solve; False = only multi-step or
+    # multi-part answers (FX2), which let one-run answers reach high on self-agreement
+    cross_check_all: bool = True
 
 
 OFF_TOPIC_REPLY = (
@@ -351,6 +354,7 @@ async def _begin(state: SolveState, deps: Deps) -> Step:
     state.messages = [
         {"role": "system", "content": prompts.SOLVER + notes},
         {"role": "user", "content": q},
+        *_cards(state.question),
     ]
     if deps.templates:
         state.started_at = deps.clock()
@@ -512,7 +516,7 @@ async def _after_run(state: SolveState, body: ResultBody, deps: Deps) -> Step:
         if (
             state.cross_check == "none"
             and _SOFT_FLAG not in state.flags
-            and _cross_check_wanted(state)
+            and _cross_check_wanted(state, deps.cross_check_all)
         ):
             if _cross_check_room(state, deps):
                 state.first_answer = float(run.result["answer"]["value"])
@@ -585,10 +589,11 @@ _MULTI_PART = re.compile(
 CROSS_CHECK_MIN_S = 40.0  # budget an independent Ultra re-solve needs
 
 
-def _cross_check_wanted(state: SolveState) -> bool:
-    """A verified, non-template answer to a multi-step or multi-quantity question."""
+def _cross_check_wanted(state: SolveState, every: bool = True) -> bool:
+    """A verified, non-template answer: every one (ACC1), or a multi-step or
+    multi-quantity one (FX2)."""
     return state.template is None and (
-        _python_runs(state) >= 2 or _MULTI_PART.search(state.question) is not None
+        every or _python_runs(state) >= 2 or _MULTI_PART.search(state.question) is not None
     )
 
 
@@ -613,6 +618,8 @@ EXPLAIN_RESERVE_S = 20.0  # time kept for explaining the solver's answer after a
 async def _cc_fallback(state: SolveState, deps: Deps, flag: str) -> Step:
     """The voluntary re-check failed or ran out of room: explain the solver's verified
     answer with a flag (cross_check_disagreed = low, not_cross_checked = medium)."""
+    if state.cc_result is not None:  # a re-solve already disagreed: the tie-break never came
+        flag = "cross_check_disagreed"
     state.cross_check = "disagreed" if flag == "cross_check_disagreed" else "none"
     state.cc_messages = []
     state.flags.append(flag)
@@ -625,17 +632,32 @@ async def _start_cross_check(state: SolveState, deps: Deps) -> Step:
     state.cc_messages = [
         {"role": "system", "content": prompts.SOLVER},
         {"role": "user", "content": _quoted(state.question)},
+        *_cards(state.question),
         {"role": "user", "content": prompts.CROSS_CHECK},
     ]
     return await _next_action(state, deps, "cross_check")
 
 
+def _cards(question: str) -> list[dict[str, str]]:
+    cards = prompts.method_cards(question)
+    return [{"role": "user", "content": cards}] if cards else []
+
+
+def _close(a: float, b: float) -> bool:
+    return abs(a - b) <= AGREE_REL * max(abs(a), abs(b))
+
+
 async def _settle_cross_check(state: SolveState, result: Any, deps: Deps) -> Step:
     state.cc_messages = []
+    if state.cc_result is not None:
+        return await _settle_tiebreak(state, result, deps)
     new = float(result["answer"]["value"])
     old = state.first_answer
     # no earlier valid answer to compare with: the cross-check's own two methods agreed
-    agree = old is None or abs(new - old) <= AGREE_REL * max(abs(new), abs(old))
+    agree = old is None or _close(new, old)
+    if not agree and _cross_check_room(state, deps):
+        state.cc_result = result  # 1 vs 1: a third independent re-solve breaks the tie
+        return await _start_cross_check(state, deps)
     state.cross_check = "agreed" if agree else "disagreed"
     if not agree:
         state.flags.append("cross_check_disagreed")
@@ -651,6 +673,28 @@ async def _settle_cross_check(state: SolveState, result: Any, deps: Deps) -> Ste
             },
         }
     state.result = result
+    return await _explain(state, deps)
+
+
+async def _settle_tiebreak(state: SolveState, result: Any, deps: Deps) -> Step:
+    """Third independent solve: a 2-of-3 majority answer is shown, at medium (never high)."""
+    third = float(result["answer"]["value"])
+    first, other = state.first_answer, state.cc_result
+    state.cross_check = "disagreed"
+    if first is not None and _close(third, first):  # state.result is already the solver's
+        state.flags.append("majority_vote")
+    elif _close(third, float(other["answer"]["value"])):
+        state.flags.append("majority_vote")
+        state.result = {
+            **other,
+            "check": {
+                "value": third,
+                "unit": other["answer"]["unit"],
+                "method": "independent re-solve (2 of 3 solves agree)",
+            },
+        }
+    else:
+        state.flags.append("cross_check_disagreed")
     return await _explain(state, deps)
 
 
@@ -742,7 +786,7 @@ async def _explain(state: SolveState, deps: Deps) -> Step:
 
 
 _SOFT_FLAG = "check_disagreed"  # the first check disagreed: never high, not low
-_SOFT_FLAGS = {_SOFT_FLAG, "not_cross_checked", "missing_parts"}  # medium, never low
+_SOFT_FLAGS = {_SOFT_FLAG, "not_cross_checked", "missing_parts", "majority_vote"}  # medium, never low
 _CROSS_CHECK_FAILED = (
     "Two different methods gave answers I couldn't reconcile, and the independent "
     "re-check didn't produce a usable result either, so I'm not giving a number I "

@@ -32,6 +32,7 @@ class SolveState(BaseModel):
     cross_check: Literal["none", "pending", "agreed", "disagreed"] = "none"
     cc_messages: list[dict[str, Any]] = Field(default_factory=list)  # fresh cross-check context
     first_answer: float | None = None  # answer before the cross-check
+    cc_result: Any = None  # the re-solve that disagreed; a tie-break re-solve is pending
     figures: list[str] = Field(default_factory=list)
     diagram: str | None = None
     sources: list[dict[str, Any]] = Field(default_factory=list)

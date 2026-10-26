@@ -168,10 +168,10 @@ class LLMClient:
         deadline: float | None = None,
         solve_id: str | None = None,
     ) -> LLMResult:
-        """image_url is usually a data: URL (JPEG, longest side ~1600 px)."""
+        """image_url is usually a data: URL (JPEG, width <= 1600 px)."""
         content = [
-            {"type": "text", "text": prompt},
             {"type": "image_url", "image_url": {"url": image_url}},
+            {"type": "text", "text": prompt},
         ]
         messages = [{"role": "user", "content": content}]
         return await self._complete("vision", messages, deadline, solve_id, None, {})

@@ -32,18 +32,33 @@ _CTRL_FIX = {"\x08": "\\b", "\x0c": "\\f", "\t": "\\t", "\r": "\\r", "\n": "\\n"
 _CODE_KEYS = frozenset({"code", "key_code"})
 
 
-def fix_latex_escapes(value: Any) -> Any:
+_MATH_KEYS = frozenset({"latex"})  # all maths, no "$" delimiters (the photo read's field)
+
+
+def fix_latex_escapes(value: Any, math: bool = False) -> Any:
     """Repair LaTeX backslashes JSON decoded as control chars, recursively (never in code fields)."""
     if isinstance(value, str):
         out = _CTRL.sub(lambda m: _CTRL_FIX[m.group()], value)
-        if "$" in out:
+        if math or "$" in out:
             out = _CTRL_NL.sub(lambda m: _CTRL_FIX[m.group()], out)
         return out
     if isinstance(value, dict):
-        return {k: v if k in _CODE_KEYS else fix_latex_escapes(v) for k, v in value.items()}
+        return {
+            k: v if k in _CODE_KEYS else fix_latex_escapes(v, math or k in _MATH_KEYS)
+            for k, v in value.items()
+        }
     if isinstance(value, list):
-        return [fix_latex_escapes(v) for v in value]
+        return [fix_latex_escapes(v, math) for v in value]
     return value
+
+
+# Single-backslash LaTeX ("\Delta H", "^\circ") is not valid JSON: double every backslash
+# that does not start a valid JSON escape (an already-doubled pair is consumed as a pair).
+_BAD_ESCAPE = re.compile(r'\\(["\\/bfnrt]|u[0-9a-fA-F]{4})?')
+
+
+def _double_bad_backslashes(text: str) -> str:
+    return _BAD_ESCAPE.sub(lambda m: m.group() if m.group(1) else "\\\\", text)
 
 
 def extract_json(text: str) -> Any:
@@ -51,6 +66,7 @@ def extract_json(text: str) -> Any:
     fenced = _FENCE.search(text)
     if fenced:
         text = fenced.group(1)
+    text = _double_bad_backslashes(text)
     decoder = json.JSONDecoder()
     for i, ch in enumerate(text):
         if ch in "{[":

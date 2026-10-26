@@ -78,6 +78,7 @@ class Notes(StubTools):
 
 
 def deps(llm: FakeLLM, **kw: Any) -> Deps:
+    kw.setdefault("cross_check_all", False)  # scripted one-run solves; ACC1 tests turn it on
     return Deps(llm=llm, store=InMemoryStore(), clock=kw.pop("clock", Clock()), **kw)
 
 
@@ -234,11 +235,13 @@ def test_cross_check_that_disagrees_is_flagged_low() -> None:
         ("chat_tools", tool("run_python", code="a")),
         ("chat_tools", tool("run_python", code="r")),
         ("chat_tools", tool("run_python", code="b")),
+        ("chat_tools", tool("run_python", code="t")),
         ("chat_json", {"answer_md": "ok"}),
     )
-    bodies = [{"result": disagreeing()}, {"result": disagreeing()}, {"result": other}]
+    third = {**GOOD, "answer": {"value": 0.3, "unit": "-"}, "check": {"value": 0.3, "unit": "-"}}
+    bodies = [{"result": disagreeing()}, {"result": disagreeing()}, {"result": other}, {"result": third}]
     steps = run(solve(deps(llm), *bodies))
-    assert steps[-1]["confidence"] == "low"
+    assert steps[-1]["confidence"] == "low"  # three different answers
 
 
 # --- WP2: "high" is earned by an independent cross-check ---------------------------
@@ -266,12 +269,14 @@ def test_wp2_multi_part_question_cross_checks_after_one_step() -> None:
     llm = calc(
         ("chat_tools", tool("run_python", code="a")),
         ("chat_tools", tool("run_python", code="u")),
+        ("chat_tools", tool("run_python", code="t")),
         ("chat_json", {"answer_md": "ok"}),
     )
     q = "(a) Find X and (b) find the volume"
-    steps = run(solve(deps(llm), {"result": GOOD_PARTS}, {"result": other}, question=q))
-    assert [c[1] for c in llm.calls[1:3]] == ["solver", "cross_check"]
-    assert steps[-1]["confidence"] == "low"  # Ultra disagreed: never high
+    third = {**GOOD_PARTS, "answer": {"value": 0.3, "unit": "-"}, "check": {"value": 0.3, "unit": "-"}}
+    steps = run(solve(deps(llm), {"result": GOOD_PARTS}, {"result": other}, {"result": third}, question=q))
+    assert [c[1] for c in llm.calls[1:4]] == ["solver", "cross_check", "cross_check"]
+    assert steps[-1]["confidence"] == "low"  # Ultra disagreed and no majority: never high
 
 
 def test_wp2_no_time_for_the_cross_check_is_medium_not_low() -> None:
@@ -914,3 +919,51 @@ def test_a_part_missing_from_the_write_up_is_appended() -> None:
          "parts": ["answer", "V"]}
     md = explained(r, "X = 0.6667")["answer_md"]
     assert "**Also:** V = 12.5 L" in md
+
+
+# --- ACC1: every answer is re-solved; a 1-vs-1 split gets a third, independent solve ---
+
+
+def _acc1(*bodies: dict[str, Any], tools: int) -> tuple[FakeLLM, list[dict[str, Any]]]:
+    llm = calc(
+        *[("chat_tools", tool("run_python", code=f"c{i}")) for i in range(tools)],
+        ("chat_json", {"answer_md": "ok"}),
+    )
+    return llm, run(solve(deps(llm, cross_check_all=True), *bodies))
+
+
+OTHER = {**GOOD, "answer": {"value": 0.9, "unit": "-"}, "check": {"value": 0.9, "unit": "-"}}
+
+
+def test_acc1_a_one_run_answer_is_re_solved_before_high() -> None:
+    llm, steps = _acc1({"result": GOOD}, {"result": GOOD}, tools=2)
+    assert [c[1] for c in llm.calls[1:3]] == ["solver", "cross_check"]
+    assert steps[-1]["confidence"] == "high"
+
+
+def test_acc1_two_of_three_agree_with_the_re_solve_its_answer_is_shown_at_medium() -> None:
+    _, steps = _acc1({"result": GOOD}, {"result": OTHER}, {"result": OTHER}, tools=3)
+    assert steps[-1]["confidence"] == "medium"
+    assert 0.9 in steps[-1]["numbers"].values()
+    assert 0.6667 not in steps[-1]["numbers"].values()
+
+
+def test_acc1_two_of_three_agree_with_the_solver_its_answer_stays_at_medium() -> None:
+    _, steps = _acc1({"result": GOOD}, {"result": OTHER}, {"result": GOOD}, tools=3)
+    assert steps[-1]["confidence"] == "medium"
+    assert 0.6667 in steps[-1]["numbers"].values()
+
+
+def test_acc1_no_time_for_the_tie_break_is_low() -> None:
+    clock = Clock()
+    llm = calc(
+        ("chat_tools", tool("run_python", code="a")),
+        ("chat_tools", tool("run_python", code="u")),
+        ("chat_json", {"answer_md": "ok"}),
+    )
+    d = deps(llm, clock=clock, cross_check_all=True)
+    sid, _ = run(loop.start("Find X", d, user_id=USER))
+    run(loop.on_result(sid, USER, ResultBody(result=GOOD), d))
+    clock.now = loop.BUDGET_S - 30.0  # below the 40 s a re-solve needs
+    final = run(loop.on_result(sid, USER, ResultBody(result=OTHER), d))
+    assert final["confidence"] == "low"

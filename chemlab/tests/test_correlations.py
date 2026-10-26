@@ -11,8 +11,13 @@ from chemlab._correlations import (
     dittus_boelter_nu,
     eps_ntu_counterflow,
     ergun_umf,
+    fuller_diffusivity,
+    kremser_stages,
     lmtd,
+    rachford_rice,
+    rayleigh_residue,
     sieder_tate_nu,
+    wilke_chang_diffusivity,
 )
 
 
@@ -54,3 +59,42 @@ def test_lmtd_and_antoine() -> None:
     assert lmtd(30, 30) == 30
     # water, A=8.07131 B=1730.63 C=233.426 (mmHg, degC): ~760 mmHg at 100 degC
     assert antoine_p(100, 8.07131, 1730.63, 233.426) == pytest.approx(760, rel=0.005)
+
+
+def test_fuller_co2_n2() -> None:
+    # Poling form; the older atm form (1e-3 T^1.75 sqrt(1/MA+1/MB)/...) gives 0.1643 cm2/s
+    d = fuller_diffusivity(300.0, 101325.0, 44.01, 28.01, 26.9, 18.5)
+    assert d == pytest.approx(0.1643e-4, rel=0.005)
+
+
+def test_wilke_chang_acetic_acid_in_water() -> None:
+    # Vb(acetic acid) 64.1 cm3/mol, water 0.89 mPa s at 25 C: ~1.4e-9 m2/s (exp. 1.29e-9)
+    d = wilke_chang_diffusivity(298.15, 0.89e-3, 18.015, 64.1)
+    assert d == pytest.approx(1.398e-9, rel=0.005)
+
+
+def test_rayleigh_residue() -> None:
+    # integral of dx/(y - x) with y = a x/(1 + (a-1) x), done numerically
+    from scipy.integrate import quad
+
+    a, xF, xW = 2.5, 0.5, 0.3
+    integral = quad(lambda x: 1 / (a * x / (1 + (a - 1) * x) - x), xW, xF)[0]
+    assert rayleigh_residue(100.0, xF, xW, a) == pytest.approx(100.0 * math.exp(-integral), rel=1e-9)
+    assert rayleigh_residue(100.0, xF, xW, a) < 100.0
+
+
+def test_rachford_rice() -> None:
+    z, K = [0.3, 0.5, 0.2], [3.0, 1.1, 0.2]
+    v = rachford_rice(z, K)
+    assert sum(zi / (1 + v * (k - 1)) for zi, k in zip(z, K, strict=True)) == pytest.approx(1.0, abs=1e-10)
+    assert rachford_rice([0.5, 0.5], [0.5, 0.8]) == 0.0  # subcooled
+    assert rachford_rice([0.5, 0.5], [2.0, 3.0]) == 1.0  # superheated
+
+
+def test_kremser_stages() -> None:
+    # stage-by-stage count for y_in 0.02 -> y_out 0.001, pure solvent, m 1, A 1.4
+    y_in, y_out, m, A = 0.02, 0.001, 1.0, 1.4
+    n = kremser_stages(y_in, y_out, 0.0, m, A)
+    # closed form check: fraction absorbed (A^(N+1) - A)/(A^(N+1) - 1)
+    frac = (A ** (n + 1) - A) / (A ** (n + 1) - 1)
+    assert 1 - y_out / y_in == pytest.approx(frac, rel=1e-9)
