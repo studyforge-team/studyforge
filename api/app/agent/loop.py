@@ -354,6 +354,7 @@ async def _begin(state: SolveState, deps: Deps) -> Step:
     state.messages = [
         {"role": "system", "content": prompts.SOLVER + notes},
         {"role": "user", "content": q},
+        *_cards(state.question),
     ]
     if deps.templates:
         state.started_at = deps.clock()
@@ -631,9 +632,15 @@ async def _start_cross_check(state: SolveState, deps: Deps) -> Step:
     state.cc_messages = [
         {"role": "system", "content": prompts.SOLVER},
         {"role": "user", "content": _quoted(state.question)},
+        *_cards(state.question),
         {"role": "user", "content": prompts.CROSS_CHECK},
     ]
     return await _next_action(state, deps, "cross_check")
+
+
+def _cards(question: str) -> list[dict[str, str]]:
+    cards = prompts.method_cards(question)
+    return [{"role": "user", "content": cards}] if cards else []
 
 
 def _close(a: float, b: float) -> bool:

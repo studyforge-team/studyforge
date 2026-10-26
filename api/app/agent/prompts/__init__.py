@@ -6,6 +6,8 @@ captured from open matplotlib figures, only the last 600 characters of an error.
 tests/unit/agent/test_prompts.py pins the rules that must not be lost in a rewrite.
 """
 
+import re
+
 CLASSIFY = """You route a question sent to a study app for engineering students.
 Answer three things about the question:
 - study: true if it is about engineering, science or maths that a student could study
@@ -179,3 +181,41 @@ answer value exactly as it appears in the result. Never write placeholders such 
 NO_RESULT = """That run did not set result, so nothing was checked and a step was used.
 Your next run must be the complete solution and end with result = {...} at the top
 level, with "answer", "check" and "values"."""
+
+
+# ACC1: tested tools by topic. The sandbox rules list every tool, but the model mostly
+# rewrote formulas from memory (Rayleigh, McCabe-Thiele stepping) and got them wrong; a
+# short card next to the question, picked by topic words, is what it actually reads.
+_CARDS: tuple[tuple[str, str], ...] = (
+    (r"rayleigh|batch distill|differential distill|simple distill",
+     ("Batch (Rayleigh) distillation, constant alpha: W = rayleigh_residue(F, xF, xW, alpha) from "
+     "chemlab._correlations. If W is given and xW is asked, solve rayleigh_residue(F, xF, x, alpha) "
+     "- W = 0 with brentq on (1e-9, xF - 1e-12). Distillate D = F - W, average y_D = (F xF - W xW)/D.")),
+    ((r"mccabe|step(?:ping)? off|stepping|equilibrium stages|theoretical (?:stages|plates|trays)"
+      r"|number of (?:stages|plates|trays)|minimum reflux|feed stage|feed plate"),
+     ("Binary column with constant alpha: use the tested module, never your own stepping loop: "
+     "from chemlab.mccabe import run as mccabe; o = mccabe({\"zF\": .., \"xD\": .., \"xB\": .., "
+     "\"q\": .., \"alpha\": .., \"R\": ..}, series=False)[\"outputs\"]. q: saturated liquid 1, "
+     "saturated vapour 0, f mol% liquid f/100. N_theoretical counts whole stages including the "
+     "partial reboiler; N_fractional = (N - 1) + (x_prev - xB)/(x_prev - x_last), also including "
+     "it; stages inside the column = N - 1. Also feed_stage, Rmin, D, B. Read the question for "
+     "whether the reboiler counts and whether to round, and report that number.")),
+    (r"\bflash\b|rachford|k[- ]values?\b",
+     ("Flash with K-values: V/F = rachford_rice(z, K) from chemlab._correlations, then "
+     "x_i = z_i/(1 + V (K_i - 1)), y_i = K_i x_i.")),
+    (r"kremser|absorber|absorption factor|stripping factor",
+     ("Dilute counter-current absorber: N = kremser_stages(y_in, y_out, x_in, m, A) from "
+     "chemlab._correlations, A = L/(m V).")),
+    (r"fuller|wilke|diffusivit",
+     ("Diffusivity: fuller_diffusivity (gas) or wilke_chang_diffusivity (dilute liquid) from "
+     "chemlab._correlations, both in m2/s; Fuller volumes are in chemlab._compounds FULLER_*.")),
+    (r"look up|standard (?:data|value|table)|from tables|steam table|property data",
+     ("Look-ups: use chemlab._compounds (COMPOUNDS by name, WATER_1ATM, FULLER_*) before "
+     "recalling a value; numbers given in the question win.")),
+)
+
+
+def method_cards(question: str) -> str | None:
+    """The tool cards whose topic words appear in the question, or None."""
+    hits = [card for pat, card in _CARDS if re.search(pat, question, re.IGNORECASE)]
+    return ("Tested tools for this question:\n- " + "\n- ".join(hits)) if hits else None
