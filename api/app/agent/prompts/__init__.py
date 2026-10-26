@@ -230,8 +230,8 @@ _CARDS: tuple[tuple[str, str], ...] = (
       "(Z = 1, dZ/dT = 0 there), with dZ/dT from the neighbouring temperature columns "
       "(np.gradient) and scipy.integrate.trapezoid. Cubic equations of state: cubic_eos(T, P, Tc, Pc, "
       "omega, eos='vdW'|'RK'|'SRK'|'PR') returns Z_vap, Z_liq, lnphi_vap, lnphi_liq, V_vap, V_liq "
-      "(P, Pc in Pa, V in m3/mol); cubic_psat(T, Tc, Pc, omega, eos) returns Psat (Pa) from equal "
-      "fugacities. Give every asked property, with units.")),
+      "(P, Pc in Pa, V in m3/mol); cubic_psat(T, Tc, Pc, omega, eos) returns Psat (Pa), Z_vap, "
+      "Z_liq from equal fugacities (unpack all three, or take r.Psat). Give every asked property, with units.")),
     ((r"bubble|dew|raoult|vle\b|vapou?r[- ]liquid|azeotrop|activity coefficient|margules|van laar"
       r"|wilson|nrtl|relative volatility|k[- ]value"),
      ("Vapour-liquid equilibrium, from chemlab._correlations: gamma_binary(model, x1, params) with "
