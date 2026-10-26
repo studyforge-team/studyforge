@@ -81,3 +81,12 @@ def test_z_table_card_extrapolates_the_integrands_to_zero_pressure() -> None:
     card = prompts.method_cards("residual enthalpy from a table of compressibility factors") or ""
     assert "do NOT vanish at P = 0" in card and "never set them to 0" in card
     assert "dZ/dT = 0 there" not in card
+
+
+def test_a_named_method_is_checked_by_itself_not_another_correlation() -> None:
+    # 27 Oct: "by the Lee/Kesler correlations" checked with Pitzer virial at Pr = 2.4 (4 % off,
+    # 0.5 % needed): every named-method question fell to the re-solve, which then had to luck in
+    assert "different model or\n   correlation than the one the question names" in prompts.SOLVER
+    assert "names a method or correlation, use that one" in prompts.CROSS_CHECK
+    card = prompts.method_cards("by the Lee/Kesler correlations") or ""
+    assert "that same one by a second route" in card and "never another correlation" in card
