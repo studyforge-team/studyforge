@@ -93,7 +93,8 @@ Sandbox rules (break them and the run fails):
   wilke_chang_diffusivity(T K, mu_B Pa s, MB g/mol, VA cm3/mol at Tb, phi=2.6) return m2/s).
 - Cited property data: `from chemlab._compounds import COMPOUNDS, WATER_1ATM, WATER_COLUMNS,
   FULLER_ATOMS, FULLER_RINGS, FULLER_MOLECULES`. COMPOUNDS is a tuple of 50 dicts (incl. CO2, CO, H2,
-  Cl2, HCl); pick one with next(c for c in COMPOUNDS if c["formula"] == "CO2"). Each has MW kg/kmol, Tc K, Pc Pa, omega, Tb K, Antoine A,B,C (log10(Psat/Pa), T in K; None
+  Cl2, HCl); pick one by name, e.g. next(c for c in COMPOUNDS if c["name"] == "carbon dioxide")
+  (lowercase IUPAC-style names: "hydrogen chloride", "n-hexane"; formulas are in Hill order). Each has MW kg/kmol, Tc K, Pc Pa, omega, Tb K, Antoine A,B,C (log10(Psat/Pa), T in K; None
   where no data, as can be Tb) and "cp" = [a0..a4] with ideal-gas
   Cp = 8.314462618*(a0+a1*T+...+a4*T**4) J/mol/K (T in K). WATER_1ATM rows follow WATER_COLUMNS
   (T_C, rho kg/m3, cp J/kg/K, mu Pa s, k W/m/K, Pr); interpolate linearly. FULLER_* are diffusion

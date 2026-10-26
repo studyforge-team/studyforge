@@ -32,17 +32,23 @@ _CTRL_FIX = {"\x08": "\\b", "\x0c": "\\f", "\t": "\\t", "\r": "\\r", "\n": "\\n"
 _CODE_KEYS = frozenset({"code", "key_code"})
 
 
-def fix_latex_escapes(value: Any) -> Any:
+_MATH_KEYS = frozenset({"latex"})  # all maths, no "$" delimiters (the photo read's field)
+
+
+def fix_latex_escapes(value: Any, math: bool = False) -> Any:
     """Repair LaTeX backslashes JSON decoded as control chars, recursively (never in code fields)."""
     if isinstance(value, str):
         out = _CTRL.sub(lambda m: _CTRL_FIX[m.group()], value)
-        if "$" in out:
+        if math or "$" in out:
             out = _CTRL_NL.sub(lambda m: _CTRL_FIX[m.group()], out)
         return out
     if isinstance(value, dict):
-        return {k: v if k in _CODE_KEYS else fix_latex_escapes(v) for k, v in value.items()}
+        return {
+            k: v if k in _CODE_KEYS else fix_latex_escapes(v, math or k in _MATH_KEYS)
+            for k, v in value.items()
+        }
     if isinstance(value, list):
-        return [fix_latex_escapes(v) for v in value]
+        return [fix_latex_escapes(v, math) for v in value]
     return value
 
 

@@ -332,3 +332,25 @@ def test_prompt_says_transcribe_only() -> None:
     assert "json" in low
     for key in ("text", "latex", "figure_description", "confidence"):
         assert key in PROMPT
+
+
+@sync
+async def test_read_always_has_a_deadline_under_the_browser_limit() -> None:
+    import time
+
+    client = FakeClient('{"text": "q", "latex": "", "figure_description": "", "confidence": "high"}')
+    await read_question(client, _encode(_drawing((300, 200)), "PNG"), "image/png")
+    deadline = client.calls[0][2]
+    assert deadline is not None and 0 < deadline - time.monotonic() <= 85
+
+
+@sync
+async def test_latex_field_keeps_nu_and_neq() -> None:
+    reply = r'{"text": "q", "latex": "\Delta H = \nu R T \neq 0", "figure_description": "", "confidence": "high"}'
+    q = await read_question(FakeClient(reply), _encode(_drawing((300, 200)), "PNG"), "image/png")
+    assert q.latex == r"\Delta H = \nu R T \neq 0"
+
+
+def test_huge_pdf_page_renders_smaller_instead_of_refusing() -> None:
+    out = _decode(prepare_image(_pdf([(2384, 3370)]), "application/pdf"))  # A0 in points
+    assert out.width <= 1600 and out.height <= 4000

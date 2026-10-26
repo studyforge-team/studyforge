@@ -28,7 +28,7 @@ who: ContextVar[Who] = ContextVar("who", default=Who())  # noqa: B039 (frozen)
 
 def _internal(ip: str) -> bool:
     try:
-        return ipaddress.ip_address(ip).is_private
+        return not ipaddress.ip_address(ip).is_global
     except ValueError:
         return False
 

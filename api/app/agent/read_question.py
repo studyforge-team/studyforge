@@ -8,6 +8,7 @@ anything is solved, so a misread digit is caught by a person, not by the agent.
 import asyncio
 import base64
 import io
+import time
 from collections.abc import Awaitable, Callable
 from typing import Any, Literal, Protocol
 
@@ -25,6 +26,7 @@ MAX_WIDTH = 1600
 MAX_HEIGHT = 4000
 MAX_SHRINK = 1.5  # a read shrunk more than this is capped at "medium" confidence
 PDF_DPI = 200
+READ_BUDGET_S = 85.0
 MAX_PIXELS = 60_000_000  # decompression-bomb guard for uploaded images
 JPEG_QUALITY = 85
 IMAGE_MIMES = {"image/jpeg", "image/png", "image/webp"}
@@ -133,9 +135,7 @@ def _render_pdf_page(data: bytes, page: int) -> Image.Image:
             )
         pdf_page = pdf[page - 1]
         width, height = pdf_page.get_size()
-        scale = PDF_DPI / 72
-        if width * scale * height * scale > MAX_PIXELS:
-            raise UnsupportedUpload("PDF page is too large to render.")
+        scale = min(PDF_DPI / 72, (MAX_PIXELS / (width * height)) ** 0.5)  # A0 renders smaller
         image: Image.Image = pdf_page.render(scale=scale).to_pil()
         return image
     finally:
@@ -168,6 +168,8 @@ async def read_question(
     reply raises ModelUnavailable (the UI then offers typed input). Client errors
     (ModelUnavailable, DeadlineExceeded, LLMAuthError, BudgetExceeded) propagate.
     """
+    if deadline is None:  # retries and a "length" re-call must still end before the browser's 90 s
+        deadline = time.monotonic() + READ_BUDGET_S
     image_url, shrink = await asyncio.to_thread(prepare_image_shrink, data, mime, page)
     result = await client.vision(
         image_url, PROMPT, deadline=deadline, solve_id=solve_id
