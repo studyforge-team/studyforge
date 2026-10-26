@@ -27,6 +27,9 @@ SAVED = {"type": "final", "answer_md": "X = 0.6667", "numbers": {"x": 0.6667},
     ("10.1.1.1, 1.2.3.4", None, "1.2.3.4"),  # a spoofed private entry on the left changes nothing
     ("10.29.8.12", "9.9.9.9", "10.29.8.12"),  # only internal hops: rightmost, as before
     ("1.2.3.4, 100.64.3.9", None, "1.2.3.4"),  # CGNAT proxy range is internal too
+    ("1.2.3.4, 172.71.198.58, 10.29.8.12", None, "1.2.3.4"),  # Cloudflare edge skipped (26 Oct log)
+    ("6.6.6.6, 1.2.3.4, 2606:4700::1", None, "1.2.3.4"),  # Cloudflare IPv6 edge, spoofed left ignored
+    ("172.71.198.58", "9.9.9.9", "172.71.198.58"),  # only proxy hops: rightmost, as before
     ("", "9.9.9.9", "9.9.9.9"),
     (None, "9.9.9.9", "9.9.9.9"),
     (None, None, None),

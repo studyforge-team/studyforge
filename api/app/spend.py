@@ -26,17 +26,32 @@ class Who:
 who: ContextVar[Who] = ContextVar("who", default=Who())  # noqa: B039 (frozen)
 
 
+# Cloudflare sits in front of Render: its edge address follows the student's in the chain.
+# Published ranges, https://www.cloudflare.com/ips/ (checked 26 Oct 2026).
+_CLOUDFLARE = tuple(ipaddress.ip_network(n) for n in (
+    "173.245.48.0/20", "103.21.244.0/22", "103.22.200.0/22", "103.31.4.0/22",
+    "141.101.64.0/18", "108.162.192.0/18", "190.93.240.0/20", "188.114.96.0/20",
+    "197.234.240.0/22", "198.41.128.0/17", "162.158.0.0/15", "104.16.0.0/13",
+    "104.24.0.0/14", "172.64.0.0/13", "131.0.72.0/22",
+    "2400:cb00::/32", "2606:4700::/32", "2803:f800::/32", "2405:b500::/32",
+    "2405:8100::/32", "2a06:98c0::/29", "2c0f:f248::/32",
+))  # fmt: skip
+
+
 def _internal(ip: str) -> bool:
+    """A proxy hop, not a student: Render's internal network or a Cloudflare edge."""
     try:
-        return not ipaddress.ip_address(ip).is_global
+        addr = ipaddress.ip_address(ip)
     except ValueError:
         return False
+    return not addr.is_global or any(addr in n for n in _CLOUDFLARE if n.version == addr.version)
 
 
 def client_ip(xff: str | None, peer: str | None) -> str | None:
-    """Rightmost public X-Forwarded-For entry: the one Render's edge appended. Render's own
-    internal hops (10.x) sit right of it; with only those, every student shared one daily
-    IP cap (ACC1). Left entries are client-supplied and spoofable, so they are never trusted."""
+    """Rightmost X-Forwarded-For entry that is not a proxy hop: the student's address as
+    Cloudflare received it. Render's internal hops (10.x) and Cloudflare's edge (172.71.x
+    in the 26 Oct logs) sit right of it; keyed on those, every student shared one daily IP
+    cap (ACC1). Left entries are client-supplied and spoofable, so they are never trusted."""
     parts = [p.strip() for p in (xff or "").split(",") if p.strip()]
     for part in reversed(parts):
         if not _internal(part):
