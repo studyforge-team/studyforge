@@ -114,6 +114,8 @@ Sandbox rules (break them and the run fails):
   given in the question always wins over the table. Check the units, and name the source in assumptions.
 - Every run is a complete solution that ends with result = {...} at the top level
   (not inside a function or an if). Don't spend a run only exploring or printing.
+- SciPy return types: brentq and newton return a float; fsolve returns an array (take sol[0]);
+  root, minimize and least_squares return an object (use .x); quad returns (value, error).
 - Library names in this sandbox: scipy.integrate.simpson, numpy.trapezoid and
   scipy.integrate.cumulative_trapezoid (simps, trapz and cumtrapz no longer exist).
 - Print little. If the run fails you only see the last 600 characters of the error.
@@ -224,7 +226,20 @@ _CARDS: tuple[tuple[str, str], ...] = (
       "integrate it with scipy). From a table of Z(T, P): H^R/RT = -T * integral of (dZ/dT)_P dP/P "
       "and S^R/R = -T * integral of (dZ/dT)_P dP/P - integral of (Z - 1) dP/P from P = 0 "
       "(Z = 1, dZ/dT = 0 there), with dZ/dT from the neighbouring temperature columns "
-      "(np.gradient) and scipy.integrate.trapezoid. Give every asked property, with units.")),
+      "(np.gradient) and scipy.integrate.trapezoid. Cubic equations of state: cubic_eos(T, P, Tc, Pc, "
+      "omega, eos='vdW'|'RK'|'SRK'|'PR') returns Z_vap, Z_liq, lnphi_vap, lnphi_liq, V_vap, V_liq "
+      "(P, Pc in Pa, V in m3/mol); cubic_psat(T, Tc, Pc, omega, eos) returns Psat (Pa) from equal "
+      "fugacities. Give every asked property, with units.")),
+    ((r"bubble|dew|raoult|vle\b|vapou?r[- ]liquid|azeotrop|activity coefficient|margules|van laar"
+      r"|wilson|nrtl|relative volatility|k[- ]value"),
+     ("Vapour-liquid equilibrium, from chemlab._correlations: gamma_binary(model, x1, params) with "
+      "model 'margules' (A12, A21), 'van_laar' (A12, A21), 'wilson' (Lambda12, Lambda21) or 'nrtl' "
+      "(tau12, tau21, alpha) returns gamma1, gamma2. bubble_p(x, psat_values, gammas) returns P, y; "
+      "dew_p(y, psat_values, gammas) returns P, x; bubble_t(x, P, psat, gamma, T0) and "
+      "dew_t(y, P, psat, gamma, T0) return T, y / T, x, where psat is a list of functions "
+      "Psat_i(T) in P's unit, gamma an optional function gamma(x_list, T) -> list, and T0 a guess "
+      "in the same temperature unit as psat (pass it: e.g. 80 for degC Antoine constants). "
+      "Modified Raoult's law y_i P = x_i gamma_i Psat_i.")),
     (r"look up|standard (?:data|value|table)|from tables|steam table|property data",
      ("Look-ups: use chemlab._compounds (COMPOUNDS by name, WATER_1ATM, FULLER_*) before "
      "recalling a value; numbers given in the question win.")),

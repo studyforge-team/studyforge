@@ -24,7 +24,16 @@ const COMPAT = `import numpy as _np, scipy.integrate as _si
 if not hasattr(_np, 'trapz'): _np.trapz = _np.trapezoid
 for _a, _b in (('simps', 'simpson'), ('trapz', 'trapezoid'), ('cumtrapz', 'cumulative_trapezoid')):
     if not hasattr(_si, _a) and hasattr(_si, _b): setattr(_si, _a, getattr(_si, _b))
-del _a, _b`
+del _a, _b
+import builtins as _bi
+class _FloatMeta(type):
+    def __instancecheck__(cls, o): return isinstance(o, _bi.float)
+    def __subclasscheck__(cls, c): return issubclass(c, _bi.float)
+class _compat_float(metaclass=_FloatMeta):
+    # NumPy 2 refuses float(np.array([x])); models write float(fsolve(...)) all the time
+    def __new__(cls, x=0.0):
+        if getattr(x, 'ndim', 0) and getattr(x, 'size', 0) == 1: x = x.reshape(()).item()
+        return _bi.float(x)`
 const FIGS = `import io, base64, json
 import matplotlib.pyplot as plt
 figs, notes = [], []
@@ -93,10 +102,19 @@ async function run(id: number, code: string, mode: 'solve' | 'chemlab') {
   py.setStdout(sink)
   py.setStderr(sink)
   const ns = py.globals.get('dict')()
+  ns.set('float', py.globals.get('_compat_float')) // user code's float() takes one-element arrays
   post({ type: 'started', id })
   try {
-    await py.runPythonAsync(code, { globals: ns })
-    if (!ns.has('result')) throw new Error('code must set result = {...} at the top level (this run set no result)')
+    const last: unknown = await py.runPythonAsync(code, { globals: ns })
+    if (!ns.has('result')) {
+      // models explore like a notebook (print, or a bare expression last): show them what it gave,
+      // or the step teaches nothing. The marker stays at the end: the error is cut to its last 600 chars.
+      const shown = last === undefined || last === null ? '' : String(last).slice(0, 150)
+      if (last && typeof (last as { destroy?: () => void }).destroy === 'function') (last as { destroy: () => void }).destroy()
+      const printed = out ? `It printed:\n${out.slice(-250)}\n` : ''
+      const expr = shown ? `Last expression: ${shown}\n` : ''
+      throw new Error(`${printed}${expr}code must set result = {...} at the top level (this run set no result)`)
+    }
     py.runPython(DUMP, { globals: ns })
     const json = ns.get('_out') as string
     // ponytail: the 16 KB cap counts UTF-16 units of the JSON string, close enough to bytes for numeric results.

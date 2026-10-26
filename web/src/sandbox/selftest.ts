@@ -71,6 +71,12 @@ result = {"ca": np.float64(ca), "arr": np.arange(3)}`)
   r = await run('x = 1')
   add('missing result', !r.ok && r.error.includes('result'), err(r) || 'unexpected ok')
 
+  r = await run('print("Tc", 369.8)\n369.8 / 2')
+  add('missing result shows output', !r.ok && r.error.includes('Tc 369.8') && r.error.includes('Last expression: 184.9') && r.error.endsWith('(this run set no result)'), err(r) || 'unexpected ok')
+
+  r = await run('from scipy.optimize import fsolve\nv = float(fsolve(lambda x: x**2 - 4, 1.0))\nresult = {"v": v, "isfloat": isinstance(v, float)}')
+  add('float() of a one-element array', r.ok && Math.abs((r.result as { v: number }).v - 2) < 1e-9 && (r.result as { isfloat: boolean }).isfloat, r.ok ? JSON.stringify(r.result) : err(r))
+
   r = await run('result = {"a": list(range(10000))}')
   add('solve result > 16 KB', !r.ok && r.error.includes('result too large'), err(r) || 'unexpected ok')
 

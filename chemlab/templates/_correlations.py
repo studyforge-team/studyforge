@@ -297,3 +297,238 @@ def ig_cp_integrals(T0: float, T: float, A: float, B: float, C: float = 0.0, D: 
     dh = A * (T - T0) + B / 2 * (T**2 - T0**2) + C / 3 * (T**3 - T0**3) + D * (1 / T0 - 1 / T)
     ds = A * math.log(T / T0) + B * (T - T0) + C / 2 * (T**2 - T0**2) + D / 2 * (1 / T0**2 - 1 / T**2)
     return Props(("dH_R", "dS_R"), {"dH_R": dh, "dS_R": ds})
+
+
+def gamma_binary(model: str, x1: float, p: tuple, T: float | None = None) -> Props:
+    """Liquid activity coefficients gamma1, gamma2 [-] of a binary (SVNA ch. 12-13).
+
+    model "margules" p = (A12, A21): ln g1 = x2^2 [A12 + 2 (A21 - A12) x1] (two-parameter);
+    "van_laar" p = (A12', A21'): ln g1 = A12' / (1 + A12' x1/(A21' x2))^2;
+    "wilson" p = (L12, L21) (SVNA eqs 13.45-13.46): ln g1 = -ln(x1 + L12 x2) + x2 [L12/(x1 + L12 x2)
+    - L21/(x2 + L21 x1)]; "nrtl" p = (tau12, tau21, alpha), G = exp(-alpha tau).
+    x1 mole fraction of component 1. T is accepted for call symmetry and unused: supply
+    temperature-dependent parameters (tau, Lambda) already evaluated at T.
+    """
+    x2 = 1.0 - x1
+    if model == "margules":
+        a12, a21 = p
+        l1 = x2**2 * (a12 + 2 * (a21 - a12) * x1)
+        l2 = x1**2 * (a21 + 2 * (a12 - a21) * x2)
+    elif model == "van_laar":
+        a12, a21 = p
+        d = (a12 * x1 + a21 * x2) ** 2
+        l1 = a12 * (a21 * x2) ** 2 / d
+        l2 = a21 * (a12 * x1) ** 2 / d
+    elif model == "wilson":
+        l12, l21 = p
+        s1, s2 = x1 + l12 * x2, x2 + l21 * x1
+        c = l12 / s1 - l21 / s2
+        l1 = -math.log(s1) + x2 * c
+        l2 = -math.log(s2) - x1 * c
+    elif model == "nrtl":
+        t12, t21, alpha = p
+        g12, g21 = math.exp(-alpha * t12), math.exp(-alpha * t21)
+        l1 = x2**2 * (t21 * (g21 / (x1 + x2 * g21)) ** 2 + t12 * g12 / (x2 + x1 * g12) ** 2)
+        l2 = x1**2 * (t12 * (g12 / (x2 + x1 * g12)) ** 2 + t21 * g21 / (x1 + x2 * g21) ** 2)
+    else:
+        raise ValueError(f"unknown activity model {model!r}")
+    return Props(("gamma1", "gamma2"), {"gamma1": math.exp(l1), "gamma2": math.exp(l2)})
+
+
+# SVNA Table 3.1: sigma, epsilon, Omega, Psi (alpha(Tr, omega) in _cubic_alpha)
+_CUBIC = {
+    "vdW": (0.0, 0.0, 1 / 8, 27 / 64),
+    "RK": (1.0, 0.0, 0.08664, 0.42748),
+    "SRK": (1.0, 0.0, 0.08664, 0.42748),
+    "PR": (1 + math.sqrt(2), 1 - math.sqrt(2), 0.07779, 0.45724),
+}
+_R = 8.314
+
+
+def _cubic_alpha(eos: str, Tr: float, omega: float) -> float:
+    if eos == "vdW":
+        return 1.0
+    if eos == "RK":
+        return Tr**-0.5
+    k = 0.480 + 1.574 * omega - 0.176 * omega**2 if eos == "SRK" else 0.37464 + 1.54226 * omega - 0.26992 * omega**2
+    return (1 + k * (1 - math.sqrt(Tr))) ** 2
+
+
+def _cubic_roots(T: float, P: float, Tc: float, Pc: float, omega: float, eos: str):
+    """(roots Z > B ascending, beta, q, sigma, epsilon) of the SVNA generic cubic."""
+    import numpy as np
+
+    if eos not in _CUBIC:
+        raise ValueError(f"unknown equation of state {eos!r}")
+    sig, eps, om, psi = _CUBIC[eos]
+    Tr, Pr = T / Tc, P / Pc
+    beta = om * Pr / Tr
+    q = psi * _cubic_alpha(eos, Tr, omega) / (om * Tr)
+    poly = np.polymul([1.0, -(1 + beta)], [1.0, (eps + sig) * beta, eps * sig * beta**2])
+    poly = np.polyadd(poly, [q * beta, -q * beta**2])
+    zs = sorted(float(z.real) for z in np.roots(poly) if abs(z.imag) < 1e-9 * max(1.0, abs(z.real)) and z.real > beta)
+    return zs, beta, q, sig, eps
+
+
+def _cubic_lnphi(z: float, beta: float, q: float, sig: float, eps: float) -> float:
+    i = beta / z if sig == eps else math.log((z + sig * beta) / (z + eps * beta)) / (sig - eps)
+    return z - 1 - math.log(z - beta) - q * i
+
+
+def cubic_eos(T: float, P: float, Tc: float, Pc: float, omega: float = 0.0, eos: str = "PR") -> Props:
+    """Generic cubic equation of state (SVNA ch. 3 Table 3.1, eqs 3.52-3.53, 13.68).
+
+    eos "vdW", "RK", "SRK" or "PR"; T, Tc [K]; P and Pc in the SAME pressure unit (Z and ln phi
+    are unit-free; the molar volumes need Pa because R = 8.314 J/mol/K, so pass Pa for V in m3/mol).
+    Real roots Z > B are kept: Z_vap is the largest, Z_liq the smallest (equal with one root).
+    ln phi = Z - 1 - ln(Z - beta) - q I, I = ln[(Z + sigma beta)/(Z + eps beta)]/(sigma - eps).
+    Returns Z_vap, Z_liq, lnphi_vap, lnphi_liq, plus V_vap, V_liq [m3/mol], A = q beta, B = beta.
+    """
+    zs, beta, q, sig, eps = _cubic_roots(T, P, Tc, Pc, omega, eos)
+    if not zs:
+        raise ValueError("no physical cubic root found")
+    zv, zl = zs[-1], zs[0]
+    return Props(("Z_vap", "Z_liq", "lnphi_vap", "lnphi_liq"), {
+        "Z_vap": zv, "Z_liq": zl,
+        "lnphi_vap": _cubic_lnphi(zv, beta, q, sig, eps), "lnphi_liq": _cubic_lnphi(zl, beta, q, sig, eps),
+        "V_vap": zv * _R * T / P, "V_liq": zl * _R * T / P, "A": q * beta, "B": beta,
+    })
+
+
+def cubic_psat(T: float, Tc: float, Pc: float, omega: float = 0.0, eos: str = "PR") -> Props:
+    """Vapour pressure from a cubic EOS: ln phi_vap = ln phi_liq (SVNA ch. 14).
+
+    T, Tc [K], Pc [Pa] -> Psat [Pa] (also Z_vap, Z_liq, V_vap, V_liq [m3/mol]). Scans ln P below Pc
+    for the three-root region, picks the sign change of the fugacity difference nearest the
+    Lee-Kesler/Wilson estimate Pc 10^(7/3 (1 + omega)(1 - Tc/T)) and solves it with brentq.
+    ValueError at or above Tc.
+    """
+    from scipy.optimize import brentq
+
+    if T >= Tc:
+        raise ValueError("T must be below Tc")
+
+    def diff(lnp: float) -> float | None:
+        zs, beta, q, sig, eps = _cubic_roots(T, math.exp(lnp), Tc, Pc, omega, eos)
+        if len(zs) < 2 or zs[-1] - zs[0] < 1e-8:
+            return None
+        return _cubic_lnphi(zs[-1], beta, q, sig, eps) - _cubic_lnphi(zs[0], beta, q, sig, eps)
+
+    guess = math.log(Pc) + 7 / 3 * (1 + omega) * (1 - Tc / T) * math.log(10)
+    grid = [math.log(Pc) + math.log(1e-5) * (1 - i / 600) for i in range(601)]
+    vals = [(g, diff(g)) for g in grid]
+    brackets = [(a, b) for (a, fa), (b, fb) in pairwise(vals) if fa is not None and fb is not None and fa * fb < 0]
+    if not brackets:
+        raise ValueError("no vapour-liquid root bracket found")
+    a, b = min(brackets, key=lambda ab: abs((ab[0] + ab[1]) / 2 - guess))
+    lnp = brentq(lambda v: diff(v), a, b, xtol=1e-14)
+    psat = math.exp(lnp)
+    r = cubic_eos(T, psat, Tc, Pc, omega, eos)
+    return Props(("Psat", "Z_vap", "Z_liq"), {
+        "Psat": psat, "Z_vap": r["Z_vap"], "Z_liq": r["Z_liq"], "V_vap": r["V_vap"], "V_liq": r["V_liq"],
+    })
+
+
+def _bracket_T(f, T0: float):
+    """Bracket the root of an increasing f(T), expanding from T0 with growing steps."""
+    f0, step = f(T0), 5.0
+    lo = hi = T0
+    for _ in range(80):
+        if f0 < 0:
+            hi += step
+            if f(hi) >= 0:
+                return lo, hi
+            lo = hi
+        else:
+            lo -= step
+            if f(lo) <= 0:
+                return lo, hi
+            hi = lo
+        step *= 1.4
+    raise ValueError("could not bracket the temperature")
+
+
+def _gam(gamma, x, T) -> list[float]:
+    return [1.0] * len(x) if gamma is None else list(gamma(x, T))
+
+
+def bubble_t(x: list[float], P: float, psat: list, gamma=None, T0: float | None = None) -> Props:
+    """Bubble-point temperature of liquid x at P (modified Raoult's law, SVNA ch. 10 and 13).
+
+    psat list of callables Psat_i(T) in the unit of P (and T); gamma optional callable
+    gamma(x, T) -> list of activity coefficients. Solves sum x_i gamma_i Psat_i = P with brentq
+    on T, bracketed by expansion from T0 (default 300, so give T0 if T is not in kelvin).
+    Returns T and vapour composition y_i = x_i gamma_i Psat_i / P.
+    """
+    from scipy.optimize import brentq
+
+    def f(t: float) -> float:
+        return sum(xi * g * p(t) for xi, g, p in zip(x, _gam(gamma, x, t), psat, strict=True)) - P
+
+    lo, hi = _bracket_T(f, 300.0 if T0 is None else T0)
+    t = float(brentq(f, lo, hi, xtol=1e-12))
+    y = [xi * g * p(t) / P for xi, g, p in zip(x, _gam(gamma, x, t), psat, strict=True)]
+    return Props(("T", "y"), {"T": t, "y": y})
+
+
+def dew_t(y: list[float], P: float, psat: list, gamma=None, T0: float | None = None) -> Props:
+    """Dew-point temperature of vapour y at P (modified Raoult's law); see bubble_t.
+
+    Solves sum y_i P/(gamma_i Psat_i) = 1; with gamma the liquid x is iterated (x_i = y_i P/(gamma_i
+    Psat_i), normalised) to convergence. Returns T and liquid composition x.
+    """
+    from scipy.optimize import brentq
+
+    x = list(y)
+    t = 300.0 if T0 is None else T0
+    for _ in range(200 if gamma else 1):
+
+        def f(tt: float, xc: list[float] = x) -> float:  # increasing in T
+            return 1.0 - P * sum(yi / (g * p(tt)) for yi, g, p in zip(y, _gam(gamma, xc, tt), psat, strict=True))
+
+        lo, hi = _bracket_T(f, t)
+        t = float(brentq(f, lo, hi, xtol=1e-12))
+        new = [yi * P / (g * p(t)) for yi, g, p in zip(y, _gam(gamma, x, t), psat, strict=True)]
+        s = sum(new)
+        new = [v / s for v in new]
+        done = max(abs(a - b) for a, b in zip(new, x, strict=True)) < 1e-12
+        x = new
+        if done:
+            break
+    return Props(("T", "x"), {"T": t, "x": x})
+
+
+def _gam_x(gammas, x: list[float]) -> list[float]:
+    if gammas is None:
+        return [1.0] * len(x)
+    return list(gammas(x)) if callable(gammas) else list(gammas)
+
+
+def bubble_p(x: list[float], psat_values: list[float], gammas=None) -> Props:
+    """Bubble pressure P = sum x_i gamma_i Psat_i and vapour y_i = x_i gamma_i Psat_i / P.
+
+    gammas: list of activity coefficients, or callable gamma(x) -> list; default ideal (1).
+    """
+    g = _gam_x(gammas, x)
+    terms = [xi * gi * p for xi, gi, p in zip(x, g, psat_values, strict=True)]
+    p_tot = sum(terms)
+    return Props(("P", "y"), {"P": p_tot, "y": [t / p_tot for t in terms]})
+
+
+def dew_p(y: list[float], psat_values: list[float], gammas=None) -> Props:
+    """Dew pressure P = 1/sum(y_i/(gamma_i Psat_i)) and liquid x_i = y_i P/(gamma_i Psat_i).
+
+    gammas: list (closed form) or callable gamma(x) -> list (x iterated to convergence).
+    """
+    x = list(y)
+    for _ in range(200 if callable(gammas) else 1):
+        g = _gam_x(gammas, x)
+        p_tot = 1.0 / sum(yi / (gi * p) for yi, gi, p in zip(y, g, psat_values, strict=True))
+        new = [yi * p_tot / (gi * p) for yi, gi, p in zip(y, g, psat_values, strict=True)]
+        s = sum(new)
+        new = [v / s for v in new]
+        done = max(abs(a - b) for a, b in zip(new, x, strict=True)) < 1e-12
+        x = new
+        if done:
+            break
+    return Props(("P", "x"), {"P": p_tot, "x": x})
