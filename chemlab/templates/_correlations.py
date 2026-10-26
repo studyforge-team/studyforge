@@ -5,6 +5,7 @@ In the sandbox: `from chemlab._correlations import annular_fin_efficiency, ...`
 """
 
 import math
+from itertools import pairwise
 
 from scipy.special import iv, kv
 
@@ -184,3 +185,94 @@ def kremser_stages(y_in: float, y_out: float, x_in: float, m: float, A: float) -
     """
     r = (y_in - m * x_in) / (y_out - m * x_in)
     return float(math.log(r * (1 - 1 / A) + 1 / A) / math.log(A))
+
+
+# Lee-Kesler (1975) constants: simple fluid (0) and reference fluid n-octane (r).
+_LK = {
+    0: {"b": (0.1181193, 0.265728, 0.154790, 0.030323), "c": (0.0236744, 0.0186984, 0.0, 0.042724),
+            "d": (0.155488e-4, 0.623689e-4), "beta": 0.65392, "gamma": 0.060167},
+    1: {"b": (0.2026579, 0.331511, 0.027655, 0.203488), "c": (0.0313385, 0.0503618, 0.016901, 0.041577),
+            "d": (0.48736e-4, 0.0740336e-4), "beta": 1.226, "gamma": 0.03754},
+}
+_LK_OMEGA_R = 0.3978
+
+
+def _lk_fluid(Tr: float, Pr: float, k: dict, phase: str) -> dict:
+    """Z, H^R/(R Tc), S^R/R, ln phi of one Lee-Kesler fluid (modified BWR in Vr = Pc V/(R Tc))."""
+    from scipy.optimize import brentq
+
+    b1, b2, b3, b4 = k["b"]
+    c1, c2, c3, c4 = k["c"]
+    d1, d2 = k["d"]
+    be, ga = k["beta"], k["gamma"]
+    B = b1 - b2 / Tr - b3 / Tr**2 - b4 / Tr**3
+    C = c1 - c2 / Tr + c3 / Tr**3
+    D = d1 + d2 / Tr
+
+    def z_of(v: float) -> float:
+        return 1 + B / v + C / v**2 + D / v**5 + c4 / (Tr**3 * v**2) * (be + ga / v**2) * math.exp(-ga / v**2)
+
+    def f(v: float) -> float:
+        return Pr * v / Tr - z_of(v)
+
+    # scan a log grid from dilute gas (Vr large) down to the dense limit, bracket sign changes
+    grid = [Tr / Pr * 10 ** (1.5 - 0.02 * i) for i in range(200)]
+    grid = [v for v in grid if v > 0.05]
+    roots = [brentq(f, hi, lo, xtol=1e-14) for hi, lo in pairwise(grid) if f(hi) * f(lo) < 0]
+    if not roots:
+        raise ValueError("no Lee-Kesler volume root found")
+    v = roots[0] if phase == "vapour" else roots[-1]
+    z = Pr * v / Tr
+    e = c4 / (2 * Tr**3 * ga) * (be + 1 - (be + 1 + ga / v**2) * math.exp(-ga / v**2))
+    hr = Tr * (z - 1 - (b2 + 2 * b3 / Tr + 3 * b4 / Tr**2) / (Tr * v)
+               - (c2 - 3 * c3 / Tr**2) / (2 * Tr * v**2) + d2 / (5 * Tr * v**5) + 3 * e)
+    sr = (math.log(z) - (b1 + b3 / Tr**2 + 2 * b4 / Tr**3) / v - (c1 - 2 * c3 / Tr**3) / (2 * v**2)
+          - d1 / (5 * v**5) + 2 * e)
+    lnphi = z - 1 - math.log(z) + B / v + C / (2 * v**2) + D / (5 * v**5) + e
+    return {"Z": z, "HR": hr, "SR": sr, "lnphi": lnphi}
+
+
+def lee_kesler(Tr: float, Pr: float, omega: float, phase: str = "vapour") -> dict:
+    """Lee-Kesler (AIChE J. 21, 1975, 510) residual properties; SVNA ch. 3 and 6, Tables E.1-E.12.
+
+    Tr, Pr reduced T and P [-], omega acentric factor. phase "vapour" takes the largest volume
+    root, "liquid" the smallest (only distinct below the critical point). Returns Z, Z0, Z1,
+    HR_RTc = H^R/(R Tc) [-], SR_R = S^R/R [-], lnphi, and the parts HR0_RTc, HR1_RTc, SR0_R,
+    SR1_R (X = X0 + omega X1, X1 = (X_ref - X0)/omega_ref, omega_ref = 0.3978).
+    """
+    s = _lk_fluid(Tr, Pr, _LK[0], phase)
+    r = _lk_fluid(Tr, Pr, _LK[1], phase)
+    p = {n: (r[n] - s[n]) / _LK_OMEGA_R for n in s}
+    return {
+        "Z": s["Z"] + omega * p["Z"], "Z0": s["Z"], "Z1": p["Z"],
+        "HR_RTc": s["HR"] + omega * p["HR"], "HR0_RTc": s["HR"], "HR1_RTc": p["HR"],
+        "SR_R": s["SR"] + omega * p["SR"], "SR0_R": s["SR"], "SR1_R": p["SR"],
+        "lnphi": s["lnphi"] + omega * p["lnphi"],
+    }
+
+
+def pitzer_virial(Tr: float, Pr: float, omega: float) -> dict:
+    """Pitzer second-virial correlation, valid at low Pr (SVNA eqs 3.57-3.66, 6.89-6.90).
+
+    Z = 1 + (B0 + omega B1) Pr/Tr with B0 = 0.083 - 0.422/Tr^1.6, B1 = 0.139 - 0.172/Tr^4.2.
+    Returns Z, HR_RTc = H^R/(R Tc), SR_R = S^R/R and lnphi (all [-]).
+    """
+    b0, b1 = 0.083 - 0.422 / Tr**1.6, 0.139 - 0.172 / Tr**4.2
+    db0, db1 = 0.6752 / Tr**2.6, 0.7224 / Tr**5.2  # exact dB/dTr (SVNA rounds to 0.675, 0.722)
+    bhat = b0 + omega * b1
+    return {
+        "Z": 1 + bhat * Pr / Tr,
+        "HR_RTc": Pr * (bhat - Tr * (db0 + omega * db1)),
+        "SR_R": -Pr * (db0 + omega * db1),
+        "lnphi": bhat * Pr / Tr,
+    }
+
+
+def ig_cp_integrals(T0: float, T: float, A: float, B: float, C: float = 0.0, D: float = 0.0) -> dict:
+    """Ideal-gas sensible heat from T0 to T [K] for Cp/R = A + B T + C T^2 + D T^-2 (SVNA ICPH/ICPS).
+
+    Returns dH_R = integral Cp/R dT [K] and dS_R = integral (Cp/R)/T dT [-].
+    """
+    dh = A * (T - T0) + B / 2 * (T**2 - T0**2) + C / 3 * (T**3 - T0**3) + D * (1 / T0 - 1 / T)
+    ds = A * math.log(T / T0) + B * (T - T0) + C / 2 * (T**2 - T0**2) + D / 2 * (1 / T0**2 - 1 / T**2)
+    return {"dH_R": dh, "dS_R": ds}

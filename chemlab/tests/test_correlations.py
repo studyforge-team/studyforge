@@ -12,8 +12,11 @@ from chemlab._correlations import (
     eps_ntu_counterflow,
     ergun_umf,
     fuller_diffusivity,
+    ig_cp_integrals,
     kremser_stages,
+    lee_kesler,
     lmtd,
+    pitzer_virial,
     rachford_rice,
     rayleigh_residue,
     sieder_tate_nu,
@@ -98,3 +101,63 @@ def test_kremser_stages() -> None:
     # closed form check: fraction absorbed (A^(N+1) - A)/(A^(N+1) - 1)
     frac = (A ** (n + 1) - A) / (A ** (n + 1) - 1)
     assert 1 - y_out / y_in == pytest.approx(frac, rel=1e-9)
+
+
+def test_lee_kesler_published_points() -> None:
+    # SVNA Ex. 3.10 (n-butane, Tr = 1.2, Pr = 0.66): Z0 = 0.865, Z1 = 0.038 (Tables E.1/E.2)
+    r = lee_kesler(1.2, 0.66, 0.2)
+    assert r["Z0"] == pytest.approx(0.865, abs=0.003)
+    assert r["Z1"] == pytest.approx(0.038, abs=0.003)
+    assert r["Z"] == pytest.approx(r["Z0"] + 0.2 * r["Z1"])
+    # Table E.1 (recalled, moderate confidence): Tr = 1.5, Pr = 1.0 -> 0.9103; Tr = 0.8, Pr = 1.0 -> 0.1626
+    assert lee_kesler(1.5, 1.0, 0.0)["Z0"] == pytest.approx(0.9103, abs=0.003)
+    assert lee_kesler(0.8, 1.0, 0.0)["Z0"] == pytest.approx(0.1626, abs=0.003)
+
+
+@pytest.mark.parametrize("Tr,Pr", [(1.1, 3.0), (1.5, 1.0), (0.9, 0.4)])
+def test_lee_kesler_thermodynamic_consistency(Tr: float, Pr: float) -> None:
+    from scipy.integrate import quad
+
+    om, h = 0.3, 1e-5
+
+    def z(t: float, p: float) -> float:
+        return lee_kesler(t, p, om)["Z"]
+
+    def dzdt(p: float) -> float:
+        return (z(Tr + h, p) - z(Tr - h, p)) / (2 * h)
+
+    # integrate from a small Pr0 (Z - 1 ~ linear in P there, so the integrand is finite)
+    p0 = 1e-4
+    r = lee_kesler(Tr, Pr, om)
+    hr = -(Tr**2) * quad(lambda p: dzdt(p) / p, p0, Pr, limit=200)[0]
+    sr = -Tr * quad(lambda p: dzdt(p) / p, p0, Pr, limit=200)[0] - quad(lambda p: (z(Tr, p) - 1) / p, p0, Pr)[0]
+    assert r["HR_RTc"] == pytest.approx(hr, rel=0.01)
+    assert r["SR_R"] == pytest.approx(sr, rel=0.01)
+    # ln phi = HR/(RT) - SR/R
+    assert r["lnphi"] == pytest.approx(r["HR_RTc"] / Tr - r["SR_R"], abs=1e-6)
+
+
+def test_lee_kesler_liquid_root() -> None:
+    v, liq = lee_kesler(0.8, 0.1, 0.2), lee_kesler(0.8, 0.1, 0.2, phase="liquid")
+    assert v["Z0"] > 0.9 and liq["Z0"] < 0.05
+
+
+def test_pitzer_virial_consistency_and_limit() -> None:
+    Tr, Pr, om, h = 1.3, 0.4, 0.25, 1e-4
+    r = pitzer_virial(Tr, Pr, om)
+    dz = (pitzer_virial(Tr + h, Pr, om)["Z"] - pitzer_virial(Tr - h, Pr, om)["Z"]) / (2 * h)
+    assert r["HR_RTc"] == pytest.approx(-(Tr**2) * dz, rel=1e-5)  # Z linear in Pr
+    assert r["SR_R"] == pytest.approx(-Tr * dz - (r["Z"] - 1), rel=1e-5)
+    lk, pv = lee_kesler(1.5, 0.05, 0.2), pitzer_virial(1.5, 0.05, 0.2)
+    assert pv["Z"] == pytest.approx(lk["Z"], rel=0.01)
+    assert pv["HR_RTc"] == pytest.approx(lk["HR_RTc"], rel=0.05)
+
+
+def test_ig_cp_integrals_vs_quad() -> None:
+    from scipy.integrate import quad
+
+    A, B, C, D = 3.4, 1.2e-3, 2.0e-7, 1.0e4
+    cp = lambda t: A + B * t + C * t**2 + D / t**2
+    r = ig_cp_integrals(298.15, 650.0, A, B, C, D)
+    assert r["dH_R"] == pytest.approx(quad(cp, 298.15, 650.0)[0], rel=1e-9)
+    assert r["dS_R"] == pytest.approx(quad(lambda t: cp(t) / t, 298.15, 650.0)[0], rel=1e-9)

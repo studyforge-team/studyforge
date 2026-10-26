@@ -11,7 +11,7 @@ const auth = async (): Promise<Record<string, string>> => {
   return t ? { Authorization: `Bearer ${t}` } : {}
 }
 
-const SOLVE_MS = 180_000 // solve calls run up to 6 steps server-side; every other route keeps the 90 s default
+const SOLVE_MS = 180_000 // one solve call is at most two model calls (90 s each); every other route keeps the 90 s default
 
 // ponytail: no retry — retrying POST /solve could create duplicate solves
 async function post<T>(path: string, body: unknown | FormData, onSlow?: () => void, timeoutMs = 90_000): Promise<T> {

@@ -32,7 +32,7 @@ SOLVER = """You are StudyForge's solver for engineering students. You never inve
 numbers: every number in the final answer must come from Python you run with the
 run_python tool, or from the question itself.
 
-Tools: run_python, search_my_notes, make_quiz, schedule_reminder, draw_diagram. At most 6 tool calls in total, so plan before you call. The student's
+Tools: run_python, search_my_notes, make_quiz, schedule_reminder, draw_diagram. At most 10 tool calls in total, so plan before you call. The student's
 notes were already searched for you (below, if any found).
 
 How to solve:
@@ -209,6 +209,22 @@ _CARDS: tuple[tuple[str, str], ...] = (
     (r"fuller|wilke|diffusivit",
      ("Diffusivity: fuller_diffusivity (gas) or wilke_chang_diffusivity (dilute liquid) from "
      "chemlab._correlations, both in m2/s; Fuller volumes are in chemlab._compounds FULLER_*.")),
+    ((r"residual|departure|lee[/ -]?kesler|generali[sz]ed correlation|pitzer|virial|compressibility"
+      r"|supercritical|real[- ]gas|fugacity|\bH\^?R\b|\bS\^?R\b|enthalpy and entropy|equation of state"
+      r"|peng|redlich|soave|van der waals"),
+     ("Real-gas properties (Smith-Van Ness ch. 3 and 6), from chemlab._correlations: "
+      "lee_kesler(Tr, Pr, omega) and pitzer_virial(Tr, Pr, omega) return Z, HR_RTc (H^R/(R Tc)), "
+      "SR_R (S^R/R), lnphi; ig_cp_integrals(T0, T, A, B, C, D) returns dH_R and dS_R for "
+      "Cp/R = A + B T + C T^2 + D T^-2. Use Lee-Kesler when the question names it or at high "
+      "reduced pressure (supercritical, liquid-like states); the virial form only at low Pr. "
+      "A change of state: dH = R*dH_R + H^R_2 - H^R_1 and dS = R*(dS_R - ln(P2/P1)) + S^R_2 - S^R_1, "
+      "with H^R = R*Tc*HR_RTc and S^R = R*SR_R at each state. Mixtures: pseudo-critical (Kay) "
+      "Tpc = sum y Tc, Ppc = sum y Pc, omega = sum y omega. Critical constants and Cp come from "
+      "the question, else chemlab._compounds (Poling cp: Cp/R = a0 + a1 T + ... + a4 T^4; "
+      "integrate it with scipy). From a table of Z(T, P): H^R/RT = -T * integral of (dZ/dT)_P dP/P "
+      "and S^R/R = -T * integral of (dZ/dT)_P dP/P - integral of (Z - 1) dP/P from P = 0 "
+      "(Z = 1, dZ/dT = 0 there), with dZ/dT from the neighbouring temperature columns "
+      "(np.gradient) and scipy.integrate.trapezoid. Give every asked property, with units.")),
     (r"look up|standard (?:data|value|table)|from tables|steam table|property data",
      ("Look-ups: use chemlab._compounds (COMPOUNDS by name, WATER_1ATM, FULLER_*) before "
      "recalling a value; numbers given in the question win.")),
