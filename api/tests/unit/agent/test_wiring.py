@@ -33,7 +33,7 @@ def browser(code: str) -> ResultBody:
 
 
 def deps(llm: FakeLLM, **kw: Any) -> Deps:
-    return Deps(llm=llm, store=InMemoryStore(), clock=Clock(), templates=SPECS, **kw)
+    return Deps(llm=llm, store=InMemoryStore(), clock=Clock(), templates=SPECS, **kw, cross_check_all=False)
 
 
 def pfr_pick() -> dict[str, Any]:
@@ -126,7 +126,7 @@ def test_guardrail_is_on_by_default_and_catches_an_invented_number() -> None:
         ("chat_json", {"answer_md": "X = 0.6667, so about 73 % reacts."}),
         ("chat_json", {"answer_md": "X = 0.6667."}),
     )
-    d = Deps(llm=llm, store=InMemoryStore(), clock=Clock())
+    d = Deps(llm=llm, store=InMemoryStore(), clock=Clock(), cross_check_all=False)
     assert d.guard is b8_guard
     sid, _ = run(loop.start("Find X", d, user_id=USER))
     final = run(loop.on_result(sid, USER, ResultBody(result=GOOD), d))

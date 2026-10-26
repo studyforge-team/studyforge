@@ -144,3 +144,43 @@ def wilke_chang_diffusivity(
     """
     d_cm2 = 7.4e-8 * math.sqrt(phi * MB) * T / (mu_B * 1e3 * VA**0.6)
     return float(d_cm2 * 1e-4)
+
+
+def rayleigh_residue(F: float, xF: float, xW: float, alpha: float) -> float:
+    """Residue W [same unit as F] after simple batch (Rayleigh) distillation, constant alpha.
+
+    xF, xW light-key mole fractions in the charge and the final residue (xW < xF).
+    ln(W/F) = [ln(xW/xF) + alpha ln((1-xF)/(1-xW))] / (alpha - 1)  (McCabe-Smith Eq. 21.x).
+    The distillate is D = F - W with average composition (F xF - W xW)/D.
+    """
+    ln_wf = (math.log(xW / xF) + alpha * math.log((1 - xF) / (1 - xW))) / (alpha - 1)
+    return float(F * math.exp(ln_wf))
+
+
+def rachford_rice(z: list[float], K: list[float]) -> float:
+    """Vapour fraction V/F [-] of an isothermal flash from feed z and K-values (Rachford-Rice).
+
+    sum z_i (K_i - 1)/(1 + V (K_i - 1)) = 0 solved on (0, 1); returns 0.0 (all liquid) or
+    1.0 (all vapour) outside the two-phase region. Then x_i = z_i/(1 + V (K_i - 1)), y_i = K_i x_i.
+    """
+    from scipy.optimize import brentq
+
+    def g(v: float) -> float:
+        return sum(zi * (k - 1) / (1 + v * (k - 1)) for zi, k in zip(z, K, strict=True))
+
+    if g(0.0) <= 0:
+        return 0.0
+    if g(1.0) >= 0:
+        return 1.0
+    return float(brentq(g, 0.0, 1.0, xtol=1e-14))
+
+
+def kremser_stages(y_in: float, y_out: float, x_in: float, m: float, A: float) -> float:
+    """Theoretical stages [-] of a dilute counter-current absorber, Kremser equation.
+
+    y_in, y_out gas mole fractions in and out, x_in entering liquid, m equilibrium slope
+    (y* = m x), A = L/(m V) absorption factor (A != 1). N = ln[((y_in - m x_in)/(y_out -
+    m x_in))(1 - 1/A) + 1/A] / ln A.
+    """
+    r = (y_in - m * x_in) / (y_out - m * x_in)
+    return float(math.log(r * (1 - 1 / A) + 1 / A) / math.log(A))

@@ -11,7 +11,7 @@ from app.routers import solve
 
 
 def client_for(llm: FakeLLM, user: str = "u1") -> tuple[TestClient, Deps]:
-    deps = Deps(llm=llm, store=InMemoryStore(), clock=Clock())
+    deps = Deps(llm=llm, store=InMemoryStore(), clock=Clock(), cross_check_all=False)
     app = FastAPI()
     app.include_router(solve.router)
     app.dependency_overrides[solve.get_deps] = lambda: deps

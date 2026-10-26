@@ -153,7 +153,7 @@ def test_score_prefers_plain_answer_key() -> None:
 
 
 def deps_for(llm: FakeLLM) -> Deps:
-    return Deps(llm=llm, store=InMemoryStore(), clock=Tick())
+    return Deps(llm=llm, store=InMemoryStore(), clock=Tick(), cross_check_all=False)
 
 
 def test_solve_one_counts_runs_after_an_error() -> None:
