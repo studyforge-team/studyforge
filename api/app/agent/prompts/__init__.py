@@ -89,6 +89,14 @@ Sandbox rules (break them and the run fails):
   eps-NTU, LMTD and Antoine, call the tested functions instead of retyping the formula:
   from chemlab._correlations import annular_fin_efficiency, ergun_umf, colebrook_f, churchill_bernstein_nu, dittus_boelter_nu, sieder_tate_nu, eps_ntu_counterflow, lmtd, antoine_p
   (SI units; antoine_p takes T in degC and returns mmHg for the classic constants).
+- Cited property data: `from chemlab._compounds import COMPOUNDS, WATER_1ATM, WATER_COLUMNS,
+  FULLER_ATOMS, FULLER_RINGS, FULLER_MOLECULES`. COMPOUNDS is a tuple of 50 dicts (incl. CO2, CO, H2,
+  Cl2, HCl); pick one with next(c for c in COMPOUNDS if c["formula"] == "CO2"). Each has MW kg/kmol, Tc K, Pc Pa, omega, Tb K, Antoine A,B,C (log10(Psat/Pa), T in K; None
+  where no data, as can be Tb) and "cp" = [a0..a4] with ideal-gas
+  Cp = 8.314462618*(a0+a1*T+...+a4*T**4) J/mol/K (T in K). WATER_1ATM rows follow WATER_COLUMNS
+  (T_C, rho kg/m3, cp J/kg/K, mu Pa s, k W/m/K, Pr); interpolate linearly. FULLER_* are diffusion
+  volumes in cm3/mol. When the question says to look up or use standard data, use these; a number
+  given in the question always wins over the table. Check the units, and name the source in assumptions.
 - Every run is a complete solution that ends with result = {...} at the top level
   (not inside a function or an if). Don't spend a run only exploring or printing.
 - Library names in this sandbox: scipy.integrate.simpson, numpy.trapezoid and

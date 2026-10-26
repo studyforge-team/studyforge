@@ -46,11 +46,21 @@ def fix_latex_escapes(value: Any) -> Any:
     return value
 
 
+# Single-backslash LaTeX ("\Delta H", "^\circ") is not valid JSON: double every backslash
+# that does not start a valid JSON escape (an already-doubled pair is consumed as a pair).
+_BAD_ESCAPE = re.compile(r'\\(["\\/bfnrt]|u[0-9a-fA-F]{4})?')
+
+
+def _double_bad_backslashes(text: str) -> str:
+    return _BAD_ESCAPE.sub(lambda m: m.group() if m.group(1) else "\\\\", text)
+
+
 def extract_json(text: str) -> Any:
     """Return the first JSON object or array in text (fenced or inline)."""
     fenced = _FENCE.search(text)
     if fenced:
         text = fenced.group(1)
+    text = _double_bad_backslashes(text)
     decoder = json.JSONDecoder()
     for i, ch in enumerate(text):
         if ch in "{[":

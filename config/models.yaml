@@ -27,7 +27,8 @@ models:
     output_usd_per_m: 0.90
 
 # models: tried in order (fallback chain). reasoning: thinking on/off for the call;
-# leave it out to send no thinking flag. Vision is off: same transcription, 1.2 s not 6.6 s.
+# leave it out to send no thinking flag. Vision is on (ACC1): printed-image set 11/12 vs
+# 10/12 off, no confident misread of a dropped superscript minus; ~6 s not ~2 s per read.
 # JSON calls always force it off.
 roles:
   router:
@@ -51,6 +52,6 @@ roles:
     max_tokens: 16000
   vision:
     models: [vision]
-    timeout_s: 45
-    reasoning: false
-    max_tokens: 4000
+    timeout_s: 75  # under the browser's 90 s limit on the read call
+    reasoning: true
+    max_tokens: 12000  # a long page used ~7200 with thinking; 4000 cut it off

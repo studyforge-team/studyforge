@@ -21,8 +21,10 @@ from app.llm.reasoning import extract_json
 from app.pdfium_lock import one_at_a_time
 
 MAX_INPUT_BYTES = 15 * 1024 * 1024
-MAX_SIDE = 1600
-PDF_DPI = 170
+MAX_WIDTH = 1600
+MAX_HEIGHT = 4000
+MAX_SHRINK = 1.5  # a read shrunk more than this is capped at "medium" confidence
+PDF_DPI = 200
 MAX_PIXELS = 60_000_000  # decompression-bomb guard for uploaded images
 JPEG_QUALITY = 85
 IMAGE_MIMES = {"image/jpeg", "image/png", "image/webp"}
@@ -33,6 +35,8 @@ Only transcribe and describe what is on the page. Do NOT solve the problem, do n
 give hints, and do not add facts that are not shown.
 - Copy every number, unit and symbol exactly as written. Never round, fix or guess a \
 value. If something is unreadable, write [unclear] in its place and lower your confidence.
+- Never flatten a power or subscript: in "text" write 3.7×10^4, 2.4×10^-3, m^3, C_A0, \
+never 3.7×104 or m3.
 - Put mathematics in LaTeX in the "latex" field. Keep plain wording in "text".
 - If there is a figure, graph, circuit or diagram, describe what it shows (labels, \
 values, axes) in "figure_description". Use an empty string if there is none.
@@ -66,7 +70,12 @@ class _Vision(Protocol):
 
 
 def prepare_image(data: bytes, mime: str, page: int = 1) -> str:
-    """Return a JPEG data URL (longest side <= 1600 px) for an image or PDF page."""
+    """Return a JPEG data URL (width <= 1600 px, height <= 4000 px) for an image or PDF page."""
+    return prepare_image_shrink(data, mime, page)[0]
+
+
+def prepare_image_shrink(data: bytes, mime: str, page: int = 1) -> tuple[str, float]:
+    """prepare_image plus how much the image was shrunk (linear factor, 1.0 = not shrunk)."""
     if mime != PDF_MIME and mime not in IMAGE_MIMES:
         raise UnsupportedUpload(
             f"Unsupported file type '{mime}'. Upload a JPEG, PNG, WEBP or PDF."
@@ -76,7 +85,10 @@ def prepare_image(data: bytes, mime: str, page: int = 1) -> str:
     try:
         img = _render_pdf_page(data, page) if mime == PDF_MIME else _open_image(data)
         img = _to_rgb(img)
-        img.thumbnail((MAX_SIDE, MAX_SIDE), Image.Resampling.LANCZOS)  # never upscales
+        shrink = max(img.width / MAX_WIDTH, img.height / MAX_HEIGHT, 1.0)  # never upscales
+        if shrink > 1:
+            size = (max(1, round(img.width / shrink)), max(1, round(img.height / shrink)))
+            img = img.resize(size, Image.Resampling.LANCZOS)
         buf = io.BytesIO()
         img.save(buf, "JPEG", quality=JPEG_QUALITY, optimize=True)
     except UnsupportedUpload:
@@ -86,7 +98,7 @@ def prepare_image(data: bytes, mime: str, page: int = 1) -> str:
     except (OSError, ValueError, SyntaxError, pdfium.PdfiumError) as err:
         raise UnsupportedUpload("The file could not be read as an image.") from err
     encoded = base64.b64encode(buf.getvalue()).decode("ascii")
-    return f"data:image/jpeg;base64,{encoded}"
+    return f"data:image/jpeg;base64,{encoded}", shrink
 
 
 async def prepare_image_async(data: bytes, mime: str, page: int = 1) -> str:
@@ -156,7 +168,7 @@ async def read_question(
     reply raises ModelUnavailable (the UI then offers typed input). Client errors
     (ModelUnavailable, DeadlineExceeded, LLMAuthError, BudgetExceeded) propagate.
     """
-    image_url = await prepare_image_async(data, mime, page)
+    image_url, shrink = await asyncio.to_thread(prepare_image_shrink, data, mime, page)
     result = await client.vision(
         image_url, PROMPT, deadline=deadline, solve_id=solve_id
     )
@@ -165,9 +177,12 @@ async def read_question(
         raise ModelUnavailable("the vision model returned an empty reply")
     try:
         payload: Any = extract_json(raw)
-        return QuestionRead.model_validate(payload)
+        read = QuestionRead.model_validate(payload)
     except ValueError:  # includes pydantic ValidationError
         return QuestionRead(text=raw, latex="", figure_description="", confidence="low")
+    if shrink > MAX_SHRINK and read.confidence == "high":
+        read.confidence = "medium"
+    return read
 
 
 def upload_reader(

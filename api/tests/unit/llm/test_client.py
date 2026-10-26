@@ -245,7 +245,7 @@ def test_vision_sends_image_part(registry: Registry) -> None:
     res = run(client.vision("data:image/jpeg;base64,AAAA", "Read the question."))
     assert res.text == "x = 2"
     content = server.body(0)["messages"][0]["content"]
-    assert content[1] == {
+    assert content[0] == {
         "type": "image_url",
         "image_url": {"url": "data:image/jpeg;base64,AAAA"},
     }

@@ -18,6 +18,7 @@ from app.agent.read_question import (
     UnsupportedUpload,
     prepare_image,
     prepare_image_async,
+    prepare_image_shrink,
     read_question,
 )
 from app.llm.client import LLMResult
@@ -77,9 +78,23 @@ def test_large_image_is_capped_at_1600() -> None:
     assert out.size == (1600, 600)
 
 
-def test_tall_image_is_capped_at_1600() -> None:
-    out = _decode(prepare_image(_encode(_drawing((1000, 4000)), "PNG"), "image/png"))
-    assert out.size == (400, 1600)
+def test_tall_image_keeps_its_width() -> None:
+    out = _decode(prepare_image(_encode(_drawing((1170, 4000)), "PNG"), "image/png"))
+    assert out.size == (1170, 4000)
+
+
+def test_very_tall_image_is_limited_by_height() -> None:
+    out = _decode(prepare_image(_encode(_drawing((1000, 9000)), "PNG"), "image/png"))
+    assert out.size == (444, 4000)
+
+
+@pytest.mark.parametrize(
+    ("size", "shrink"),
+    [((1170, 4000), 1.0), ((1600, 1000), 1.0), ((2000, 1000), 1.25), ((3000, 1000), 1.875), ((1000, 9000), 2.25)],
+)
+def test_shrink_factor(size: tuple[int, int], shrink: float) -> None:
+    _, got = prepare_image_shrink(_encode(_drawing(size), "PNG"), "image/png")
+    assert got == pytest.approx(shrink, abs=0.01)
 
 
 def test_exif_orientation_is_applied() -> None:
@@ -98,11 +113,11 @@ def test_rgba_is_flattened_on_white() -> None:
     assert min(r, g, b) >= 250
 
 
-def test_pdf_pages_render_at_170_dpi() -> None:
+def test_pdf_pages_render_at_200_dpi() -> None:
     data = _pdf([(200, 100), (300, 150)])
     p1 = _decode(prepare_image(data, "application/pdf"))
     p2 = _decode(prepare_image(data, "application/pdf", page=2))
-    scale = 170 / 72
+    scale = 200 / 72
     assert abs(p1.width - 200 * scale) <= 2
     assert abs(p1.height - 100 * scale) <= 2
     assert abs(p2.width - 300 * scale) <= 2
@@ -111,7 +126,14 @@ def test_pdf_pages_render_at_170_dpi() -> None:
 
 def test_large_pdf_page_is_capped() -> None:
     out = _decode(prepare_image(_pdf([(842, 595)]), "application/pdf"))
-    assert max(out.size) == 1600
+    assert out.width == 1600
+
+
+@pytest.mark.parametrize("size", [(595, 842), (612, 792)])  # A4, Letter
+def test_a4_and_letter_render_at_full_width(size: tuple[float, float]) -> None:
+    out = _decode(prepare_image(_pdf([size]), "application/pdf"))
+    assert out.width == 1600
+    assert out.height > out.width
 
 
 @pytest.mark.parametrize("page", [0, 3, -1])
@@ -262,7 +284,26 @@ async def test_pdf_page_is_used() -> None:
     client = FakeClient(REPLY)
     data = _pdf([(200, 100), (300, 150)])
     await read_question(client, data, "application/pdf", page=2)
-    assert abs(_decode(client.calls[0][0]).width - 300 * 170 / 72) <= 2
+    assert abs(_decode(client.calls[0][0]).width - 300 * 200 / 72) <= 2
+
+
+@pytest.mark.parametrize(
+    ("size", "model_says", "expected"),
+    [
+        ((1170, 4000), "high", "high"),
+        ((1600, 2300), "high", "high"),
+        ((1000, 9000), "high", "medium"),
+        ((3000, 1000), "high", "medium"),
+        ((1000, 9000), "low", "low"),
+    ],
+)
+@sync
+async def test_shrink_caps_confidence(
+    size: tuple[int, int], model_says: str, expected: str
+) -> None:
+    client = FakeClient(REPLY.replace('"high"', f'"{model_says}"'))
+    data = _encode(_drawing(size), "PNG")
+    assert (await read_question(client, data, "image/png")).confidence == expected
 
 
 @sync

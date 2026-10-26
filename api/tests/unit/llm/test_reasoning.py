@@ -66,3 +66,25 @@ def test_fix_latex_escapes_never_touches_code_or_plain_prose() -> None:
     assert args["answer_md"] == "where\nu is speed"  # no math in it: a real line break
     assert fx("$x\nu = 1$") == "$x" + chr(92) + "nu = 1$"  # inside math it is \nu again
     assert fx("2\times") == "2" + chr(92) + "times"  # tab rule still on in text
+
+
+def test_extract_json_single_backslash_latex() -> None:
+    bs = chr(92)
+    latex = bs + "Delta H = 5 " + bs + "mu " + bs + "cdot x^" + bs + "circ"
+    assert extract_json('{"s": "' + latex + '"}') == {"s": latex}
+    assert extract_json('```json\n{"s": "' + latex + '"}\n```') == {"s": latex}
+
+
+def test_extract_json_double_backslash_and_real_escapes_unchanged() -> None:
+    bs = chr(92)
+    assert extract_json('{"s": "' + bs * 2 + "Delta H" + '"}') == {"s": bs + "Delta H"}
+    assert extract_json('{"s": "a' + bs + "nb " + bs + '"q' + bs + '" ' + bs + "u00e9" + '"}') == {
+        "s": 'a\nb "q" é'
+    }
+
+
+def test_extract_json_single_backslash_leaves_code_alone() -> None:
+    bs = chr(92)
+    code = "x = 1" + bs + "ny = 2"  # JSON text: a real line break
+    out = extract_json('{"code": "' + code + '", "s": "' + bs + 'Delta"}')
+    assert out == {"code": "x = 1\ny = 2", "s": bs + "Delta"}

@@ -63,5 +63,8 @@ def test_missing_role_is_rejected(tmp_path: Path) -> None:
         load_registry(path)
 
 
-def test_repo_config_vision_thinking_is_off() -> None:
-    assert load_registry().roles["vision"].reasoning is False
+def test_repo_config_vision_thinks_with_room_to_finish() -> None:
+    vision = load_registry().roles["vision"]
+    assert vision.reasoning is True
+    assert vision.max_tokens is not None and vision.max_tokens >= 12000
+    assert vision.timeout_s < 90  # the browser gives the read call 90 s
