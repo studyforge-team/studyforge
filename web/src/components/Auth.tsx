@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button'
 import { turnOff } from '@/lib/pushReminders' // D1b: stop this device's reminders while the token still works
 import { getCaptchaToken, supabase } from '@/lib/supabase'
 
+// undefined until Supabase answers, then null (signed out) or the session
 export function useSession() {
-  const [session, setSession] = useState<Session | null>(null)
+  const [session, setSession] = useState<Session | null>()
   useEffect(() => {
     if (!supabase) return
     void supabase.auth.getSession().then(({ data }) => setSession(data.session))

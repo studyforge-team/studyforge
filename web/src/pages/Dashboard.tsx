@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { getDashboard, uploadFile } from '@/api/client'
 import type { Dashboard as Data } from '@/api/types'
+import { useSession } from '@/components/Auth'
 import { FilePick } from '@/components/FilePick'
 import { Button } from '@/components/ui/button'
 import PushReminders from '@/components/PushReminders'
 import { friendly } from '@/lib/errors'
+import { supabase } from '@/lib/supabase'
 import { useSlow } from '@/lib/useSlow'
 import { warm } from '@/sandbox/client'
 
@@ -46,16 +48,21 @@ export default function Dashboard() {
   const [note, setNote] = useState('') // upload status or error
   const [noteBad, setNoteBad] = useState(false)
   const inboxRef = useRef<HTMLDivElement>(null)
-  const slow = useSlow(!data && !error)
+  const session = useSession()
+  const signedOut = !!supabase && session === null // first visit: nothing to load until Try demo
+  const slow = useSlow(!data && !error && !signedOut)
 
   useEffect(() => {
     const c = (navigator as { connection?: { saveData?: boolean; effectiveType?: string } }).connection
     if (!c?.saveData && c?.effectiveType !== 'slow-2g' && c?.effectiveType !== '2g') void warm()
   }, [])
 
+  const uid = session?.user.id
   useEffect(() => {
+    if (supabase && !uid) return // signed out or not known yet: the API would answer 401
+    setError(false)
     getDashboard().then(setData, () => setError(true))
-  }, [tries])
+  }, [tries, uid])
 
   // ponytail: seen = inbox was on screen ≥1 s; per-device until the server tracks it
   useEffect(() => {
@@ -90,6 +97,14 @@ export default function Dashboard() {
     }
   }
 
+  if (signedOut) {
+    return (
+      <main className={wrap}>
+        <h1 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">What do I do today?</h1>
+        <p className="mt-3 text-sm">Press <strong>Try demo</strong> above to use every feature now, no account needed. Sign in with Google to keep your work across devices.</p>
+      </main>
+    )
+  }
   if (error) {
     return (
       <main className={wrap}>
