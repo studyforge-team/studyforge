@@ -2,6 +2,8 @@
 
 The openai SDK's own retries are off (max_retries=0) so that every attempt is
 logged, every wait respects the solve's deadline, and 4xx errors are never retried.
+A second key (env `<api_key_env>_2`, e.g. a teammate's account) is used only when the
+first is refused (401/402/403) or every model in the role's chain failed on it.
 """
 
 import asyncio
@@ -41,6 +43,10 @@ JSON_INSTRUCTION = (
 )
 
 
+class _ChainFailed(ModelUnavailable):
+    """Every model in the chain failed on this key: worth trying the backup key."""
+
+
 @dataclass(frozen=True)
 class ToolCall:
     id: str
@@ -66,6 +72,7 @@ class LLMClient:
         registry: Registry,
         *,
         api_key: str | None = None,
+        backup_key: str | None = None,
         http_client: httpx.AsyncClient | None = None,
         recorder: CostRecorder | None = None,
         budget: BudgetGuard | None = None,
@@ -75,13 +82,17 @@ class LLMClient:
     ) -> None:
         self.registry = registry
         key = api_key or os.environ.get(registry.api_key_env)
-        self._has_key = bool(key)
-        self._openai = openai.AsyncOpenAI(
-            base_url=registry.base_url,
-            api_key=key or "unset",
-            max_retries=0,
-            http_client=http_client,
-        )
+        backup = backup_key or os.environ.get(f"{registry.api_key_env}_2")
+        self._has_key = bool(key or backup)
+        self._clients = [
+            openai.AsyncOpenAI(
+                base_url=registry.base_url,
+                api_key=k,
+                max_retries=0,
+                http_client=http_client,
+            )
+            for k in dict.fromkeys(k for k in (key, backup) if k)
+        ]
         self.recorder = recorder
         self.budget = budget or NoBudgetGuard()
         self.clock = clock
@@ -187,6 +198,27 @@ class LLMClient:
     ) -> LLMResult:
         if not self._has_key:
             raise LLMAuthError(f"{self.registry.api_key_env} is not set")
+        for client in self._clients[:-1]:
+            try:
+                return await self._complete_on(
+                    client, role, messages, deadline, solve_id, reasoning, dict(extra)
+                )
+            except (LLMAuthError, _ChainFailed):
+                pass  # this key was refused or failed: the backup key next
+        return await self._complete_on(
+            self._clients[-1], role, messages, deadline, solve_id, reasoning, extra
+        )
+
+    async def _complete_on(
+        self,
+        client: openai.AsyncOpenAI,
+        role: str,
+        messages: list[Message],
+        deadline: float | None,
+        solve_id: str | None,
+        reasoning: bool | None,
+        extra: dict[str, Any],
+    ) -> LLMResult:
         spec = self.registry.roles[role]
         params: dict[str, Any] = {
             k: v
@@ -205,7 +237,7 @@ class LLMClient:
                 attempts += 1
                 start = self.clock()
                 try:
-                    resp = await self._openai.chat.completions.create(
+                    resp = await client.chat.completions.create(
                         model=model.id,
                         messages=cast(Any, messages),
                         timeout=timeout,
@@ -219,7 +251,7 @@ class LLMClient:
                     await self._log(role, model, solve_id, start, last, 0, 0)
                     if isinstance(
                         exc, openai.AuthenticationError | openai.PermissionDeniedError
-                    ):
+                    ) or getattr(exc, "status_code", 0) == 402:  # 402: out of credit
                         raise LLMAuthError(last) from exc
                     if isinstance(exc, openai.NotFoundError):
                         break  # model not served: next in chain, no retry
@@ -270,7 +302,7 @@ class LLMClient:
                     attempts=attempts,
                     finish_reason=finish,
                 )
-        raise ModelUnavailable(f"role '{role}': every model failed (last: {last})")
+        raise _ChainFailed(f"role '{role}': every model failed (last: {last})")
 
     def _timeout(self, role_timeout: float, deadline: float | None) -> float:
         if deadline is None:
