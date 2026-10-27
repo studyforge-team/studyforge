@@ -141,6 +141,10 @@ async def _spend(engine: AsyncEngine) -> None:
     assert await hits(spend.Caps(ip=1.0), anon)
     assert not await hits(spend.Caps(ip=1.0), spend.Who("ua", False, "1.1.1.1"))  # per-IP: anonymous only
     assert not await hits(spend.Caps(ip=1.0), spend.Who(None, True, None))
+    assert not await hits(spend.Caps(primary_key=1.0), anon)  # the key switch never blocks
+    assert not await spend.SpendGuard(engine, spend.Caps()).primary_spent()
+    assert await spend.SpendGuard(engine, spend.Caps(primary_key=2.0)).primary_spent()  # 2.0 spent
+    assert not await spend.SpendGuard(engine, spend.Caps(primary_key=2.5)).primary_spent()
 
     solve = SolveState(id="c1", user_id="u1", question="Find   X", status="done", last_step={"type": "final"})
     store = PgStateStore(engine)

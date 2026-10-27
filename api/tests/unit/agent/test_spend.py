@@ -39,7 +39,7 @@ def test_client_ip(xff: str | None, peer: str | None, want: str | None) -> None:
 
 
 def test_caps_from_env(monkeypatch: pytest.MonkeyPatch) -> None:
-    for k in ("SPEND_CAP_USD", "DAILY_GLOBAL_USD", "DAILY_USER_USD", "DAILY_IP_USD"):
+    for k in ("SPEND_CAP_USD", "DAILY_GLOBAL_USD", "DAILY_USER_USD", "DAILY_IP_USD", "PRIMARY_KEY_USD"):
         monkeypatch.delenv(k, raising=False)
     assert spend.Caps.from_env() == spend.Caps()
     monkeypatch.setenv("DAILY_USER_USD", "")
@@ -47,6 +47,8 @@ def test_caps_from_env(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("SPEND_CAP_USD", "12.5")
     monkeypatch.setenv("DAILY_IP_USD", "0.1")
     assert spend.Caps.from_env() == spend.Caps(total=12.5, ip=0.1)
+    monkeypatch.setenv("PRIMARY_KEY_USD", "40")
+    assert spend.Caps.from_env().primary_key == 40.0
     monkeypatch.setenv("DAILY_GLOBAL_USD", "abc")
     with pytest.raises(ValueError):
         spend.Caps.from_env()

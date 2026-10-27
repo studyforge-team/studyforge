@@ -2,8 +2,10 @@
 
 The openai SDK's own retries are off (max_retries=0) so that every attempt is
 logged, every wait respects the solve's deadline, and 4xx errors are never retried.
-A second key (env `<api_key_env>_2`, e.g. a teammate's account) is used only when the
-first is refused (401/402/403) or every model in the role's chain failed on it.
+A second key (env `<api_key_env>_2`, a teammate's account) is used when the first is
+refused (401/402/403) or every model in the role's chain failed on it, and alone once
+`primary_spent()` says the first account's share is used up (Token Factory does not refuse
+an empty account, it bills its card, so the switch has to come from our own spend count).
 """
 
 import asyncio
@@ -73,6 +75,7 @@ class LLMClient:
         *,
         api_key: str | None = None,
         backup_key: str | None = None,
+        primary_spent: Callable[[], Awaitable[bool]] | None = None,
         http_client: httpx.AsyncClient | None = None,
         recorder: CostRecorder | None = None,
         budget: BudgetGuard | None = None,
@@ -93,6 +96,7 @@ class LLMClient:
             )
             for k in dict.fromkeys(k for k in (key, backup) if k)
         ]
+        self.primary_spent = primary_spent
         self.recorder = recorder
         self.budget = budget or NoBudgetGuard()
         self.clock = clock
@@ -198,7 +202,10 @@ class LLMClient:
     ) -> LLMResult:
         if not self._has_key:
             raise LLMAuthError(f"{self.registry.api_key_env} is not set")
-        for client in self._clients[:-1]:
+        clients = self._clients
+        if len(clients) > 1 and self.primary_spent and await self.primary_spent():
+            clients = clients[1:]  # never back to the first account once its share is spent
+        for client in clients[:-1]:
             try:
                 return await self._complete_on(
                     client, role, messages, deadline, solve_id, reasoning, dict(extra)
@@ -206,7 +213,7 @@ class LLMClient:
             except (LLMAuthError, _ChainFailed):
                 pass  # this key was refused or failed: the backup key next
         return await self._complete_on(
-            self._clients[-1], role, messages, deadline, solve_id, reasoning, extra
+            clients[-1], role, messages, deadline, solve_id, reasoning, extra
         )
 
     async def _complete_on(
