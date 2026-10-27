@@ -1,8 +1,8 @@
 # Devpost draft (ticket F8)
 
-Status: draft written from the code on `main`. The Nebius Token Factory model
-has not been called yet, so every result, latency, cost and accuracy figure is a placeholder
-marked **TBD after Nebius integration**. Do not paste invented numbers here.
+Status: ready to paste (27 Oct 2026). Every number below was measured on the live app or in
+the team's evals on real Nemotron calls; the source is named next to it. Lines marked
+**[team]** need a teammate's words or a decision before submitting.
 
 ## Project name
 
@@ -14,149 +14,149 @@ A study agent for engineers that can't make up numbers
 
 (53 characters)
 
+## Track
+
+Best Apps and Agents (Track 2)
+
 ## Inspiration
 
-Language models are fluent and wrong with confidence, and in engineering a wrong number
-costs marks (or worse). We wanted a study helper that never states a number it did not
-compute. <!-- TODO(F8): team's own story, in their words -->
+Chatbots give engineering students fluent, confident answers with wrong numbers, and a wrong
+number costs marks. We are chemical-engineering students, and we wanted a study partner that
+never states a number it did not compute, and says "not verified" when it isn't sure.
+**[team]** add a line in your own words (an exam, a tutorial sheet, a moment that started it).
 
 ## What it does
 
-- Solves quantitative engineering questions: Nemotron plans and writes Python, the student's
-  own browser computes it in a sealed Pyodide sandbox, the answer must agree with a check
-  value computed in the same script, and the written explanation is rejected if it contains a number the sandbox did not produce.
-- Gives plain-language answers for concept questions, with no computed numbers.
-- Reads a photo or scanned page of a question with a vision model; the transcript always goes
-  to a confirm screen so a person fixes any misread digit before anything is solved.
-- ChemLab: eight tested templates (CSTR, PFR, batch, McCabe-Thiele distillation, heat
-  exchanger, flash, recycle with purge, pipe and pump) that power the ChemLab page
-  (interactive models and 3D). Chat answers always go through the general solver with a
-  check and verify, so they no longer include the template's stable/unstable steady-state
-  analysis; the ChemLab page shows it. The page has a tab for each template. Process flow diagrams for all eight,
-  engineering drawings for the CSTR, the distillation column, the shell-and-tube exchanger
-  and the PFR, and 3D views of the CSTR, column and exchanger.
-- Quizzes whose numerical answer keys are computed by sandboxed code, not written by the model.
-- A dashboard for deadlines and reminders, a notices inbox for pasted class messages,
-  phone reminders (web push) and a check-in an hour after each deadline that asks one
-  quiz question, plus weak-topic memory from quiz answers.
-- Prep packs: open a deadline and get 5 questions linked to the relevant page of your notes.
-- Notes and PDF handling: upload notes (full-text search on the server), and read a past
-  paper or a PDF's page count in Time to Finish and the PYQ Predictor.
-- Planned, not built yet: the agent's `search_my_notes` and `web_search` tools (the notes
-  search route exists; the tools still answer "not available"), so cited web answers are not
-  there yet. <!-- TODO(F8): update if web search lands -->
+- **Solves engineering questions with computed, checked numbers.** Nemotron plans the
+  solution and writes Python; the student's own browser runs it in a sealed Pyodide sandbox;
+  the result must carry an answer and a check that agree to 0.5 %; every number in the written
+  explanation must come from the sandbox output or the question.
+- **Earns its confidence.** An answer is shown as *high* only when an independent Nemotron
+  Ultra re-solve agrees. If they disagree, a third solve breaks the tie (2 of 3 = *medium*,
+  all different = *low*). When it cannot verify, it says so instead of guessing.
+- **Uses tested engineering tools,** not recalled formulas: a McCabe-Thiele template for
+  distillation stage counts and a library of tested correlations and equations of state
+  (Colebrook, Churchill-Bernstein, Ergun, Antoine, Lee/Kesler, Peng-Robinson and other cubic
+  EOS, Margules/van Laar/Wilson/NRTL, bubble and dew points).
+- **Reads questions from photos and PDFs** with Nemotron VL; the transcript goes to a confirm
+  screen so a misread digit is fixed before solving. A tutorial sheet is split and solved one
+  question at a time.
+- **Explains concepts and derivations** in plain language, without invented numbers.
+- **ChemLab:** eight interactive calculators (CSTR, batch, PFR, McCabe-Thiele, heat exchanger,
+  flash drum, recycle loop, pipe and pump) with charts, process flow diagrams and 3D models of
+  the CSTR, column and exchanger. They run in the browser and use no credits.
+- **A full study loop:** quizzes with progress tracking (numerical keys computed in the
+  sandbox), OA coding practice and company OA question sets, an interview bank for 15
+  companies, a PYQ predictor, a time-to-finish planner, a notices inbox, voice input, and a
+  history of every solve.
 
-The live site is https://studyforge-ten-alpha.vercel.app. It runs in demo/mock mode until the
-Render and Vercel environment variables and the model key are set: the screens work and one
-built-in CSTR sample is really computed in the browser sandbox, but your own questions are
-not solved yet.
+Try it: https://studyforge-ten-alpha.vercel.app (press **Try demo**, no account needed).
 
 ## How we built it
 
-**Stack.** React 19 + Vite + TypeScript frontend; FastAPI + Pydantic backend; Supabase for
-Postgres, Auth and Storage; Vercel and Render free tiers. Libraries: react-markdown + KaTeX
-for maths, Mermaid (strict) + DOMPurify for diagrams, Pyodide 314.0.7 for the sandbox.
+**Nemotron on Nebius Token Factory.** One `openai` client pointed at the Token Factory base
+URL; `config/models.yaml` maps each role to a fallback chain of models:
 
-**Nemotron on Nebius Token Factory.** Through the `openai` SDK pointed at the Token Factory
-base URL. `config/models.yaml` defines four roles: `router` (classify), `solver` (write the code, explain), `cross_check` (re-solve by a different
-method when the first answer fails verification) and `vision`. Reasoning is on for solving
-and off for every JSON call. The client has its own retries with backoff, per-role timeouts,
-a per-solve deadline, model fallback chains, JSON repair, and a cost row per attempt. A
-record/replay transport lets CI test the loop without an API key.
-Models and prices actually used: **TBD after Nebius integration** (only `super` has an ID in
-the registry so far).
+| Role | Model | Why |
+| --- | --- | --- |
+| router | Nemotron 3 Nano (fallback Super) | classifies every question in about 0.6 s for $0.00003 |
+| solver | Nemotron 3 Ultra (fallback Super), reasoning on | writes the Python and the explanation |
+| cross_check | Nemotron 3 Ultra (fallback Super), reasoning on | re-solves independently, blind to the first answer |
+| vision | Nemotron 3.5 Super-VL, reasoning on | reads question photos and PDF pages |
 
-**Sandbox.** Model-written Python never runs on our server. It runs in a dedicated Web Worker
-with network APIs deleted before user code starts, a 10 s kill timer, capped output and figures,
-and shape-checked messages back to the page. CI and evals use a Node Pyodide runner in docker
-with no network and an empty environment.
+The client adds retries with backoff, per-role timeouts, a per-solve deadline, JSON repair,
+a cut-off-reply retry, a cost row per call, spend caps (per user, per IP, daily, total) and an
+automatic switch to a teammate's Token Factory key when our credits are spent. A
+record/replay transport lets CI test the agent loop without a key.
 
-**Verification and guardrail.** The result must carry an answer and a check from a second
-method, with the same unit, agreeing within 0.1 %. A disagreement triggers a re-solve by a
-different method. A number guardrail then checks the explanation: each number must be within
-0.5 % of a sandbox value, a number in the question, or a physical constant, or the answer is
-regenerated and, if it still fails, flagged low confidence. A solve is capped at 4 tool steps
-and 90 s and always ends with an honest final step.
+**Where Token Factory helped.** The OpenAI-compatible API meant one client for all four
+models; moving the solver from Super to Ultra after an eval was a one-line config change;
+per-model prices let us log the cost of every call and keep a question at about one cent.
 
-**Six tools, enforced.** `run_python`, `search_my_notes`, `web_search`, `make_quiz`,
-`schedule_reminder`, `draw_diagram`; unknown tools are refused in code.
+**Sandbox.** Model-written code never runs on our server. It runs in a Web Worker with
+network APIs removed, a kill timer, capped output, and compatibility shims for NumPy 2.
+React + Vite + TypeScript on Vercel; FastAPI + Pydantic on Render; Supabase for Postgres,
+auth and storage.
 
-**ChemLab.** Plain numpy/scipy templates with declared input ranges (SPEC). They power the
-ChemLab page, which makes no API call. The solve path does not use them: a template is a
-single unverified method, and two of its six real picks were wrong but shown as high
-confidence, so templates stay out until they sit behind a verify step.
+**Verification.** Answer and check must agree; impossible values fail (a conversion outside
+0–1, a negative flow, a fraction of a stage); a number guardrail rejects any number in the
+explanation the sandbox did not produce (standard constants and visible unit conversions
+allowed); every part the question asks for must be answered. At most 10 tool steps and 300 s
+per solve.
 
-Measured results (accuracy on the problem set, latency, cost per solve):
-**TBD after Nebius integration**.
+## Results
+
+- **Accuracy:** 93.8 % on a held-out set of 96 new tutorial-style questions across 8 topic
+  families (135/144 over 3 runs), with **0 wrong answers labelled high** (PR #156, live
+  Nemotron, real prompts and checks).
+- **Live app, 26 Oct:** 43 of 50 unseen hard questions from our 300-question bank correct
+  (86 %); every *high* answer correct; median 33 s; about $0.013 per question.
+- **Images:** 12/12 printed question images read with every number correct (was 9/12).
+- **Tests:** about 1,000 API unit tests and about 390 ChemLab tests run in CI on every PR.
 
 ## Challenges we ran into
 
-- **Keeping model numbers honest.** Checking "no invented numbers" means parsing LaTeX,
-  scientific notation, list markers, subscripts and step labels without false alarms. The
-  guardrail is a purpose-built parser with tolerances and an allow-list of constants.
-- **Locking down the sandbox.** Python can call back into JavaScript, so the worker removes
-  network APIs from `self` and its prototype chain and the page treats every worker message as
-  untrusted.
-- **CSTR multiple steady states.** An exothermic CSTR can have several steady states, and
-  naive root finding picks one arbitrarily. The template scans conversion, solves for the
-  temperature on the mole-balance curve, finds every root of heat generated minus heat removed
-  and reports stability, so the student sees all states.
-- **Model output quirks.** Reasoning text leaks into replies, JSON arrives fenced, tool calling
-  may not be used; the client strips reasoning, extracts JSON, and the loop accepts a fenced
-  Python block as a fallback. How often this happens with the real model:
-  **TBD after Nebius integration**.
-- **Model access arrived late.** Nebius access was delayed, so the whole loop was built and
-  tested against fakes and a record/replay transport instead of the live API. The model's
-  real behaviour is still to be measured: **TBD after Nebius integration**.
-- **pdfium is not thread-safe.** Reading notes, question photos and PDFs all use pypdfium2,
-  and pdfium must not run in two threads at once, even on different documents. One shared
-  lock now guards every PDF reader.
-- **A frozen API contract.** The solve contract could not change, so every new feature
-  (notices, phone reminders, prep packs, PDF reading) was added as a new optional endpoint,
-  each written up in `docs/api-contract.md`.
-- **Free tiers only.** Everything must fit free hosting and cold starts; a keep-alive ping
-  (a GitHub Actions schedule plus an external pinger) keeps the free Render backend awake,
-  and also drives reminder delivery.
-  <!-- TODO(F8): add the team's own integration challenges, in their words -->
+- **The model's own check repeated its mistake.** Early on, every confident wrong answer had
+  a "check" that recomputed the same formula. Fix: an independent Ultra re-solve and a
+  tie-break before anything is shown as *high*.
+- **Recalled formulas were wrong.** Real-gas, Wilson and Peng-Robinson formulas were
+  sometimes misremembered; Supercritical CO2 was treated as an ideal gas. Fix: tested tools the
+  model must call, chosen by topic.
+- **Keeping numbers honest without false alarms.** The guardrail parses LaTeX, scientific
+  notation and unit conversions; standard constants and differences of given values had to
+  be allowed so correct answers were not marked *low*.
+- **The browser's NumPy 2** rejects patterns the model writes from habit (`float()` of a
+  one-element array, `trapz`, `simps`); shims keep them working.
+- **Images shrunk too far** turned 10⁻³ into 10⁻⁵; images now keep their resolution.
+- **Credits:** Token Factory charges the card when an account's credit is used, so we count
+  spend ourselves and switch keys.
+- **[team]** add one challenge from your own part of the build.
 
 ## Accomplishments that we're proud of
 
-- A pipeline where an unsupported number is a failed check, not a style issue.
-- A browser sandbox that keeps model-written code off our server entirely.
-- ChemLab templates that cover multiple steady states, not just the textbook case.
-- Record/replay tests, so model-dependent code is tested in CI with no key.
-- Demo mode that runs real Python in the browser with no backend.
-- Results: **TBD after Nebius integration**.
+- A wrong number shown with confidence is now rare: 0 in the held-out eval and 0 in our last
+  live test of 50 hard questions.
+- Model-written code never touches our server.
+- A whole study app, not a demo: solver, ChemLab with 3D, quizzes, OA and interview prep.
 
 ## What we learned
 
-Mostly engineering lessons visible in the code: make the model propose and the program
-dispose (template picking, tool argument validation); treat every string from a model, a
-note or a worker as data; give the agent a hard budget and a graceful failure instead of an
-error. Lessons about the models themselves: **TBD after Nebius integration**.
+Make the model propose and the program check. A model's "second method" is often the same
+method twice, so real confirmation needs an independent solve. Tested tools beat recalled
+formulas. Honest "not verified" answers build more trust than fluent wrong ones.
 
 ## What's next
 
-Connect the live backend and measure the golden problem set; connect notes search to the
-agent; web search with citations. (Telegram reminders were dropped; phone reminders use web push.)
-<!-- TODO(F8): align with the final roadmap -->
+Notes search for the agent, turning pasted notices into deadlines automatically, more tested
+templates for transient heat and mass transfer, and broader subject coverage.
 
 ## Built with
 
-python, fastapi, pydantic, sqlalchemy, alembic, openai-sdk, nvidia-nemotron,
-nebius-token-factory, supabase, postgresql, react, typescript, vite, tailwindcss, pyodide, webassembly, numpy, scipy, sympy,
-matplotlib, katex, mermaid, dompurify, playwright, vercel, render
+nvidia-nemotron, nebius-token-factory, python, fastapi, pydantic, sqlalchemy, alembic,
+openai-sdk, supabase, postgresql, react, typescript, vite, tailwindcss, pyodide,
+webassembly, numpy, scipy, sympy, matplotlib, three.js, katex, mermaid, playwright, vercel,
+render
 
-## Track
+## Testing instructions (Devpost field)
 
-Track 2
+Open https://studyforge-ten-alpha.vercel.app and press **Try demo** (no account needed).
+Ask an engineering question, for example: "A liquid-phase first-order reaction (k = 0.35
+min^-1) runs in a CSTR fed at 720 L/h. Find the volume in m^3 for 85 % conversion." Hard
+multi-step questions can take 30–180 s because a second model re-solves them before the
+answer is marked *high*. From the menu, try ChemLab (move a slider; open the 3D view), Quiz,
+OA Prep and Interview Bank. Free to use until judging ends.
 
 ## Tools feedback (Nebius / NVIDIA)
 
-See [docs/feedback-log.md](feedback-log.md). That file is currently empty apart from its
-header, so there is no feedback to report yet. <!-- TODO(F8): summarise real entries from the log -->
+See [feedback-log.md](feedback-log.md); paste its points into the feedback field.
+
+## New project?
+
+Yes: the repository was created on 8 Oct 2026, inside the submission period.
 
 ## Links and media
 
-Repo: https://github.com/studyforge-team/studyforge. Demo URL (demo/mock mode until the env
-vars and model key are set): https://studyforge-ten-alpha.vercel.app. Video, screenshots: **TBD**.
+- Demo: https://studyforge-ten-alpha.vercel.app
+- Repo: https://github.com/studyforge-team/studyforge (MIT licence)
+- Video: **[team]** YouTube link, set to Public, under 3:00
+- Screenshots: answer with confidence badge, ChemLab 3D, quiz progress, photo read, Today

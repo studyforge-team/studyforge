@@ -5,8 +5,8 @@ Token Factory) plans the solution and writes Python, a sealed Pyodide sandbox in
 student's browser does the computing, and the answer is checked before it is explained:
 the script must produce a check value that agrees with the answer, and every number in the
 explanation must come from the sandbox output or the question. Around the solver sit deadlines and
-reminders, quizzes, prep packs, cited web answers, and ChemLab reactor and distillation
-simulations.
+reminders, quizzes, prep packs, OA and interview practice, and ChemLab reactor and
+distillation simulations.
 
 **Status: hackathon build, live** (Nebius x NVIDIA Global AI Hackathon, Track 2).
 Live site: https://studyforge-ten-alpha.vercel.app (press "Try demo", no account needed). It
@@ -42,10 +42,12 @@ available").
    check value, and the two must agree. The prompt asks for a second route (closed form vs
    numeric, another balance); in practice the model often re-runs the same formula, so the
    check catches sandbox, unit and shape errors more than a wrong formula. (Measured 21 Oct:
-   asked explicitly for a different route, it produced one 5 times in 36.) ChemLab templates are not
-   used here (they power the ChemLab page), so chat answers no longer include the
-   template's stable/unstable steady-state analysis; the ChemLab page shows it. At most 4
-   tool steps and 90 s per solve.
+   asked explicitly for a different route, it produced one 5 times in 36.) Distillation stage-count
+   questions use the tested McCabe-Thiele template, and the solver can call tested
+   correlation and equation-of-state tools (`chemlab/templates/_correlations.py`). Before an
+   answer is shown at high confidence, Ultra re-solves it independently; if they disagree, a
+   third solve breaks the tie (2-of-3 = medium, all different = low). At most 10 tool steps
+   and 300 s per solve.
 4. **Sandbox.** The API returns a `run_python` step; the browser's Pyodide worker runs
    it and posts the result back. The server never executes model-written code.
 5. **Verify.** `verify()` requires `answer` and `check` with the same unit that agree
@@ -85,9 +87,9 @@ re-sanitised with DOMPurify.
 | Role | Used for | Models tried in order | Reasoning |
 | --- | --- | --- | --- |
 | `router` | classify | nano, super | off |
-| `solver` | write the Python, explain, concept answers | super | on |
+| `solver` | write the Python, explain, concept answers | ultra, super | on |
 | `cross_check` | re-solve by a different method | ultra, super | on |
-| `vision` | transcribe photos and scanned PDF pages | vision | off |
+| `vision` | transcribe photos and scanned PDF pages | vision | on |
 
 JSON calls always force reasoning off. The client (`api/app/llm/client.py`) uses the
 `openai` SDK against the Token Factory base URL with SDK retries disabled, so it can do
@@ -106,14 +108,15 @@ Models confirmed from Token Factory's `GET /v1/models` (ticket G10), with live n
 | `ultra` | `nvidia/Nemotron-3-Ultra-550b-a55b` | 1.00 / 3.00 | 3.8 s | $0.008 |
 | `vision` | `nvidia/Nemotron-3.5-Super-VL` | 0.30 / 0.90 | 2.1 s | $0.001 |
 
-A typical solve makes one `nano` call and a few `super` calls. `ultra` only runs when the
-answer and the check disagree. A model set to `null` is skipped in its role's chain.
+A typical solve makes one `nano` call, an `ultra` solve and an independent `ultra`
+re-solve (a third only when the two disagree); `super` is the fallback. A model set to
+`null` is skipped in its role's chain.
 
 The agent has exactly six tools: `run_python`, `search_my_notes`, `web_search`,
 `make_quiz`, `schedule_reminder`, `draw_diagram`. Unknown tools are refused in code. In the
 deployed wiring `make_quiz` and `schedule_reminder` are real; `search_my_notes` (the notes
-search route exists, the tool is not connected yet) and `web_search` still answer "not
-available".
+search route exists, the tool is not connected yet) answers "not available", and
+`web_search` is not offered to the solver (no search provider is wired).
 
 ## ChemLab templates
 
