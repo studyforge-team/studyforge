@@ -4,6 +4,18 @@ Status: ready to paste (27 Oct 2026). Every number below was measured on the liv
 the team's evals on real Nemotron calls; the source is named next to it. Lines marked
 **[team]** need a teammate's words or a decision before submitting.
 
+## For judges (first lines of the description)
+
+> Chatbots give engineering students confident wrong numbers. **StudyForge never states a
+> number it did not compute:** Nemotron 3 Ultra writes the Python, the student's browser runs
+> it, and a second, independent Ultra solve must agree before an answer is marked *high*.
+> Held-out result: 93.8 % correct and **0 wrong answers marked high**. Try it in 10 seconds:
+> https://studyforge-ten-alpha.vercel.app → **Try demo**.
+
+Gallery (in this order, each with a one-line caption): thumbnail, an answer with its
+confidence badge and "Ran Python", the "How a question is answered" diagram, ChemLab 3D,
+a photo read, quiz progress.
+
 ## Project name
 
 StudyForge
@@ -86,9 +98,9 @@ per solve.
 
 ## Results
 
-- **Accuracy:** 93.8 % on a held-out set of 96 new tutorial-style questions across 8 topic
-  families (135/144 over 3 runs), with **0 wrong answers labelled high** (PR #156, live
-  Nemotron, real prompts and checks).
+- **Accuracy:** 93.8 % on the held-out half of a new 96-question tutorial-style set across
+  8 topic families (135/144 over 3 runs of 48 questions), with **0 wrong answers labelled
+  high** (PR #156, live Nemotron, real prompts and checks).
 - **Live app, 26 Oct:** 43 of 50 unseen hard questions from our 300-question bank correct
   (86 %); every *high* answer correct; median 33 s; about $0.013 per question.
 - **Images:** 12/12 printed question images read with every number correct (was 9/12).
