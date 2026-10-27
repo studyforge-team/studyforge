@@ -86,7 +86,7 @@ export default function Solve() {
     const onSlow = () => setSlow(true)
     const first = await startSolve(text, onSlow, file?.id, confirmed)
     let step = first.step
-    let ran = true
+    let ran = false // true once any run worked: a failed first try the model then fixed is still computed
     for (let n = 0; step.type === 'run_python'; n++) {
       if (n >= MAX_STEPS) throw new PlainError('Too many steps, stopping.')
       const { code } = step
@@ -95,7 +95,7 @@ export default function Solve() {
       const body = res.ok
         ? { stdout: res.stdout, result: res.result, figures: res.figures, error: null, ms: res.ms }
         : { stdout: '', result: null, figures: [], error: res.error, ms: 0 }
-      ran &&= res.ok
+      ran ||= res.ok
       patch(n, { status: res.ok ? 'ok' : 'fail', ms: body.ms, stdout: body.stdout, timeout: !res.ok && res.error === 'timeout' })
       step = await postResult(first.solve_id, body, onSlow)
     }
@@ -164,7 +164,12 @@ export default function Solve() {
             onDismiss={() => { setFile(undefined); setRead(undefined) }}
           />
         )}
-        {busy && <p aria-live="polite" className="mt-2 text-sm text-muted-foreground">Working{label && ` on ${label}`}… step {Math.max(1, rows.length)}</p>}
+        {busy && (
+          <p aria-live="polite" className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+            <span className="size-3.5 animate-spin rounded-full border-2 border-tint border-t-primary" aria-hidden="true" />
+            Thinking{label && ` about ${label}`}…
+          </p>
+        )}
         {slow && <p className="mt-2 text-sm text-muted-foreground">Waking up the server…</p>}
       </div>
       {error && <p role="alert" className="mt-3 text-sm font-medium text-destructive">{error}</p>}
@@ -181,9 +186,10 @@ export default function Solve() {
       ))}
       {label && <h2 className="mt-6 text-lg font-semibold">{label}</h2>}
       <div aria-live="polite" className="mt-4 print:hidden">
-        {rows.length > 0 && (
+        {/* failed tries are the model's scratch work (it reads the error and retries): only runs that worked are shown */}
+        {rows.some((r) => r.status !== 'fail') && (
           <ol className="relative space-y-3 rounded-lg border bg-card p-4 before:absolute before:bottom-8 before:left-[27px] before:top-8 before:w-px before:bg-border">
-            {rows.map((r, i) => <StepRow key={i} r={r} />)}
+            {rows.filter((r) => r.status !== 'fail').map((r, i) => <StepRow key={i} r={r} />)}
           </ol>
         )}
         {end?.type === 'need_confirm' && (
@@ -198,7 +204,7 @@ export default function Solve() {
         <>
         <p className="mt-4 hidden whitespace-pre-wrap print:block">{question}</p>
         <Suspense fallback={<p className="mt-6 text-sm text-muted-foreground">Loading answer…</p>}>
-          <AnswerCard a={end} ran={rows.length > 0 && rows.every((r) => r.status === 'ok')} />
+          <AnswerCard a={end} ran={rows.some((r) => r.status === 'ok')} />
         </Suspense>
         {(() => {
           const lab = labLink(question, end)
