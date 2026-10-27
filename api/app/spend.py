@@ -8,7 +8,7 @@ the loop serves a cached answer (see loop._capped).
 import ipaddress
 import os
 from contextvars import ContextVar
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
@@ -70,12 +70,13 @@ class Caps:
     day: float | None = None
     user: float | None = None
     ip: float | None = None
+    primary_key: float | None = None  # spend after which only the backup key is used
 
     @classmethod
     def from_env(cls) -> "Caps":
         return cls(
             _cap("SPEND_CAP_USD"), _cap("DAILY_GLOBAL_USD"),
-            _cap("DAILY_USER_USD"), _cap("DAILY_IP_USD"),
+            _cap("DAILY_USER_USD"), _cap("DAILY_IP_USD"), _cap("PRIMARY_KEY_USD"),
         )
 
 
@@ -91,13 +92,16 @@ from app.llm_calls, d
 """)
 
 
+_TOTAL = text("select coalesce(sum(cost_usd), 0) from app.llm_calls")
+
+
 class SpendGuard:
     def __init__(self, engine: AsyncEngine, caps: Caps) -> None:
         self._engine, self._caps = engine, caps
 
     async def check(self, role: str, model_id: str) -> None:
         c, w = self._caps, who.get()
-        if c == Caps():
+        if replace(c, primary_key=None) == Caps():
             return
         async with self._engine.connect() as conn:
             total, day, user, ip = (
@@ -109,3 +113,11 @@ class SpendGuard:
         ):
             if cap is not None and spent >= cap:
                 raise BudgetExceeded(f"{name} spend cap reached")
+
+    async def primary_spent(self) -> bool:
+        """True once total spend reaches PRIMARY_KEY_USD: the first account's share is used."""
+        if self._caps.primary_key is None:
+            return False
+        async with self._engine.connect() as conn:
+            total = (await conn.execute(_TOTAL)).scalar_one()
+        return bool(total >= self._caps.primary_key)

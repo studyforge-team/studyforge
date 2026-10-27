@@ -14,7 +14,8 @@ class DeadlineExceeded(ModelUnavailable):
 
 
 class LLMAuthError(LLMError):
-    """401/403: the key is wrong or missing. Never retried, never falls back."""
+    """401/402/403: the key is wrong, missing or out of credit. Never retried; the
+    client moves to the backup key if one is set, never to another model."""
 
 
 class LLMRequestError(LLMError):

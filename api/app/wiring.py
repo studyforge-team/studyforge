@@ -46,9 +46,10 @@ def get_deps() -> Deps:
         raise HTTPException(status_code=503, detail="solver not available")
     engine = db.shared_engine()
     if _cache is None or _cache[0] is not engine:
+        guard = SpendGuard(engine, Caps.from_env())
         llm = LLMClient(
-            registry, recorder=db.PgCostRecorder(engine),
-            budget=SpendGuard(engine, Caps.from_env()),
+            registry, recorder=db.PgCostRecorder(engine), budget=guard,
+            primary_spent=guard.primary_spent,
         )
         # read_upload=None until C1/C2 merge; guard keeps its Deps default
         _cache = (engine, Deps(

@@ -145,6 +145,56 @@ def test_401_stops_everything(registry: Registry) -> None:
     assert len(server.requests) == 1
 
 
+def test_refused_key_moves_to_the_backup_key(registry: Registry) -> None:
+    for code in (401, 402, 403):
+        server, clock = FakeServer().status(code).ok(completion("ok")), FakeClock()
+        client, _ = make(registry, server, clock, backup_key="team")
+        assert run(client.chat("router", MSG)).text == "ok"
+        keys = [r.headers["authorization"] for r in server.requests]
+        assert keys == ["Bearer test", "Bearer team"]
+
+
+def test_failed_chain_retries_on_the_backup_key(registry: Registry) -> None:
+    server = FakeServer()
+    for _ in range(4):
+        server.status(503)
+    server.ok(completion("ok"))
+    client, _ = make(registry, server, FakeClock(), backup_key="team")
+    assert run(client.chat("solver", MSG)).text == "ok"
+    assert server.requests[-1].headers["authorization"] == "Bearer team"
+
+
+def test_bad_request_and_deadline_do_not_switch_keys(registry: Registry) -> None:
+    server, clock = FakeServer().status(400), FakeClock()
+    client, _ = make(registry, server, clock, backup_key="team")
+    with pytest.raises(LLMRequestError):
+        run(client.chat("router", MSG))
+    assert len(server.requests) == 1
+    with pytest.raises(DeadlineExceeded):
+        run(client.chat("solver", MSG, deadline=clock.now - 1))
+    assert len(server.requests) == 1
+
+
+def test_spent_primary_account_is_never_used_again(registry: Registry) -> None:
+    async def spent() -> bool:
+        return True
+
+    server = FakeServer().status(401)
+    client, _ = make(registry, server, FakeClock(), backup_key="team", primary_spent=spent)
+    with pytest.raises(LLMAuthError):  # the backup is refused: fail, don't bill the first
+        run(client.chat("router", MSG))
+    assert [r.headers["authorization"] for r in server.requests] == ["Bearer team"]
+
+
+def test_backup_key_from_env(registry: Registry, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("TF_API_KEY", raising=False)
+    monkeypatch.setenv("TF_API_KEY_2", "team")
+    server = FakeServer().ok(completion("ok"))
+    client = LLMClient(registry, http_client=server.http_client())
+    assert run(client.chat("router", MSG)).text == "ok"
+    assert server.requests[0].headers["authorization"] == "Bearer team"
+
+
 def test_no_call_once_deadline_passed(registry: Registry) -> None:
     server, clock = FakeServer(), FakeClock()
     client, _ = make(registry, server, clock)
