@@ -383,13 +383,13 @@ def cubic_eos(T: float, P: float, Tc: float, Pc: float, omega: float = 0.0, eos:
     are unit-free; the molar volumes need Pa because R = 8.314 J/mol/K, so pass Pa for V in m3/mol).
     Real roots Z > B are kept: Z_vap is the largest, Z_liq the smallest (equal with one root).
     ln phi = Z - 1 - ln(Z - beta) - q I, I = ln[(Z + sigma beta)/(Z + eps beta)]/(sigma - eps).
-    Returns Z_vap, Z_liq, lnphi_vap, lnphi_liq, plus V_vap, V_liq [m3/mol], A = q beta, B = beta.
+    Returns (and unpacks to) Z_vap, Z_liq, lnphi_vap, lnphi_liq, V_vap, V_liq [m3/mol]; also A = q beta, B = beta.
     """
     zs, beta, q, sig, eps = _cubic_roots(T, P, Tc, Pc, omega, eos)
     if not zs:
         raise ValueError("no physical cubic root found")
     zv, zl = zs[-1], zs[0]
-    return Props(("Z_vap", "Z_liq", "lnphi_vap", "lnphi_liq"), {
+    return Props(("Z_vap", "Z_liq", "lnphi_vap", "lnphi_liq", "V_vap", "V_liq"), {
         "Z_vap": zv, "Z_liq": zl,
         "lnphi_vap": _cubic_lnphi(zv, beta, q, sig, eps), "lnphi_liq": _cubic_lnphi(zl, beta, q, sig, eps),
         "V_vap": zv * _R * T / P, "V_liq": zl * _R * T / P, "A": q * beta, "B": beta,
