@@ -24,13 +24,15 @@ recordings and subtitles (P3).
 | 1 | 0–15 | Today on a phone | The problem: deadlines and numbers you can't trust |
 | 2 | 15–60 | Ask → photo → confirm screen → answer | The model plans, the browser computes, every number comes from the sandbox (show "run_python" running, then the checked answer) |
 | 3 | 60–80 | The same answer: a wrong-number case or "Not verified" | It can't make up numbers |
-| 4 | 80–105 | Share a WhatsApp notice to StudyForge → Notices | In-app intake (D1) |
-| 5 | 105–125 | Phone notification arrives → tap → prep pack | Reminders (D6, D1b) and the prep pack (D5) |
+| 4 | 80–105 | Photo of a printed question → transcript → confirm → solved | Nemotron VL reads every number |
+| 5 | 105–125 | Model card: Nano routes, Ultra solves, Ultra re-solves to confirm "high", cost per question | Stage One proof: Token Factory + NVIDIA models |
 | 6 | 125–150 | ChemLab: change an input, the drawing and 3D update | Engineering depth |
 | 7 | 150–165 | Quiz and check-in | Learning loop |
 | 8 | 165–175 | Title card: StudyForge, team, "Nemotron on Nebius Token Factory" | Close |
 
-Cut anything that does not fit 3:00. Leave a second of silence at each cut for editing.
+Show only what works on the live site: a pasted notice is saved (turning it into a deadline
+is future work, the page says so), and phone push was not verified live, so neither is a shot.
+Trim the waiting on hard questions (30–180 s). Cut anything that does not fit 3:00. Leave a second of silence at each cut for editing.
 
 ## Editing (27 Oct)
 
@@ -42,7 +44,8 @@ Cut anything that does not fit 3:00. Leave a second of silence at each cut for e
 
 ## Upload and check (27 Oct)
 
-- [ ] YouTube (public or unlisted, as Devpost requires), music only if licence-free.
+- [ ] YouTube, **Public** (the Rules say "uploaded to and made publicly visible on YouTube";
+      unlisted does not meet that), music only if licence-free, no third-party logos.
 - [ ] Open the link in a private window, logged out of everything: it plays, full length,
       captions on.
 - [ ] Put the link in the Devpost draft (F8) and the README.
