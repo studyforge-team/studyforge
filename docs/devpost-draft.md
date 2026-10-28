@@ -152,11 +152,14 @@ render
 ## Testing instructions (Devpost field)
 
 Open https://studyforge-ten-alpha.vercel.app and press **Try demo** (no account needed).
-Ask an engineering question, for example: "A liquid-phase first-order reaction (k = 0.35
-min^-1) runs in a CSTR fed at 720 L/h. Find the volume in m^3 for 85 % conversion." Hard
-multi-step questions can take 30–180 s because a second model re-solves them before the
-answer is marked *high*. From the menu, try ChemLab (move a slider; open the 3D view), Quiz,
-OA Prep and Interview Bank. Free to use until judging ends.
+Ask an engineering question, for example: "A shell-and-tube heat exchanger cools 2.0 kg/s
+of oil (cp = 2100 J/kg/K) from 160 C to 100 C using 2.5 kg/s of water (cp = 4180 J/kg/K)
+entering at 20 C, in counterflow. U = 350 W/m^2/K. Find the water outlet temperature, the
+LMTD and the heat-transfer area in m^2." (about 30 s; 44.1 C, 96.8 K, 7.44 m^2). Then press
+**See it in 3D in ChemLab** under the answer: the same exchanger opens as a live simulation
+with a 3D model. Hard multi-step questions can take 30–180 s because a second model re-solves
+them before the answer is marked *high*. From the menu, also try Quiz, OA Prep and Interview
+Bank. Free to use until judging ends.
 
 ## Tools feedback (Nebius / NVIDIA)
 
