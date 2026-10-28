@@ -13,14 +13,18 @@ Live site: https://studyforge-ten-alpha.vercel.app (press "Try demo", no account
 runs on Nemotron via Nebius Token Factory: the web app on Vercel, the API on Render, and
 Supabase for auth, Postgres and storage.
 
-Measured on the live site, 23 Oct 2026:
+Measured 26–28 Oct 2026, with Ultra as the solver and an independent Ultra re-solve of
+every answer:
 
-- **Accuracy:** 32 of 32 questions in our dev set were answered correctly
-  (`docs/eval/sv_questions.json`, run with `web/eval/eval_live.mjs`). No wrong number was shown
-  at high confidence, and all 12 plain calculations were answered at high confidence.
-- **Speed:** the median solve takes 15 s, including the browser sandbox run.
-- **Cost:** the median solve costs $0.0017 and the mean is $0.0030 (155 live solves,
-  22–23 Oct).
+- **Accuracy:** on a held-out bank of 48 questions never used for tuning, 135 of 144
+  answers over three runs were right (93.8 %), with no wrong number shown at high
+  confidence (ACC1). With Ultra as the solver, a run scored 46 of 48 against 44 of 48 for
+  Super (ACC2). Run-to-run variance is about ±4 of 48, so we always run the bank 2–3 times.
+  Earlier dev set: 32 of 32 (`docs/eval/sv_questions.json`, `web/eval/eval_live.mjs`, 23 Oct).
+- **Speed:** the median solve takes about 33 s of model time (27 live solves, 27–28 Oct),
+  including the independent re-solve.
+- **Cost:** the median solve costs about $0.027 and the mean $0.032 (same 27 solves, before
+  VAT).
 - **Known limit:** about 1 in 10 harder questions comes back low confidence or is refused
   ("not verified") instead of answered. That is the design: it says so rather than guess.
 
@@ -44,13 +48,15 @@ available").
    check catches sandbox, unit and shape errors more than a wrong formula. (Measured 21 Oct:
    asked explicitly for a different route, it produced one 5 times in 36.) ChemLab templates are not
    used here (they power the ChemLab page), so chat answers no longer include the
-   template's stable/unstable steady-state analysis; the ChemLab page shows it. At most 4
-   tool steps and 90 s per solve.
+   template's stable/unstable steady-state analysis; the ChemLab page shows it. At most 10
+   tool steps (solver, re-solve and tie-break share them) and 300 s per solve.
 4. **Sandbox.** The API returns a `run_python` step; the browser's Pyodide worker runs
    it and posts the result back. The server never executes model-written code.
 5. **Verify.** `verify()` requires `answer` and `check` with the same unit that agree
-   within 0.1 %. A failure triggers a repair prompt; a disagreement triggers one
-   re-solve by a different method (`cross_check` role) and is flagged if it still differs.
+   within 0.5 %. A failure triggers a repair prompt. Then every answer gets an independent
+   re-solve from scratch (`cross_check` role). If the two disagree, a third solve breaks the
+   tie: a 2-of-3 majority is shown at medium confidence (never high), and no majority is
+   flagged low.
 6. **Explain.** The solver writes the worked answer from the sandbox result as JSON.
 7. **Number guardrail.** Every number in the answer must be within 0.5 % of a sandbox
    value, a number in the question, or a physical constant. Otherwise the answer is
@@ -85,8 +91,8 @@ re-sanitised with DOMPurify.
 | Role | Used for | Models tried in order | Reasoning |
 | --- | --- | --- | --- |
 | `router` | classify | nano, super | off |
-| `solver` | write the Python, explain, concept answers | super | on |
-| `cross_check` | re-solve by a different method | ultra, super | on |
+| `solver` | write the Python, explain, concept answers | ultra, super | on |
+| `cross_check` | independent re-solve of every answer, tie-break | ultra, super | on |
 | `vision` | transcribe photos and scanned PDF pages | vision | off |
 
 JSON calls always force reasoning off. The client (`api/app/llm/client.py`) uses the
@@ -106,8 +112,11 @@ Models confirmed from Token Factory's `GET /v1/models` (ticket G10), with live n
 | `ultra` | `nvidia/Nemotron-3-Ultra-550b-a55b` | 1.00 / 3.00 | 3.8 s | $0.008 |
 | `vision` | `nvidia/Nemotron-3.5-Super-VL` | 0.30 / 0.90 | 2.1 s | $0.001 |
 
-A typical solve makes one `nano` call and a few `super` calls. `ultra` only runs when the
-answer and the check disagree. A model set to `null` is skipped in its role's chain.
+A typical solve makes one `nano` call, a few `ultra` solver calls and one independent
+`ultra` re-solve; a third solve runs only when those two disagree. `super` is the fallback
+when `ultra` fails or times out (on our held-out bank Ultra scored 46/48 against Super's
+44/48). The per-call figures above are from 22–23 Oct, when `super` was the solver. A model
+set to `null` is skipped in its role's chain.
 
 The agent has exactly six tools: `run_python`, `search_my_notes`, `web_search`,
 `make_quiz`, `schedule_reminder`, `draw_diagram`. Unknown tools are refused in code. In the
